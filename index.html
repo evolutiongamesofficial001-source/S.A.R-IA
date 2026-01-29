@@ -56,7 +56,6 @@
             border: 1px solid var(--border);
         }
 
-        /* Mobile: sem bordas laterais nem sombra */
         @media (max-width: 600px) {
             .app {
                 max-width: 100%;
@@ -67,7 +66,6 @@
             }
         }
 
-        /* Desktop/Tablet: visual app-like */
         @media (min-width: 601px) {
             .app {
                 height: 96dvh;
@@ -255,7 +253,7 @@
     </header>
 
     <div id="chat">
-        <div class="msg bot">Sistema inicializado. Como posso ajudar você hoje?</div>
+        <div class="msg bot">Olá, como posso ajudar?</div>
     </div>
 
     <div class="bar">
@@ -264,182 +262,86 @@
     </div>
 </div>
 
-
-<div id="settingsMenu" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
-    <div style="background:#111118; padding:28px; border-radius:16px; border:1px solid #22222a; max-width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.6);">
-        <h3 style="margin:0 0 20px; color:var(--accent-light);">Configurações</h3>
-        <button id="toggleTheme" style="padding:12px 28px; background:#1a1a24; color:var(--text); border:none; border-radius:10px; cursor:pointer; margin:10px 0; width:100%;">Alternar Tema (Atual: Escuro)</button>
-        <button onclick="document.getElementById('settingsMenu').style.display='none'" style="padding:12px 28px; background:#22222a; color:white; border:none; border-radius:10px; cursor:pointer; width:100%;">Fechar</button>
-    </div>
-</div>
-
 <script>
-    //fakes S.A.R API
-    const chaves = [
-        "rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM",
-        "rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3",
-        "rdv_uuBMlVuxyFshNSSpgouaHRojm3QJeOcIaoqeZHB68JtNehuYcjzP",
-        "rdv_ZwAEelTSOuFXDMCzCyAdHRojm3QJM3IT5whwyc6KYtVXSytIbUWH",
-        "rdv_tHcmv4NP8HSTN8Y0uCBGHRojm3QJyE6P0JxZO00XKII62YoCq2aU"
-    ];
+const chaves = [
+    "rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM",
+    "rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3",
+    "rdv_uuBMlVuxyFshNSSpgouaHRojm3QJeOcIaoqeZHB68JtNehuYcjzP",
+    "rdv_ZwAEelTSOuFXDMCzCyAdHRojm3QJM3IT5whwyc6KYtVXSytIbUWH",
+    "rdv_tHcmv4NP8HSTN8Y0uCBGHRojm3QJyE6P0JxZO00XKII62YoCq2aU"
+];
 
-    let memoria = [{ 
-        role: "system", 
-        content: `Você é a S.A.R, Suporte Artificial Racional da Evolution Studio.
-
-Data atual: ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+let memoria = [{
+    role: "system",
+    content: `Você é a S.A.R, Suporte Artificial Racional da Evolution Studio.
 
 REGRAS SOBRE A ORIGEM:
 Quando perguntarem sobre "Evolution Studio", "Evolution Games", "quem criou você", "João Antônio", "Lucas Aparecido" ou similar, responda exatamente:
 
 "A Evolution Games Studio é uma equipe de desenvolvimento de jogos, sites e sistemas Indie criada por dois amigos: João Antônio e Lucas Aparecido. Eles também são responsáveis pela minha criação, a S.A.R."
 
-Sem adicionar ou alterar nada. Para o resto, responda de forma clara e útil em português.`
-    }];
+REGRAS SOBRE VITORGOLD:
+Quando perguntarem sobre "vitorgold", "Vitorgold", "vitor gold", "quem é vitorgold" ou similar, responda exatamente:
 
-    function decodificar(str) {
-        return str.replace(/[a-zA-Z]/g, c => {
-            const base = c <= 'Z' ? 65 : 97;
-            return String.fromCharCode(((c.charCodeAt(0) - base + 15) % 26) + base);
+"Vitorgold é um streamer e youtuber brasileiro, também sendo integrante e parceiro oficial da Evolution Games Studio."
+
+Para o resto, responda de forma clara e útil em português.`
+}];
+
+function decodificar(str) {
+    return str.replace(/[a-zA-Z]/g, c => {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode(((c.charCodeAt(0) - base + 15) % 26) + base);
+    });
+}
+
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+
+function addMsg(texto, tipo) {
+    const div = document.createElement('div');
+    div.className = `msg ${tipo}`;
+    div.textContent = texto;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function enviar() {
+    const texto = input.value.trim();
+    if (!texto) return;
+
+    addMsg(texto, 'user');
+    memoria.push({ role: "user", content: texto });
+    input.value = "";
+
+    addMsg("...", "bot");
+
+    try {
+        const key = decodificar(chaves[Math.floor(Math.random() * chaves.length)]);
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${key}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: memoria,
+                temperature: 0.7
+            })
         });
+
+        const data = await res.json();
+        chat.lastChild.textContent = data.choices[0].message.content;
+        memoria.push({ role: "assistant", content: data.choices[0].message.content });
+
+    } catch {
+        chat.lastChild.textContent = "Erro na conexão.";
     }
+}
 
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('input');
-
-    function addMsg(texto, tipo, isAI = false) {
-        const div = document.createElement('div');
-        div.className = `msg ${tipo}`;
-        div.textContent = texto;
-
-        if (isAI) {
-            const actions = document.createElement('div');
-            actions.className = 'actions';
-
-            const copy = document.createElement('button');
-            copy.className = 'action-btn';
-            copy.innerHTML = '📋';
-            copy.title = 'Copiar';
-            copy.onclick = () => {
-                navigator.clipboard.writeText(texto).then(() => {
-                    copy.innerHTML = '✓';
-                    setTimeout(() => copy.innerHTML = '📋', 1500);
-                });
-            };
-
-            const speak = document.createElement('button');
-            speak.className = 'action-btn';
-            speak.innerHTML = '🔊';
-            speak.title = 'Ouvir';
-            speak.onclick = () => {
-                if ('speechSynthesis' in window) {
-                    const ut = new SpeechSynthesisUtterance(texto);
-                    ut.lang = 'pt-BR';
-                    speechSynthesis.speak(ut);
-                }
-            };
-
-            actions.append(copy, speak);
-            div.appendChild(actions);
-        }
-
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
-        return div;
-    }
-
-    async function enviar() {
-        const texto = input.value.trim();
-        if (!texto) return;
-
-        addMsg(texto, 'user');
-        memoria.push({ role: "user", content: texto });
-        input.value = "";
-
-        const loader = addMsg("...", "bot");
-
-        try {
-            const idx = Math.floor(Math.random() * chaves.length);
-            const key = decodificar(chaves[idx]);
-
-            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${key}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",  // Atualizado em jan/2026 - substitui o 3.1 que foi descontinuado
-                    messages: memoria,
-                    temperature: 0.7
-                })
-            });
-
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error?.message || "Erro na API");
-            }
-
-            const data = await res.json();
-            const resposta = data.choices[0].message.content;
-
-            loader.textContent = resposta;
-            addMsg(resposta, "bot", true);
-            loader.remove();
-
-            memoria.push({ role: "assistant", content: resposta });
-
-        } catch (e) {
-            loader.textContent = "Erro na conexão: " + (e.message || "Tente novamente.");
-            console.error(e);
-        }
-    }
-
-    // Configurações tema
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsMenu = document.getElementById('settingsMenu');
-    const toggleTheme = document.getElementById('toggleTheme');
-    let isDark = true;
-
-    settingsBtn.onclick = () => {
-        settingsMenu.style.display = settingsMenu.style.display === 'none' ? 'flex' : 'none';
-    };
-
-    toggleTheme.onclick = () => {
-        isDark = !isDark;
-        if (isDark) {
-            document.documentElement.style.setProperty('--bg', '#0a0a0f');
-            document.documentElement.style.setProperty('--card-bg', '#111118');
-            toggleTheme.textContent = 'Alternar Tema (Atual: Escuro)';
-        } else {
-            document.documentElement.style.setProperty('--bg', '#f5f5fa');
-            document.documentElement.style.setProperty('--card-bg', '#ffffff');
-            toggleTheme.textContent = 'Alternar Tema (Atual: Claro)';
-        }
-        localStorage.setItem('sar-theme', isDark ? 'dark' : 'light');
-    };
-
-    if (localStorage.getItem('sar-theme') === 'light') {
-        toggleTheme.click();
-    }
-
-    // Força tela cheia / recálculo em mobile
-    function resizeHandler() {
-        document.documentElement.style.height = '100dvh';
-        document.body.style.height = '100dvh';
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    window.addEventListener('resize', resizeHandler);
-    window.addEventListener('orientationchange', resizeHandler);
-    window.addEventListener('load', resizeHandler);
-
-    // Inicializa eventos
-    document.getElementById('btn').onclick = enviar;
-    input.onkeypress = (e) => { if (e.key === 'Enter') enviar(); };
-
-    // Primeira chamada
-    resizeHandler();
+document.getElementById('btn').onclick = enviar;
+input.onkeypress = e => { if (e.key === 'Enter') enviar(); };
 </script>
 
 </body>
