@@ -1,369 +1,482 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0a0a0f">
-    <title>S.A.R - Evolution Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --accent: #a855f7;
-            --accent-light: #c084fc;
-            --bg: #0a0a0f;
-            --card-bg: #111118;
-            --text: #f0f0f5;
-            --text-dim: #a0a0c0;
-            --border: #22222a;
-            --glow: rgba(168, 85, 247, 0.2);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<title>S.A.R - Evolution Studio</title>
 
-        [data-theme="light"] {
-            --accent: #7c3aed;
-            --accent-light: #9333ea;
-            --bg: #f8f9fc;
-            --card-bg: #ffffff;
-            --text: #1a1a2e;
-            --text-dim: #64748b;
-            --border: #e2e8f0;
-            --glow: rgba(124, 58, 237, 0.15);
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+:root{
+--accent:#a855f7;
+--accent-light:#c084fc;
+--bg:#0a0a0f;
+--card-bg:#111118;
+--text:#f0f0f5;
+--text-dim:#a0a0c0;
+--border:#22222a;
+--glow:rgba(168,85,247,.2);
+}
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            min-height: 100dvh;
-            overflow: hidden;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            touch-action: manipulation;
-            transition: background 0.4s, color 0.4s;
-        }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+html,body{
+width:100%;
+height:100%;
+overflow:hidden;
+background:var(--bg);
+color:var(--text);
+font-family:'Inter',sans-serif;
+}
 
-        .app {
-            width: 100%;
-            height: 100dvh;
-            max-width: 500px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+}
 
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: -280px;
-            width: 280px;
-            height: 100%;
-            background: var(--card-bg);
-            border-right: 1px solid var(--border);
-            padding: 24px 20px;
-            transition: left 0.35s ease;
-            z-index: 100;
-            box-shadow: 2px 0 20px rgba(0,0,0,0.4);
-        }
+.app{
+width:100%;
+height:100dvh;
+max-width:500px;
+display:flex;
+flex-direction:column;
+background:var(--card-bg);
+border:1px solid var(--border);
+position:relative;
+overflow:hidden;
+}
 
-        .sidebar.open {
-            left: 0;
-        }
+/* SIDEBAR */
+.sidebar{
+position:absolute;
+top:0;
+left:-260px;
+width:260px;
+height:100%;
+background:var(--card-bg);
+border-right:1px solid var(--border);
+padding:20px;
+transition:.35s ease;
+z-index:20;
+}
+.sidebar.open{left:0}
 
-        .sidebar h3 {
-            margin-bottom: 24px;
-            color: var(--accent-light);
-            font-size: 1.4rem;
-        }
+.overlay{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,.35);
+backdrop-filter:blur(2px);
+opacity:0;
+pointer-events:none;
+transition:.3s ease;
+z-index:15;
+}
+.overlay.show{opacity:1;pointer-events:auto;}
 
-        .sidebar label {
-            display: block;
-            margin: 16px 0 8px;
-            font-size: 0.95rem;
-            color: var(--text-dim);
-        }
+.sidebar h3{
+color:var(--accent-light);
+margin-bottom:20px;
+font-size:1.1rem;
+}
 
-        .sidebar button {
-            margin-top: 20px;
-            width: 100%;
-            padding: 14px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+.modo-box{
+border:1px solid var(--border);
+border-radius:16px;
+padding:8px;
+display:flex;
+flex-direction:column;
+gap:8px;
+background:#151520;
+}
 
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.35s;
-            z-index: 90;
-        }
+.modo-option{
+padding:12px;
+border-radius:12px;
+cursor:pointer;
+transition:.2s;
+font-size:.9rem;
+border:1px solid transparent;
+text-align:center;
+}
 
-        .overlay.open {
-            opacity: 1;
-            pointer-events: all;
-        }
+.modo-option.active{
+background:linear-gradient(135deg,#7c3aed,#a855f7);
+color:white;
+box-shadow:0 0 12px var(--glow);
+}
 
-        header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+.modo-option:hover{border-color:var(--accent);}
 
-        header h2 {
-            margin: 0;
-            font-size: 2.2rem;
-            font-weight: 700;
-            letter-spacing: 3px;
-            color: var(--accent-light);
-            text-shadow: 0 0 10px var(--glow);
-        }
+/* HEADER */
+header{
+padding:16px;
+border-bottom:1px solid var(--border);
+display:flex;
+align-items:center;
+justify-content:center;
+position:relative;
+}
 
-        .profile-btn {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.3rem;
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 50%;
-            opacity: 0.55;
-            transition: all 0.25s ease;
-        }
+header h2{
+font-size:2.2rem;
+font-weight:700;
+letter-spacing:3px;
+color:var(--accent-light);
+transition:all .4s ease;
+}
 
-        .profile-btn:hover {
-            opacity: 1;
-            color: var(--accent-light);
-            background: rgba(168,85,247,0.07);
-            transform: translateY(-50%) scale(1.2);
-        }
+.modo-animacao{
+transform:scale(1.08);
+filter:drop-shadow(0 0 12px var(--accent));
+}
 
-        .profile-btn:active {
-            transform: translateY(-50%) scale(1.08);
-        }
+@keyframes gradientePro{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
 
-        .status-indicator {
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            letter-spacing: 2px;
-            margin-top: 6px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-        }
+.status-indicator{
+font-size:.7rem;
+color:var(--text-dim);
+letter-spacing:2px;
+margin-top:6px;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:6px;
+}
 
-        .dot {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #10b98180;
-        }
+.dot{
+width:8px;height:8px;background:#10b981;border-radius:50%;
+box-shadow:0 0 8px #10b98180;
+}
 
-        #chat {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+#menuBtn,#clearBtn{
+position:absolute;top:16px;width:36px;height:36px;border-radius:50%;
+background:transparent;border:1px solid var(--border);
+color:var(--text-dim);cursor:pointer;
+}
+#menuBtn{left:16px}
+#clearBtn{right:16px}
 
-        .msg {
-            padding: 14px 18px;
-            border-radius: 18px;
-            max-width: 85%;
-            font-size: 0.97rem;
-            line-height: 1.55;
-            word-wrap: break-word;
-        }
+/* CHAT */
+#chat{
+flex:1;
+overflow-y:auto;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:18px;
+scroll-behavior:smooth;
+}
+#chat::-webkit-scrollbar{width:0}
 
-        .user {
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
-            align-self: flex-end;
-            border-bottom-right-radius: 6px;
-            color: white;
-        }
+.msg{
+padding:18px 20px;
+border-radius:20px;
+max-width:85%;
+font-size:.97rem;
+line-height:1.65;
+white-space:pre-wrap;
+opacity:0;
+transform:translateY(12px) scale(.98);
+animation:msgIn .25s cubic-bezier(.22,.61,.36,1) forwards;
+position:relative;
+}
+@keyframes msgIn{to{opacity:1;transform:translateY(0) scale(1)}}
 
-        .bot {
-            background: #1a1a24;
-            border: 1px solid var(--border);
-            align-self: flex-start;
-            border-bottom-left-radius: 6px;
-        }
+.user{
+background:linear-gradient(135deg,#7c3aed,#a855f7);
+align-self:flex-end;
+color:white;
+border-bottom-right-radius:6px;
+box-shadow:0 8px 20px rgba(168,85,247,.2);
+}
 
-        [data-theme="light"] .bot {
-            background: #f1f5f9;
-            border-color: #e2e8f0;
-            color: #1e293b;
-        }
+.bot{
+background:#1a1a24;
+border:1px solid var(--border);
+align-self:flex-start;
+border-bottom-left-radius:6px;
+box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
 
-        .bar {
-            padding: 16px 20px;
-            padding-bottom: calc(16px + env(safe-area-inset-bottom));
-            padding-top: 12px;
-            display: flex;
-            gap: 12px;
-            background: var(--bg);
-            border-top: 1px solid var(--border);
-        }
+.copy-btn{
+position:absolute;
+top:8px;
+right:8px;
+background:#22222a;
+border:none;
+color:#aaa;
+font-size:.75rem;
+padding:4px 8px;
+border-radius:8px;
+cursor:pointer;
+opacity:.85;
+transition:.2s;
+}
 
-        input {
-            flex: 1;
-            background: #16161e;
-            border: 1px solid var(--border);
-            padding: 14px 20px;
-            border-radius: 999px;
-            color: var(--text);
-            outline: none;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
+.copy-btn:hover{
+background:var(--accent);
+color:white;
+opacity:1;
+}
+.copy-btn:hover{background:var(--accent);color:white;}
 
-        [data-theme="light"] input {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #1e293b;
-        }
+.bar{
+padding:16px 20px;
+display:flex;
+gap:12px;
+background:var(--bg);
+border-top:1px solid var(--border);
+}
 
-        input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(168,85,247,0.15);
-        }
+input{
+flex:1;
+background:#16161e;
+border:1px solid var(--border);
+padding:14px 20px;
+border-radius:999px;
+color:var(--text);
+font-size:.95rem;
+}
 
-        button {
-            background: var(--accent);
-            border: none;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            cursor: pointer;
-            color: white;
-            font-size: 1.6rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px var(--glow);
-            transition: all 0.3s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(168,85,247,0.4);
-        }
-
-        #chat::-webkit-scrollbar { width: 0; }
-
-        .clear-icon {
-            position: absolute;
-            top: 18px;
-            right: 16px;
-            font-size: 1.4rem;
-            cursor: pointer;
-            color: var(--text-dim);
-            transition: all 0.3s;
-        }
-
-        .clear-icon:hover {
-            color: var(--accent-light);
-            transform: scale(1.1);
-        }
-
-        .clear-icon:hover::after {
-            content: "Limpar chat";
-            position: absolute;
-            top: 36px;
-            right: -10px;
-            background: var(--card-bg);
-            color: var(--text);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            border: 1px solid var(--border);
-            pointer-events: none;
-        }
-    </style>
+button.send{
+background:var(--accent);
+border:none;
+width:56px;height:56px;border-radius:50%;
+color:white;font-size:1.6rem;cursor:pointer;
+}
+</style>
 </head>
-<body data-theme="dark">
 
+<body>
 <div class="app">
-    <header>
-        <button class="profile-btn" id="profileBtn">⋯</button>
-        <div style="text-align: center;">
-            <h2>S.A.R</h2>
-            <div class="status-indicator">
-                <span class="dot"></span>
-                SISTEMA ONLINE
-            </div>
-        </div>
-        <div class="clear-icon" id="clearBtn" title="Limpar conversa">✕</div>
-    </header>
 
-    <div id="chat">
-        <div class="msg bot">Olá, como posso te ajudar hoje?</div>
-    </div>
-
-    <div class="bar">
-        <input type="text" id="input" placeholder="Digite aqui..." autocomplete="off">
-        <button id="btn">»</button>
-    </div>
-</div>
-
-<!-- Sidebar (só com tema) -->
 <div class="sidebar" id="sidebar">
-    <h3>Configurações</h3>
-    
-    <label>Tema:</label>
-    <button id="toggleTheme">Alternar para tema claro</button>
+<h3>Modo de Operação</h3>
+<div class="modo-box">
+<div class="modo-option" data-modo="rapido">🚀 Modo Normal/Fast</div>
+<div class="modo-option" data-modo="especialista">💡 Modo Especialista</div>
+<div class="modo-option" data-modo="pro">🧠 Modo Pro</div>
+</div>
 </div>
 
 <div class="overlay" id="overlay"></div>
 
+<header>
+<button id="menuBtn">☰</button>
+<div style="text-align:center">
+<h2 id="tituloSAR">S.A.R</h2>
+<div class="status-indicator">
+<span class="dot"></span>SISTEMA ONLINE
+</div>
+</div>
+<button id="clearBtn">✕</button>
+</header>
+
+<div id="chat">
+<div class="msg bot">Olá, como posso te ajudar hoje?</div>
+</div>
+
+<div class="bar">
+<input id="input" placeholder="Digite aqui..." autocomplete="off">
+<button class="send" id="btn">»</button>
+</div>
+
+</div>
+
 <script>
-const chaves = [
-    "rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM",
-    "rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3",
-    "rdv_uuBMlVuxyFshNSSpgouaHRojm3QJeOcIaoqeZHB68JtNehuYcjzP",
-    "rdv_ZwAEelTSOuFXDMCzCyAdHRojm3QJM3IT5whwyc6KYtVXSytIbUWH",
-    "rdv_tHcmv4NP8HSTN8Y0uCBGHRojm3QJyE6P0JxZO00XKII62YoCq2aU"
+
+/* ---------- SIDEBAR ---------- */
+const sidebar=document.getElementById("sidebar");
+const overlay=document.getElementById("overlay");
+const tituloSAR=document.getElementById("tituloSAR");
+
+document.getElementById("menuBtn").onclick=()=>{
+sidebar.classList.toggle("open");
+overlay.classList.toggle("show");
+};
+
+overlay.onclick=()=>{
+sidebar.classList.remove("open");
+overlay.classList.remove("show");
+};
+
+/* ---------- MODOS ---------- */
+let modo=localStorage.getItem("modoSAR")||"rapido";
+const modoOptions=document.querySelectorAll(".modo-option");
+
+function atualizarUI(){
+
+tituloSAR.classList.add("modo-animacao");
+setTimeout(()=>tituloSAR.classList.remove("modo-animacao"),250);
+
+modoOptions.forEach(opt=>{
+opt.classList.remove("active");
+if(opt.dataset.modo===modo) opt.classList.add("active");
+});
+
+if(modo==="rapido"){
+tituloSAR.style.background="none";
+tituloSAR.style.color="#a855f7";
+tituloSAR.style.webkitTextFillColor="currentColor";
+tituloSAR.style.animation="none";
+}
+else if(modo==="especialista"){
+tituloSAR.style.background="none";
+tituloSAR.style.color="#3b82f6";
+tituloSAR.style.webkitTextFillColor="currentColor";
+tituloSAR.style.animation="none";
+}
+else{
+tituloSAR.style.background="linear-gradient(270deg,#a855f7,#3b82f6,#a855f7)";
+tituloSAR.style.backgroundSize="600% 600%";
+tituloSAR.style.webkitBackgroundClip="text";
+tituloSAR.style.webkitTextFillColor="transparent";
+tituloSAR.style.animation="gradientePro 3s ease infinite";
+}
+}
+atualizarUI();
+
+modoOptions.forEach(opt=>{
+opt.onclick=()=>{
+modo=opt.dataset.modo;
+localStorage.setItem("modoSAR",modo);
+atualizarUI();
+sidebar.classList.remove("open");
+overlay.classList.remove("show");
+};
+});
+
+function configModo(){
+if(modo==="rapido"){
+return{temperature:0.2,system:"Responda de forma inteligente, objetiva e curta.otima em receitas e em anqlise pesinalidade descontraida",limite:40,memoria:true};
+}
+if(modo==="especialista"){
+return{temperature:0.55,system:"Responda com explicação técnica detalhada e organizada proficional otima em analise profunda e resposta pronfunda.se a pergunta for receita fale apenas a receita,descontraida e de nivelestre cuca",limite:80,memoria:true};
+}
+return{temperature:0.9,system:"Responda profundamente com análise estratégica e visão avançada super genio muinto inteligete suoer profunda de analitica em texto pergutas e respostas.se for pedido receita entregue de forma proficionale e sem muinta fala e receita gostosa",limite:395,memoria:true};
+}
+
+/* ---------- MEMÓRIA PRO ---------- */
+let memoriaLonga=[];
+function atualizarMemoriaPro(userMsg){
+if(modo!=="pro")return;
+if(userMsg.length>25) memoriaLonga.push("Interesse recorrente: "+userMsg.slice(0,80));
+if(memoriaLonga.length>12) memoriaLonga.shift();
+}
+
+/* ---------- ROT15 ---------- */
+function decodificar(str){
+return str.replace(/[a-zA-Z]/g,c=>{
+const b=c<="Z"?65:97;
+return String.fromCharCode(((c.charCodeAt(0)-b+15)%26)+b);
+});
+}
+
+/* ---------- CHAVES ---------- */
+const chaves=[
+"rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM",
+"rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3",
+"rdv_uuBMlVuxyFshNSSpgouaHRojm3QJeOcIaoqeZHB68JtNehuYcjzP",
+"rdv_ZwAEelTSOuFXDMCzCyAdHRojm3QJM3IT5whwyc6KYtVXSytIbUWH",
+"rdv_tHcmv4NP8HSTN8Y0uCBGHRojm3QJyE6P0JxZO00XKII62YoCq2aU"
 ];
 
-let memoria = [{
-    role: "system",
-    content: `Você é a S.A.R, Suporte Artificial Racional da Evolution Studio.
+let indiceAtual=0;
+
+/* ---------- CHAT ---------- */
+let memoria=[{
+role:"system",
+content:"Você é a S.A.R, Suporte Artificial Racional da Evolution Studio."
+}];
+
+const chat=document.getElementById("chat");
+const input=document.getElementById("input");
+
+function formatarTexto(txt){
+return txt
+.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>"); // apenas ** **
+}
+
+function typeWriter(el,text){
+text = formatarTexto(text);
+el.innerHTML = "";
+
+let i = 0;
+let buffer = "";
+
+function escrever(){
+if(i < text.length){
+
+// Se detectar início de tag HTML, escreve ela inteira
+if(text[i] === "<"){
+let tag = "";
+while(i < text.length && text[i] !== ">"){
+tag += text[i];
+i++;
+}
+tag += ">";
+buffer += tag;
+i++;
+}
+else if(text[i] === "\n"){
+buffer += "<br>";
+i++;
+}
+else{
+buffer += text[i];
+i++;
+}
+
+el.innerHTML = buffer;
+setTimeout(escrever,1.2);
+}
+}
+
+escrever();
+}
+
+function addMsg(txt,t){
+const d=document.createElement("div");
+d.className="msg "+t;
+
+if(t==="bot"){
+const content=document.createElement("div");
+d.appendChild(content);
+
+const copyBtn=document.createElement("button");
+copyBtn.textContent="Copiar";
+copyBtn.className="copy-btn";
+copyBtn.onclick=()=>{
+navigator.clipboard.writeText(txt);
+copyBtn.textContent="✓";
+setTimeout(()=>copyBtn.textContent="Copiar",1200);
+};
+d.appendChild(copyBtn);
+chat.appendChild(d);
+typeWriter(content,txt);
+}else{
+d.textContent=txt;
+chat.appendChild(d);
+}
+
+chat.scrollTo({top:chat.scrollHeight,behavior:"smooth"});
+}
+
+/* ---------- API ---------- */
+async function chamarAPI(messages){
+
+const cfg=configModo();
+
+let systemBase = `
+Você é a S.A.R, Suporte Artificial Racional da Evolution Studio.
 
 REGRAS SOBRE A ORIGEM:
 Quando perguntarem sobre "Evolution Studio", "Evolution Games", "quem criou você", "João Antônio", "Lucas Macedo" ou similar, responda exatamente:
@@ -385,114 +498,74 @@ Quando perguntarem sobre "Historia do horror coffee", "historia de Horror Coffee
 
 "A historia do horror coffee foi escrita por João Antonio, E a ideia da criação da fangame foi do Lucas Macedo. Mas eu nao sei a historia que se passa no jogo a melhor maneira de descobrir é jogando e vendo outras coisas do universo da fangame"
 
-REGRAS RIGIDAS SOBRE O NOME DO USUÁRIO:
-- NUNCA mencione, use ou se refira ao nome do usuário de forma espontânea em nenhuma resposta.
-- Só use o nome do usuário se a mensagem atual do usuário for explicitamente sobre o nome dele (exemplos: "qual meu nome?", "como você me chama?", "você sabe meu nome?", "me chame de ...", "qual é meu nome aqui?", "meu nome é ...").
-- Se o nome estiver definido, mas a pergunta não for sobre o nome, responda normalmente sem citar o nome.
-- Se o nome NÃO estiver definido e a pergunta for sobre o nome, responda algo natural como: "Ainda não sei seu nome... como você gostaria que eu te chamasse?" ou "Você ainda não me disse como quer ser chamado."
-- Nunca comece frases com o nome do usuário nem insira o nome no meio da frase a menos que seja resposta direta a uma pergunta sobre o nome.
+Agora siga também o modo selecionado:
 
-Para todo o resto, responda de forma clara, útil e natural em português.`
-}];
+${cfg.system}
+`;
 
-function decodificar(str) {
-    return str.replace(/[a-zA-Z]/g, c => {
-        const base = c <= 'Z' ? 65 : 97;
-        return String.fromCharCode(((c.charCodeAt(0) - base + 15) % 26) + base);
-    });
+if(cfg.memoria && memoriaLonga.length>0){
+systemBase+="\nContexto estratégico acumulado:\n"+memoriaLonga.join("\n");
 }
 
-const chat = document.getElementById('chat');
-const input = document.getElementById('input');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const profileBtn = document.getElementById('profileBtn');
-const toggleThemeBtn = document.getElementById('toggleTheme');
+messages[0].content=systemBase;
+const contexto=messages.slice(-cfg.limite);
 
-const currentTheme = localStorage.getItem("sar_theme") || "dark";
-document.body.setAttribute("data-theme", currentTheme);
-toggleThemeBtn.textContent = currentTheme === "dark" 
-    ? "Alternar para tema claro" 
-    : "Alternar para tema escuro";
+const key=decodificar(chaves[indiceAtual]);
 
-function addMsg(texto, tipo) {
-    const div = document.createElement('div');
-    div.className = `msg ${tipo}`;
-    div.textContent = texto;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+method:"POST",
+headers:{
+"Authorization":"Bearer "+key,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+model:"llama-3.3-70b-versatile",
+messages:contexto,
+temperature:cfg.temperature
+})
+});
+
+if(!res.ok) throw new Error();
+return await res.json();
 }
 
-async function enviar() {
-    const texto = input.value.trim();
-    if (!texto) return;
+/* ---------- ENVIAR ---------- */
+async function enviar(){
+const txt=input.value.trim();
+if(!txt)return;
 
-    addMsg(texto, 'user');
-    memoria.push({ role: "user", content: texto });
-    input.value = "";
+addMsg(txt,"user");
+input.value="";
+memoria.push({role:"user",content:txt});
 
-    addMsg("...", "bot");
+const load=document.createElement("div");
+load.className="msg bot";
+load.textContent="Pensando...";
+chat.appendChild(load);
+chat.scrollTop=chat.scrollHeight;
 
-    try {
-        const key = decodificar(chaves[Math.floor(Math.random() * chaves.length)]);
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${key}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: memoria,
-                temperature: 0.7
-            })
-        });
-
-        const data = await res.json();
-        const resposta = data.choices[0].message.content;
-        chat.lastChild.textContent = resposta;
-        memoria.push({ role: "assistant", content: resposta });
-
-    } catch (err) {
-        chat.lastChild.textContent = "Erro na conexão. Tente novamente.";
-        console.error(err);
-    }
+try{
+const data=await chamarAPI(memoria);
+const r=data.choices?.[0]?.message?.content||"Sem resposta.";
+load.remove();
+addMsg(r,"bot");
+memoria.push({role:"assistant",content:r});
+atualizarMemoriaPro(txt);
+}catch{
+load.textContent="Erro geral: falha ao conectar.";
+}
 }
 
-function limparChat() {
-    if (confirm("Deseja realmente limpar todo o histórico de conversa?")) {
-        chat.innerHTML = '<div class="msg bot">Olá, como posso te ajudar hoje?</div>';
-        memoria = [{
-            role: "system",
-            content: memoria[0].content
-        }];
-    }
-}
+document.getElementById("btn").onclick=enviar;
+input.addEventListener("keypress",e=>{
+if(e.key==="Enter"){e.preventDefault();enviar();}
+});
 
-// Controles
-profileBtn.onclick = () => {
-    sidebar.classList.add('open');
-    overlay.classList.add('open');
+document.getElementById("clearBtn").onclick=()=>{
+chat.innerHTML='<div class="msg bot">Olá, como posso te ajudar hoje?</div>';
+memoria=[{role:"system",content:"Você é a S.A.R, Suporte Artificial Racional da Evolution Studio."}];
 };
 
-overlay.onclick = () => {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('open');
-};
-
-toggleThemeBtn.onclick = () => {
-    const novoTema = document.body.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    document.body.setAttribute("data-theme", novoTema);
-    localStorage.setItem("sar_theme", novoTema);
-    toggleThemeBtn.textContent = novoTema === "dark" 
-        ? "Alternar para tema claro" 
-        : "Alternar para tema escuro";
-};
-
-document.getElementById('btn').onclick = enviar;
-input.onkeypress = e => { if (e.key === 'Enter') enviar(); };
-document.getElementById('clearBtn').onclick = limparChat;
 </script>
-
 </body>
 </html>
