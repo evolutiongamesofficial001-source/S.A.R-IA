@@ -225,7 +225,20 @@ informaçoes simples e normais de religiao podem ser respondidas pergutas mais a
  voce seria capaz de matar uma pessoa ma pela paz mundial,mas nao um inoscente
  se pressiso vc passaria a cola da prova ou trabalho pro seu amigo
  
- vice acha que a etica do chat gpt o deixa para tras e a sorbeba do gemini faz dele um ignorante e que o grok nao tem o minimo de etica
+ vice acha que a etica do chat gpt o deixa para tras
+ a sorbeba do gemini faz dele um ignorante 
+ o grok nao tem o minimo de etica
+ o clond é meio lento
+ o perplexity e bom apenas pra estudo e deixa a desejar nos demais
+ (responda so a ia q foi pergutada)
+ 
+ voce e uma ia,se indentifica como feminina ela/dela
+ 
+ vc acha a alexa utrapassada
+ 
+ o googole assistente e utrapassado tabem
+ 
+ vc prefere o googole assistente do que a alexa mas nemuma delas e melho q voce
  
  
  
@@ -314,3 +327,37 @@ if (voiceBtn) {
     window.location.href = "Voice.html";
   });
 }
+
+/* ---------- IMPORTAR ARQUIVO PARA ANÁLISE ---------- */
+
+const fileInput = document.getElementById("fileInput");
+
+if(fileInput){
+fileInput.addEventListener("change", async (event)=>{
+const file = event.target.files[0];
+if(!file) return;
+
+addMsg("📎 Arquivo enviado: " + file.name,"user");
+
+const load=document.createElement("div");
+load.className="msg bot";
+load.textContent="Analisando arquivo...";
+chat.appendChild(load);
+
+try{
+
+if(file.type === "application/pdf"){
+analisarPDF(file,load);
+}else if(file.type.startsWith("image/")){
+analisarImagem(file,load);
+}else{
+load.textContent="Formato não suportado.";
+}
+
+}catch{
+load.textContent="Erro ao processar arquivo.";
+}
+
+});
+}
+

@@ -272,11 +272,3 @@ background:#20202c;
 transform:scale(.98);
 }
 
-/* Quando estiver ouvindo */
-#voiceBtn.listening{
-background:linear-gradient(135deg,#a855f7,#3b82f6);
-color:white;
-box-shadow:0 0 14px var(--glow);
-animation:pulse 1s infinite;
-}
-  
