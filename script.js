@@ -263,7 +263,7 @@ messages[0].content=systemBase;
 
 const key=decodificar(chaves[indiceAtual]);
 
-let modelo="llama-3.3-70b-versatile";
+let modelo="gpt-oss-120b";
 
 try{
 const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
