@@ -23,11 +23,9 @@
         <div class="modo-option" data-modo="pro">🧠 Modo Pro</div>
       </div>
 
-      <!-- BOTÃO MODO VOZ ABAIXO DOS MODOS -->
       <div style="margin-top:20px;">
-<button id="scrollBtn">↓</button>
+        <button id="scrollBtn">↓</button>
       </div>
-
     </div>
 
     <!-- OVERLAY -->
@@ -35,29 +33,27 @@
 
     <!-- HEADER -->
     <header>
-      <button id="menuBtn">☰</button>
+      <button id="menuBtn" aria-label="Menu">☰</button>
 
-      <div style="text-align:center">
+      <div class="header-center">
         <h2 id="tituloSAR">S.A.R</h2>
         <div class="status-indicator">
           <span class="dot"></span>SISTEMA ONLINE
         </div>
       </div>
 
-      <button id="clearBtn">✕</button>
+      <button id="clearBtn" aria-label="Limpar chat">✕</button>
     </header>
 
     <!-- CHAT -->
     <div id="chat">
-      <div class="msg bot">Olá, como posso te ajudar hoje?</div>
+      <div class="msg bot intro-msg">Olá, como posso te ajudar hoje?</div>
     </div>
-
-    
 
     <!-- BARRA INPUT -->
     <div class="bar">
-      <input id="input" placeholder="Digite aqui..." autocomplete="off">
-      <button class="send" id="btn">»</button>
+      <input id="input" placeholder="Digite aqui..." autocomplete="off" spellcheck="false">
+      <button class="send" id="btn" aria-label="Enviar">»</button>
     </div>
 
   </div>
