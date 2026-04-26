@@ -675,17 +675,12 @@ chat.addEventListener("scroll", () => {
 scrollBtn.onclick = () => chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
 
 /* ====================================================
-   INIT — carrega o chat mais recente do LS (se existir)
+   INIT — sempre inicia um chat novo em memória
    ==================================================== */
 (function init() {
   atualizarUI();
-  const chats = carregarChats();
-  const lista  = Object.values(chats).sort((a,b) => b.criadoEm - a.criadoEm);
-  if (lista.length > 0) {
-    carregarChatTela(lista[0].id);
-  } else {
-    // Nenhum histórico — tela em branco com slot em memória
-    chat.innerHTML = '<div class="msg bot intro-msg">Olá, como posso te ajudar hoje?</div>';
-  }
+  // Sempre começa com slot vazio em memória (não carrega histórico)
+  novoSlot();
+  chat.innerHTML = '<div class="msg bot intro-msg">Olá, como posso te ajudar hoje?</div>';
   renderHistorico();
 })();
