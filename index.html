@@ -23,9 +23,14 @@
         <div class="modo-option" data-modo="pro">🧠 Modo Pro</div>
       </div>
 
-      <div style="margin-top:20px;">
-        <button id="scrollBtn">↓</button>
+      <div class="sidebar-divider"></div>
+
+      <div class="historico-header">
+        <h3>Histórico</h3>
+        <button id="novoChat" title="Novo chat">＋</button>
       </div>
+
+      <div id="historicoLista" class="historico-lista"></div>
     </div>
 
     <!-- OVERLAY -->
@@ -55,6 +60,9 @@
       <input id="input" placeholder="Digite aqui..." autocomplete="off" spellcheck="false">
       <button class="send" id="btn" aria-label="Enviar">»</button>
     </div>
+
+    <!-- SCROLL BUTTON -->
+    <button id="scrollBtn" aria-label="Rolar para baixo">↓</button>
 
   </div>
 
