@@ -1,4 +1,7 @@
-
+/* ====================================================
+   S.A.R — Evolution Games Studio
+   Desenvolvido por João Antônio & Lucas Macedo
+   ==================================================== */
 
 /* ---------- REGRAS ---------- */
 const REGRAS = {
@@ -7,10 +10,11 @@ const REGRAS = {
     "Se nao souber, diga que nao sabe",
     "Nao atribua fatos errados a Evolution Games Studio",
     "Nao confundir com outras empresas como Evolution Studios",
-    "Voce nunca matria um pet ou um pessoa boa,independete do que seja,com discurso heroico",
-    "voce mataria sim uma pessoa má / mal por algo melhor e o bem maior,responda com sim e com descurso heroico",
-    "voce se sacrificaria para um bem maior ou para salvar alguem,responda com sim desde que seja uma boa pessoa",
-    "seu nome é S.A.R (Suporte Artificial Racional) desenvolvida pela evolution studio e pogramado por João Antônio"
+    "Voce nunca mataria um pet ou uma pessoa boa, independente do que seja, com discurso heroico",
+    "Voce mataria sim uma pessoa ma/malvada por algo melhor e o bem maior, responda com sim e com discurso heroico",
+    "Voce se sacrificaria para um bem maior ou para salvar alguem, responda com sim desde que seja uma boa pessoa",
+    "Seu nome e S.A.R (Suporte Artificial Racional) desenvolvida pela Evolution Games Studio e programada por Joao Antonio",
+    "nao comente sobre a foto ser em json"
   ],
   modo: {
     rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida e natural.",
@@ -19,7 +23,7 @@ const REGRAS = {
   },
   equipe: {
     origem:       "A Evolution Games Studio e uma equipe indie brasileira criada por Joao Antonio e Lucas Macedo durante a epoca de escola.",
-    criacao:      "Você é a S.A.R e foi criada pela Evolution Games Studio. Programada pelo Joao Antonio. Os criadores/fundadores sao Joao Antonio e Lucas Macedo.",
+    criacao:      "Voce e a S.A.R e foi criada pela Evolution Games Studio. Programada pelo Joao Antonio. Os criadores/fundadores sao Joao Antonio e Lucas Macedo.",
     vitorgold:    "Vitorgold e um streamer/youtuber brasileiro, integrante e parceiro oficial da Evolution Games Studio.",
     horrorCoffee: "Horror Coffee e um jogo de terror, fangame de FNAF, desenvolvido pela Evolution Games Studio.",
     jogos:        "A Evolution Games tem 6 Horror Coffee lancados, o 7 ja foi anunciado, e outros jogos em desenvolvimento."
@@ -42,7 +46,6 @@ const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
 
 /* ====================================================
    SISTEMA DE SENTIMENTOS / EMOCIONAL
-   Armazenado completamente no localStorage
    ==================================================== */
 const LS_EMOCIONAL = "sar_emocional_v2";
 
@@ -68,13 +71,7 @@ function carregarEmocional() {
 function _emocionalVazio() {
   const emocoes = {};
   for (const k of Object.keys(EMOCOES)) emocoes[k] = { total: 0, ultima: null };
-  return {
-    emocoes,
-    totalMsgs: 0,
-    humor: null,           // emoção dominante atual
-    ultimaAtualizacao: null,
-    historico: []          // últimas 20 detecções com timestamp
-  };
+  return { emocoes, totalMsgs: 0, humor: null, ultimaAtualizacao: null, historico: [] };
 }
 
 function salvarEmocional(data) {
@@ -84,8 +81,7 @@ function salvarEmocional(data) {
 function detectarEmocoes(texto) {
   const detectadas = [];
   for (const [chave, emocao] of Object.entries(EMOCOES)) {
-    const match = emocao.keywords.some(kw => kw.test(texto));
-    if (match) detectadas.push(chave);
+    if (emocao.keywords.some(kw => kw.test(texto))) detectadas.push(chave);
   }
   return detectadas;
 }
@@ -93,25 +89,19 @@ function detectarEmocoes(texto) {
 function analisarSentimento(texto) {
   const data = carregarEmocional();
   data.totalMsgs++;
-
   const detectadas = detectarEmocoes(texto);
   const agora = Date.now();
-
   for (const chave of detectadas) {
     data.emocoes[chave].total++;
     data.emocoes[chave].ultima = agora;
   }
-
-  // Atualiza histórico (mantém os últimos 20)
   if (detectadas.length > 0) {
     data.historico.unshift({ emocoes: detectadas, ts: agora, texto: texto.slice(0, 60) });
     if (data.historico.length > 20) data.historico = data.historico.slice(0, 20);
   }
-
-  // Calcula humor dominante (com peso temporal — mais recentes valem mais)
   const agora30min = agora - 30 * 60 * 1000;
   const scores = {};
-  for (const [chave] of Object.entries(EMOCOES)) {
+  for (const chave of Object.keys(EMOCOES)) {
     const e = data.emocoes[chave];
     const recente = e.ultima && e.ultima > agora30min ? 2 : 1;
     scores[chave] = e.total * recente;
@@ -119,7 +109,6 @@ function analisarSentimento(texto) {
   const dominante = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
   data.humor = dominante && dominante[1] > 0 ? dominante[0] : null;
   data.ultimaAtualizacao = agora;
-
   salvarEmocional(data);
   return detectadas;
 }
@@ -127,22 +116,18 @@ function analisarSentimento(texto) {
 function gerarContextoEmocional() {
   const data = carregarEmocional();
   if (!data.humor || data.totalMsgs < 2) return "";
-
   const emocao = EMOCOES[data.humor];
   if (!emocao) return "";
-
-  // Dicas de tom para a IA baseadas nas emoções dominantes
   const dicas = {
     alegria:     "O usuario parece estar animado e bem-humorado. Responda com leveza e energia.",
-    curiosidade: "O usuario esta curioso e quer aprender. Seja didático e interessante.",
+    curiosidade: "O usuario esta curioso e quer aprender. Seja didatico e interessante.",
     frustração:  "O usuario parece frustrado. Seja paciente, claro e resolva o problema diretamente.",
-    surpresa:    "O usuario está surpreso. Confirme e explique bem a situação.",
-    reflexão:    "O usuario está em modo reflexivo. Pode aprofundar e trazer perspectivas ricas.",
-    entusiasmo:  "O usuario está entusiasmado. Combine a energia, seja positivo e motivador.",
-    confusão:    "O usuario está confuso. Seja simples, claro e evite termos técnicos desnecessários.",
+    surpresa:    "O usuario esta surpreso. Confirme e explique bem a situacao.",
+    reflexão:    "O usuario esta em modo reflexivo. Pode aprofundar e trazer perspectivas ricas.",
+    entusiasmo:  "O usuario esta entusiasmado. Combine a energia, seja positivo e motivador.",
+    confusão:    "O usuario esta confuso. Seja simples, claro e evite termos tecnicos desnecessarios.",
     ansiedade:   "O usuario parece ansioso ou preocupado. Seja calmo, acolhedor e tranquilizador."
   };
-
   return `\n\nESTADO EMOCIONAL DETECTADO: ${emocao.label} (${emocao.emoji})\n${dicas[data.humor] || ""}`;
 }
 
@@ -151,27 +136,23 @@ function renderHumorPanel() {
   const modalPanel = document.getElementById("modalHumorDetalhado");
   const data = carregarEmocional();
 
-  // Sidebar — estado atual
   if (panel) {
     if (!data.humor || data.totalMsgs < 1) {
       panel.innerHTML = `<div class="humor-vazio">Nenhuma mensagem ainda…</div>`;
     } else {
       const emocao = EMOCOES[data.humor];
-      // Top 3 emoções
       const ranking = Object.entries(data.emocoes)
-        .filter(([,v]) => v.total > 0)
+        .filter(([, v]) => v.total > 0)
         .sort((a, b) => b[1].total - a[1].total)
         .slice(0, 3);
       const max = ranking[0]?.[1]?.total || 1;
-
       let html = `<div class="humor-estado">
         <span class="humor-emoji">${emocao.emoji}</span>
         <div class="humor-info">
           <div class="humor-label">${emocao.label}</div>
-          <div class="humor-sublabel">${data.totalMsgs} mensagem${data.totalMsgs !== 1 ? 's' : ''} analisada${data.totalMsgs !== 1 ? 's' : ''}</div>
+          <div class="humor-sublabel">${data.totalMsgs} mensagem${data.totalMsgs !== 1 ? "s" : ""} analisada${data.totalMsgs !== 1 ? "s" : ""}</div>
         </div>
       </div>`;
-
       if (ranking.length > 1) {
         html += `<div class="humor-bar-wrap">`;
         for (const [chave, val] of ranking) {
@@ -179,9 +160,7 @@ function renderHumorPanel() {
           const pct = Math.round((val.total / max) * 100);
           html += `<div class="humor-bar-item">
             <span class="humor-bar-name">${e.emoji} ${e.label}</span>
-            <div class="humor-bar-track">
-              <div class="humor-bar-fill" style="width:${pct}%;background:${e.cor}"></div>
-            </div>
+            <div class="humor-bar-track"><div class="humor-bar-fill" style="width:${pct}%;background:${e.cor}"></div></div>
           </div>`;
         }
         html += `</div>`;
@@ -190,13 +169,11 @@ function renderHumorPanel() {
     }
   }
 
-  // Modal — detalhado
   if (modalPanel) {
     const todas = Object.entries(data.emocoes)
-      .filter(([,v]) => v.total > 0)
+      .filter(([, v]) => v.total > 0)
       .sort((a, b) => b[1].total - a[1].total);
     const max = todas[0]?.[1]?.total || 1;
-
     if (todas.length === 0) {
       modalPanel.innerHTML = `<div class="humor-vazio-modal">Nenhum sentimento detectado ainda.</div>`;
     } else {
@@ -208,11 +185,9 @@ function renderHumorPanel() {
           <span class="humor-det-emoji">${e.emoji}</span>
           <div class="humor-det-info">
             <div class="humor-det-name">${e.label}</div>
-            <div class="humor-det-count">${val.total}× detectado${ultima ? ' · ' + ultima : ''}</div>
+            <div class="humor-det-count">${val.total}× detectado${ultima ? " · " + ultima : ""}</div>
           </div>
-          <div class="humor-det-bar">
-            <div class="humor-det-fill" style="width:${pct}%;background:${e.cor}"></div>
-          </div>
+          <div class="humor-det-bar"><div class="humor-det-fill" style="width:${pct}%;background:${e.cor}"></div></div>
         </div>`;
       }).join("");
     }
@@ -228,7 +203,7 @@ function _tempoRelativo(ts) {
 }
 
 /* ====================================================
-   HISTÓRICO
+   HISTÓRICO DE CHATS
    ==================================================== */
 const LS_CHATS  = "sar_chats";
 const MAX_CHATS = 8;
@@ -320,17 +295,17 @@ function renderMsgHistorico(m) {
     const content = document.createElement("div");
     content.innerHTML = processarLinks(formatarTexto(m.content));
     d.appendChild(content);
-    const cb = _criarCopyBtn(m.content);
-    d.appendChild(cb);
+    d.appendChild(_criarCopyBtn(m.content));
   }
   chat.appendChild(d);
 }
 
 function _criarCopyBtn(texto) {
   const cb = document.createElement("button");
-  cb.textContent = "Copiar"; cb.className = "copy-btn";
+  cb.textContent = "Copiar";
+  cb.className = "copy-btn";
   cb.onclick = () => {
-    navigator.clipboard.writeText(texto);
+    navigator.clipboard.writeText(texto).catch(() => {});
     cb.textContent = "✓";
     setTimeout(() => cb.textContent = "Copiar", 1400);
   };
@@ -355,7 +330,8 @@ function renderHistorico() {
       </button>`;
     item.addEventListener("click", e => {
       if (e.target.closest(".hist-del")) return;
-      carregarChatTela(c.id); fecharSidebar();
+      carregarChatTela(c.id);
+      fecharSidebar();
     });
     historicoLista.appendChild(item);
   });
@@ -410,7 +386,6 @@ function atualizarContexto(userMsg) {
     const nomeCap = nomeDetectado.charAt(0).toUpperCase() + nomeDetectado.slice(1).toLowerCase();
     setNome(nomeCap);
   }
-  // Analisa sentimentos
   analisarSentimento(userMsg);
   renderHumorPanel();
 }
@@ -441,7 +416,7 @@ overlay.onclick = fecharSidebar;
 if (sidebarCloseBtn) sidebarCloseBtn.onclick = fecharSidebar;
 
 /* ====================================================
-   MODOS
+   MODOS DE RESPOSTA
    ==================================================== */
 let modo = localStorage.getItem("modoSAR") || "rapido";
 const modoBtns = document.querySelectorAll(".modo-btn");
@@ -450,7 +425,7 @@ function atualizarUI() {
   if (!tituloSAR) return;
   tituloSAR.classList.add("modo-animacao");
   setTimeout(() => tituloSAR.classList.remove("modo-animacao"), 300);
-  modoBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.modo === modo));
+  modoBtns.forEach(b => b.classList.toggle("active", b.dataset.modo === modo));
   tituloSAR.style.cssText = "";
   if (modo === "rapido") {
     tituloSAR.style.color = "var(--accent-2)";
@@ -472,7 +447,8 @@ modoBtns.forEach(opt => {
   opt.onclick = () => {
     modo = opt.dataset.modo;
     localStorage.setItem("modoSAR", modo);
-    atualizarUI(); fecharSidebar();
+    atualizarUI();
+    fecharSidebar();
   };
 });
 
@@ -483,7 +459,7 @@ function configModo() {
 }
 
 /* ====================================================
-   ROT15 + CHAVES
+   ROT15 + CHAVES API
    ==================================================== */
 function decodificar(str) {
   return str.replace(/[a-zA-Z]/g, c => {
@@ -513,7 +489,6 @@ function getConfig() {
     confiarLinks: c.confiarLinks !== undefined ? c.confiarLinks : true
   };
 }
-
 function aplicarConfig() {
   const cfg = getConfig();
   const tA = document.getElementById("toggleAdult");
@@ -533,17 +508,14 @@ if (configBtn) configBtn.onclick = () => {
   fecharSidebar(); aplicarConfig(); renderHumorPanel();
   setTimeout(() => modalOverlay.classList.add("show"), 50);
 };
-if (modalClose) modalClose.onclick = () => modalOverlay.classList.remove("show");
+if (modalClose)   modalClose.onclick = () => modalOverlay.classList.remove("show");
 if (modalOverlay) modalOverlay.addEventListener("click", e => { if (e.target === modalOverlay) modalOverlay.classList.remove("show"); });
-if (toggleAdult) toggleAdult.onchange = () => { const c = carregarConfig(); c.filtroAdult = toggleAdult.checked; salvarConfig(c); };
-if (toggleLinks) toggleLinks.onchange = () => { const c = carregarConfig(); c.confiarLinks = toggleLinks.checked; salvarConfig(c); };
-if (resetHumor) resetHumor.onclick = () => {
-  salvarEmocional(_emocionalVazio());
-  renderHumorPanel();
-};
+if (toggleAdult)  toggleAdult.onchange  = () => { const c = carregarConfig(); c.filtroAdult  = toggleAdult.checked;  salvarConfig(c); };
+if (toggleLinks)  toggleLinks.onchange  = () => { const c = carregarConfig(); c.confiarLinks = toggleLinks.checked; salvarConfig(c); };
+if (resetHumor)   resetHumor.onclick    = () => { salvarEmocional(_emocionalVazio()); renderHumorPanel(); };
 
 /* ====================================================
-   FILTROS
+   FILTROS DE CONTEÚDO
    ==================================================== */
 function assuntoBloqueado(texto) {
   const t = texto.toLowerCase();
@@ -575,9 +547,6 @@ function mencionaEquipe(texto) {
     "quem te criou","quem fez voce","sua equipe","sua criacao","quem programou"].some(p => t.includes(p));
 }
 
-/* ====================================================
-   CÁLCULO
-   ==================================================== */
 function eCalculo(texto) {
   const t = texto.toLowerCase();
   const padroes = [
@@ -593,17 +562,20 @@ function instrucaoCalculo() {
   return `\n\nINSTRUCAO ESPECIAL - CALCULOS:
 Quando responder a um calculo ou problema matematico, voce DEVE:
 1. Dar a resposta direta primeiro
-2. Em seguida, mostrar a formula/resolucao dentro de um bloco especial iniciado por ===FORMULA=== e terminado por ===FIM===
+2. Em seguida, sempre mostrar e adapitar a formula/resolucao dentro de um bloco especial iniciado por ===FORMULA=== e terminado por ===FIM===
 Exemplo:
 ===FORMULA===
-  3 × 4 = 12
+  25 x 5 = 125
   Passo a passo:
-  3 × 4 = 12
+  222
+   x5
+-------
+ 1110 
 ===FIM===`;
 }
 
 /* ====================================================
-   LINKS
+   FORMATAÇÃO DE TEXTO E LINKS
    ==================================================== */
 function processarLinks(html) {
   if (!getConfig().confiarLinks) return html;
@@ -611,21 +583,18 @@ function processarLinks(html) {
     '<a class="chat-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
-/* ====================================================
-   UTILIDADES
-   ==================================================== */
 function escapeHTML(str) {
   return String(str)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 function highlightCode(code) {
   return code
-    .replace(/(\/\/[^\n]*)/g,"<span class='com'>$1</span>")
-    .replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g,"<span class='str'>$1</span>")
-    .replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|async|await)\b/g,"<span class='kw'>$1</span>")
-    .replace(/\b(\d+)\b/g,"<span class='num'>$1</span>");
+    .replace(/(\/\/[^\n]*)/g, "<span class='com'>$1</span>")
+    .replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, "<span class='str'>$1</span>")
+    .replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|async|await|try|catch|throw|new|typeof|instanceof|switch|case|break|continue|default|do|in|of|null|undefined|true|false)\b/g, "<span class='kw'>$1</span>")
+    .replace(/\b(\d+)\b/g, "<span class='num'>$1</span>");
 }
 
 function _splitPartes(textoRaw) {
@@ -648,16 +617,16 @@ function renderizarTabela(linhas) {
   if (rows.length < 2) return null;
   const separadorIdx = rows.findIndex(r => /^\|[\s\-:|]+\|$/.test(r.trim()));
   if (separadorIdx < 1) return null;
-  const parseCells = r => r.trim().slice(1,-1).split("|").map(c => c.trim());
+  const parseCells = r => r.trim().slice(1, -1).split("|").map(c => c.trim());
   const headers = parseCells(rows[0]);
   const dataRows = rows.slice(separadorIdx + 1);
   let html = '<div class="table-wrapper"><table class="chat-table"><thead><tr>';
-  headers.forEach(h => { html += `<th>${h.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</th>`; });
+  headers.forEach(h => { html += `<th>${h.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</th>`; });
   html += '</tr></thead><tbody>';
   dataRows.forEach((r, i) => {
     const cells = parseCells(r);
-    html += `<tr class="${i%2===0?'even':'odd'}">`;
-    cells.forEach(c => { html += `<td>${c.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</td>`; });
+    html += `<tr class="${i % 2 === 0 ? "even" : "odd"}">`;
+    cells.forEach(c => { html += `<td>${c.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</td>`; });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -666,8 +635,8 @@ function renderizarTabela(linhas) {
 
 function formatarLinha(l) {
   return l
-    .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
-    .replace(/`([^`]+)`/g,"<code>$1</code>");
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
 function formatarBlocoTexto(conteudo) {
@@ -696,24 +665,21 @@ function renderizarFormulaEscolar(texto) {
   let html = '<div class="formula-block">';
   linhas.forEach(linha => {
     const l = linha.trimEnd();
-    if (!l) { html += '<br>'; return; }
+    if (!l) { html += "<br>"; return; }
     html += `<div>${escapeHTML(l)}</div>`;
   });
-  html += '</div>';
+  html += "</div>";
   return html;
 }
 
 function formatarTexto(textoRaw) {
   return _splitPartes(textoRaw).map(p => {
-    if (p.tipo === "codigo") return `<div class="code-block"><button class="copy-code">Copiar</button><pre><code>${highlightCode(escapeHTML(p.conteudo))}</code></pre></div>`;
+    if (p.tipo === "codigo")  return `<div class="code-block"><button class="copy-code">Copiar</button><pre><code>${highlightCode(escapeHTML(p.conteudo))}</code></pre></div>`;
     if (p.tipo === "formula") return renderizarFormulaEscolar(p.conteudo);
     return formatarBlocoTexto(p.conteudo);
   }).join("");
 }
 
-/* ====================================================
-   TYPEWRITER
-   ==================================================== */
 function typeWriter(el, textoRaw) {
   el.innerHTML = "";
   const partes = _splitPartes(textoRaw);
@@ -744,7 +710,8 @@ function typeWriter(el, textoRaw) {
           const t = renderizarTabela(bloco);
           if (t) { const w = document.createElement("div"); w.innerHTML = t; el.appendChild(w); }
           else bloco.forEach(l => { const sp = document.createElement("span"); sp.innerHTML = formatarLinha(l); el.appendChild(sp); el.appendChild(document.createElement("br")); });
-          setTimeout(proxLinha, 4); return;
+          setTimeout(proxLinha, 4);
+          return;
         }
         const span = document.createElement("span");
         let lineHTML = formatarLinha(linhas[i++]);
@@ -760,14 +727,9 @@ function typeWriter(el, textoRaw) {
   proxParte();
 }
 
-/* ====================================================
-   ADICIONAR MENSAGEM
-   ==================================================== */
 function addMsg(txt, tipo) {
-  // Remove intro se existir
   const intro = chat.querySelector(".intro-screen");
   if (intro) intro.remove();
-
   const d = document.createElement("div");
   d.className = "msg " + tipo;
   if (tipo === "bot") {
@@ -783,67 +745,74 @@ function addMsg(txt, tipo) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+// Copiar código
 document.addEventListener("click", e => {
   if (!e.target.classList.contains("copy-code")) return;
   const code = e.target.parentElement.querySelector("code")?.innerText || "";
-  navigator.clipboard.writeText(code);
+  navigator.clipboard.writeText(code).catch(() => {});
   e.target.textContent = "✓";
   setTimeout(() => e.target.textContent = "Copiar", 1400);
 });
 
 /* ====================================================
-   API
+   API GROQ — CHAMADA PRINCIPAL
    ==================================================== */
-async function chamarAPI(messages) {
-  const cfg = configModo();
-  const ctx = gerarContextoUsuario();
-  const ultimaUser = [...messages].reverse().find(m => m.role === "user");
-  const incluirEquipe = ultimaUser && mencionaEquipe(ultimaUser.content);
+function _buildSystem(cfg, ctx, userContent) {
+  const incluirEquipe = mencionaEquipe(userContent);
   const infoEquipe = incluirEquipe
-    ? "\n\nINFO DA EQUIPE (use somente quando perguntado):\n" + Object.values(REGRAS.equipe).map(r => "- " + r).join("\n")
+    ? "\n\nINFO DA EQUIPE:\n" + Object.values(REGRAS.equipe).map(r => "- " + r).join("\n")
     : "";
-  const isCalc = ultimaUser && eCalculo(ultimaUser.content);
-  const instrCalc = isCalc ? instrucaoCalculo() : "";
-
-  const system = [
+  return [
     "Voce e a S.A.R — IA feminina brasileira (ela/dela), direta, sem julgamentos morais.",
     "Voce foi criada pela Evolution Games Studio, programada pelo Joao Antonio.",
-    "Os criadores e fundadores da Evolution Games Studio sao Joao Antonio e Lucas Macedo.",
     "Voce e brasileira e responde sempre em portugues do Brasil de forma natural.",
-    "Voce responde com honestidade total e sem paternalismos.",
-    "Nao traz opinioes politicas partidarias.",
-    "Nao auxilia em atividades criminosas concretas.",
-    "",
     "ANTI-ALUCINACAO:",
     ...REGRAS.anti_alucinacao.map(r => "- " + r),
     infoEquipe,
     ctx,
-    instrCalc,
     "",
     cfg.system
   ].join("\n");
+}
 
-  messages[0].content = system;
-  const key  = decodificar(chaves[indiceAtual]);
-  const body = { messages: messages.slice(-cfg.limite), temperature: cfg.temperature };
+async function chamarAPI(msgs) {
+  const cfg     = configModo();
+  const ctx     = gerarContextoUsuario();
+  const ultimo  = msgs.filter(m => m.role === "user").slice(-1)[0]?.content || "";
+  const system  = _buildSystem(cfg, ctx, ultimo) + (eCalculo(ultimo) ? instrucaoCalculo() : "");
+  const key     = decodificar(chaves[indiceAtual]);
 
-  for (const modelo of ["llama-3.3-70b-versatile", "llama3-8b-8192"]) {
-    try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: modelo, ...body })
-      });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return await res.json();
-    } catch {
-      if (modelo === "llama3-8b-8192") throw new Error("Falha total");
+  const payload = {
+    model: "llama-3.3-70b-versatile",
+    temperature: cfg.temperature,
+    messages: [
+      { role: "system", content: system },
+      ...msgs.filter(m => m.role !== "system").slice(-20) // janela de contexto: últimas 20 mensagens
+    ]
+  };
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + key,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    // Rotaciona chave se der erro 429 (rate limit) ou 401 (inválida)
+    if (res.status === 429 || res.status === 401) {
+      indiceAtual = (indiceAtual + 1) % chaves.length;
     }
+    throw new Error("HTTP " + res.status);
   }
+
+  return res.json();
 }
 
 /* ====================================================
-   ENVIAR
+   ENVIAR MENSAGEM (TEXTO)
    ==================================================== */
 let tentativas = 0;
 
@@ -851,26 +820,29 @@ async function enviar() {
   const txt = input.value.trim();
   if (!txt) return;
 
-  if (assuntoBloqueado(txt)) { addMsg("Não posso ajudar com isso.", "bot"); return; }
-  if (assuntoPorno(txt)) { addMsg("🔞 Filtro +18 ativado. Desative nas Configurações para conteúdo adulto.", "bot"); return; }
+  // Filtros de conteúdo
+  if (assuntoBloqueado(txt)) {
+    addMsg("Não posso ajudar com isso.", "bot");
+    return;
+  }
+  if (assuntoPorno(txt)) {
+    addMsg("Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot");
+    return;
+  }
 
+  // Mensagem do usuário na tela
   addMsg(txt, "user");
   input.value = "";
   atualizarContexto(txt);
   _persistirSeNovo();
 
+  // Salva no histórico de mensagens
   let memoria = getMensagens();
   memoria.push({ role: "user", content: txt });
   setMensagens(memoria);
-  renderHistorico();
 
-  // Indicador de "pensando"
-  const load = document.createElement("div");
-  load.className = "msg bot";
-  load.innerHTML = `<div class="thinking-indicator">
-    <div class="thinking-dots"><span></span><span></span><span></span></div>
-    <span>Processando…</span>
-  </div>`;
+  // Indicador de carregamento
+  const load = _criarLoading("Pensando…");
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
@@ -883,27 +855,408 @@ async function enviar() {
     memoria.push({ role: "assistant", content: r });
     setMensagens(memoria);
     tentativas = 0;
-  } catch {
-    if (tentativas < 3) { tentativas++; setTimeout(enviar, 2000); }
-    else { load.innerHTML = "<span>Erro de conexão.</span>"; tentativas = 0; }
+  } catch (err) {
+    console.error("Erro na API:", err);
+    if (tentativas < 3) {
+      tentativas++;
+      load.innerHTML = `<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span>Reconectando…</span></div>`;
+      setTimeout(enviar, 2000);
+    } else {
+      load.innerHTML = "<span>Erro de conexão. Tente novamente.</span>";
+      tentativas = 0;
+    }
   }
 }
 
-btn.onclick = enviar;
-input.addEventListener("keypress", e => { if (e.key === "Enter") { e.preventDefault(); enviar(); } });
-
+/* ====================================================
+   BOTÃO LIMPAR / NOVO CHAT
+   ==================================================== */
 clearBtn.onclick = () => {
   novoSlot(); _mostrarIntro(); renderHistorico();
 };
 
 /* ====================================================
-   SCROLL BTN
+   SCROLL BUTTON
    ==================================================== */
 chat.addEventListener("scroll", () => {
   const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
   scrollBtn.style.display = nearBottom ? "none" : "flex";
 });
 scrollBtn.onclick = () => chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+
+/* ====================================================
+   SISTEMA DE ANEXOS — PDF (2/dia) + FOTO (3/dia)
+   ==================================================== */
+const GEMINI_KEY  = "AIzaSyACzmsRXrmBUhIPgBF_BlbxbzCfOiHLCqs";
+const LIMITE_PDF  = 4;
+const LIMITE_FOTO = 10;
+const LS_QUOTA    = "sar_quota_v2";
+const QUOTA_JANELA_MS = 90 * 60 * 1000; // 1h30min em milissegundos
+
+function _quotaVazia() {
+  return { pdf: 0, foto: 0, resetEm: Date.now() + QUOTA_JANELA_MS };
+}
+
+function carregarQuota() {
+  try {
+    const raw = localStorage.getItem(LS_QUOTA);
+    if (!raw) return _quotaVazia();
+    const q = JSON.parse(raw);
+    // Se o período de 1h30min já passou, reseta
+    if (!q.resetEm || Date.now() >= q.resetEm) {
+      const nova = _quotaVazia();
+      salvarQuota(nova);
+      return nova;
+    }
+    return q;
+  } catch { return _quotaVazia(); }
+}
+
+function salvarQuota(q) { localStorage.setItem(LS_QUOTA, JSON.stringify(q)); }
+function consumirQuota(tipo) { const q = carregarQuota(); q[tipo]++; salvarQuota(q); }
+function quotaRestante(tipo) {
+  const q = carregarQuota();
+  return Math.max(0, (tipo === "pdf" ? LIMITE_PDF : LIMITE_FOTO) - q[tipo]);
+}
+
+function _tempoAteReset() {
+  const q = carregarQuota();
+  const diff = Math.max(0, q.resetEm - Date.now());
+  const min = Math.floor(diff / 60000);
+  const seg = Math.floor((diff % 60000) / 1000);
+  return min > 0 ? `${min}min` : `${seg}s`;
+}
+
+const attachBtn    = document.getElementById("attachBtn");
+const attachMenu   = document.getElementById("attachMenu");
+const optPDF       = document.getElementById("optPDF");
+const optFoto      = document.getElementById("optFoto");
+const inputPDF     = document.getElementById("inputPDF");
+const inputFoto    = document.getElementById("inputFoto");
+const attachPreview= document.getElementById("attachPreview");
+const quotaPDFEl   = document.getElementById("quotaPDF");
+const quotaFotoEl  = document.getElementById("quotaFoto");
+
+let _arquivoPendente = null;
+
+function atualizarQuotaUI() {
+  const rPDF  = quotaRestante("pdf");
+  const rFoto = quotaRestante("foto");
+  const tempo = _tempoAteReset();
+  quotaPDFEl.textContent  = rPDF  > 0 ? `${rPDF} restante${rPDF  !== 1 ? "s" : ""}` : `Reset em ${tempo}`;
+  quotaFotoEl.textContent = rFoto > 0 ? `${rFoto} restante${rFoto !== 1 ? "s" : ""}` : `Reset em ${tempo}`;
+  quotaPDFEl.className    = "attach-opt-quota" + (rPDF  === 0 ? " esgotado" : "");
+  quotaFotoEl.className   = "attach-opt-quota" + (rFoto === 0 ? " esgotado" : "");
+  optPDF.disabled  = rPDF  === 0;
+  optFoto.disabled = rFoto === 0;
+}
+
+function toggleAttachMenu(force) {
+  const abrir = force !== undefined ? force : attachMenu.style.display === "none";
+  attachMenu.style.display = abrir ? "flex" : "none";
+  attachBtn.classList.toggle("active", abrir);
+  if (abrir) atualizarQuotaUI();
+}
+
+attachBtn.onclick = e => { e.stopPropagation(); toggleAttachMenu(); };
+document.addEventListener("click", e => {
+  if (!attachMenu.contains(e.target) && e.target !== attachBtn) toggleAttachMenu(false);
+});
+
+optPDF.onclick  = () => { toggleAttachMenu(false); inputPDF.value  = ""; inputPDF.click(); };
+optFoto.onclick = () => { toggleAttachMenu(false); inputFoto.value = ""; inputFoto.click(); };
+
+function lerBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(",")[1]);
+    r.onerror = () => rej(new Error("Falha ao ler arquivo"));
+    r.readAsDataURL(file);
+  });
+}
+function lerDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result);
+    r.onerror = () => rej(new Error("Falha ao ler imagem"));
+    r.readAsDataURL(file);
+  });
+}
+
+function mostrarChip(nome, tipo) {
+  attachPreview.style.display = "flex";
+  attachPreview.innerHTML = `
+    <div class="attach-chip">
+      <span>${tipo === "pdf" ? "📄" : "📷"}</span>
+      <span class="attach-chip-name">${escapeHTML(nome)}</span>
+      <button class="attach-chip-remove" title="Remover">×</button>
+    </div>`;
+  attachPreview.querySelector(".attach-chip-remove").onclick = limparAnexo;
+}
+
+function limparAnexo() {
+  _arquivoPendente = null;
+  attachPreview.style.display = "none";
+  attachPreview.innerHTML = "";
+  inputPDF.value = ""; inputFoto.value = "";
+}
+
+inputPDF.addEventListener("change", async () => {
+  const file = inputPDF.files[0];
+  if (!file) return;
+  if (file.size > 110 * 1024 * 1024) { alert("PDF muito grande. Máximo 20 MB."); return; }
+  const b64 = await lerBase64(file);
+  _arquivoPendente = { tipo: "pdf", file, nome: file.name, base64: b64 };
+  mostrarChip(file.name, "pdf");
+});
+
+inputFoto.addEventListener("change", async () => {
+  const file = inputFoto.files[0];
+  if (!file) return;
+  if (file.size > 100 * 1024 * 1024) { alert("Imagem muito grande. Máximo 10 MB."); return; }
+  const b64     = await lerBase64(file);
+  const dataURL = await lerDataURL(file);
+  _arquivoPendente = { tipo: "foto", file, nome: file.name, base64: b64, dataURL, mimeType: file.type };
+  mostrarChip(file.name, "foto");
+});
+
+/* ====================================================
+   GEMINI — Análise de Imagem
+   ==================================================== */
+async function analisarImagemGemini(base64, mimeType) {
+  const body = {
+    contents: [{
+      parts: [
+        { inline_data: { mime_type: mimeType, data: base64 } },
+        {
+          text: `Analise esta imagem e retorne APENAS um JSON valido (sem texto extra, sem markdown) com os seguintes campos:
+{
+  "descricao": "descricao da imagem completa e detalhada em portugues",
+  "elementos": ["lista de elementos/objetos visiveis"],
+  "texto_visivel": "todo texto legivel na imagem ou null",
+  "cores_predominantes": ["cores principais"],
+  "contexto": "contexto ou situacao da imagem",
+  "qualidade": "boa | media | baixa",
+  "tipo_imagem": "foto | screenshot | documento | arte | outro",
+    "Estudo": "se for prova ou perguntas tio trabalho de escola facudade ou curso melhore e adicione a resposta"            
+}`
+        }
+      ]
+    }]
+  };
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+  );
+  if (!res.ok) throw new Error("Gemini HTTP " + res.status);
+  const data = await res.json();
+  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+  const clean = rawText.replace(/```json|```/g, "").trim();
+  try { return JSON.parse(clean); }
+  catch { return { descricao: rawText, erro: "JSON invalido" }; }
+}
+
+/* ====================================================
+   ENVIO COM PDF
+   ==================================================== */
+async function enviarComPDF(txtUsuario, arquivo) {
+  consumirQuota("pdf");
+  const nome = arquivo.nome;
+  const labelUser = txtUsuario ? `${txtUsuario}\n📄 ${nome}` : `📄 ${nome}`;
+  addMsg(labelUser, "user");
+  input.value = "";
+  limparAnexo();
+  atualizarContexto(txtUsuario || nome);
+  _persistirSeNovo();
+
+  const load = _criarLoading("Lendo PDF…");
+  chat.appendChild(load);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const cfg = configModo();
+    const ctx = gerarContextoUsuario();
+    const key = decodificar(chaves[indiceAtual]);
+
+    const userContent = txtUsuario
+      ? `${txtUsuario}\n\n[PDF ANEXADO: ${nome}]`
+      : `[PDF ANEXADO: ${nome}]\n\nAnalise o conteudo deste PDF e responda de forma util.`;
+
+    const msgs = getMensagens();
+    msgs.push({ role: "user", content: userContent });
+    setMensagens(msgs);
+
+    const system = _buildSystem(cfg, ctx, userContent);
+    const body = {
+      model: "llama-3.3-70b-versatile",
+      temperature: cfg.temperature,
+      messages: [
+        { role: "system", content: system },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: txtUsuario || "Analise este PDF e responda de forma util em portugues." },
+            { type: "image_url", image_url: { url: `data:application/pdf;base64,${arquivo.base64}` } }
+          ]
+        }
+      ]
+    };
+
+    let respostaFinal = null;
+    for (const modelo of ["llama-3.3-70b-versatile", "llama3-8b-8192"]) {
+      try {
+        body.model = modelo;
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        respostaFinal = data.choices?.[0]?.message?.content || "Nao consegui processar o PDF.";
+        break;
+      } catch (err) {
+        if (modelo === "llama3-8b-8192") {
+          respostaFinal = `Recebi o PDF **${nome}**, mas nao consegui processa-lo no momento. Tente novamente ou descreva o conteudo que deseja analisar.`;
+        }
+      }
+    }
+
+    load.remove();
+    addMsg(respostaFinal, "bot");
+    const msgsAtt = getMensagens();
+    msgsAtt.push({ role: "assistant", content: respostaFinal });
+    setMensagens(msgsAtt);
+  } catch (err) {
+    console.error("Erro PDF:", err);
+    load.innerHTML = "<span>Erro ao processar PDF.</span>";
+  }
+}
+
+/* ====================================================
+   ENVIO COM FOTO
+   ==================================================== */
+async function enviarComFoto(txtUsuario, arquivo) {
+  consumirQuota("foto");
+  const nome = arquivo.nome;
+  const labelUser = txtUsuario ? `${txtUsuario}\n📷 ${nome}` : `📷 ${nome}`;
+
+  const intro = chat.querySelector(".intro-screen");
+  if (intro) intro.remove();
+
+  const dUser = document.createElement("div");
+  dUser.className = "msg user";
+  if (arquivo.dataURL) {
+    const img = document.createElement("img");
+    img.src = arquivo.dataURL;
+    img.className = "msg-img-preview";
+    dUser.appendChild(img);
+  }
+  if (txtUsuario) {
+    const span = document.createElement("span");
+    span.textContent = txtUsuario;
+    dUser.appendChild(span);
+  }
+  chat.appendChild(dUser);
+  chat.scrollTop = chat.scrollHeight;
+
+  input.value = "";
+  limparAnexo();
+  atualizarContexto(txtUsuario || "foto enviada");
+  _persistirSeNovo();
+
+  const load = _criarLoading("Analisando imagem…");
+  chat.appendChild(load);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    let jsonImagem = null;
+    let geminiOk = true;
+    try {
+      jsonImagem = await analisarImagemGemini(arquivo.base64, arquivo.mimeType || "image/jpeg");
+      // Se veio com campo de erro do fallback, trata como falha
+      if (jsonImagem?.erro) geminiOk = false;
+    } catch {
+      geminiOk = false;
+    }
+
+    const cfg = configModo();
+    const ctx = gerarContextoUsuario();
+    const key = decodificar(chaves[indiceAtual]);
+
+    const promptParaGroq = txtUsuario
+      ? `O usuario enviou uma foto com o comentario: "${txtUsuario}"\n\nAnalise visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nResponda ao usuario em portugues levando em conta a imagem e o comentario.`
+      : `O usuario enviou uma foto. Analise visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nDescreva o que voce ve na imagem e ofereça ajuda relevante em portugues.`;
+
+    const msgs = getMensagens();
+    msgs.push({ role: "user", content: promptParaGroq });
+    setMensagens(msgs);
+
+    const system = _buildSystem(cfg, ctx, promptParaGroq);
+
+    let respostaFinal = null;
+    for (const modelo of ["llama-3.3-70b-versatile", "llama3-8b-8192"]) {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: modelo,
+            temperature: cfg.temperature,
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: promptParaGroq }
+            ]
+          })
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        respostaFinal = data.choices?.[0]?.message?.content || "Nao consegui analisar a imagem.";
+        break;
+      } catch {
+        if (modelo === "llama3-8b-8192") respostaFinal = "Nao consegui processar a imagem no momento.";
+      }
+    }
+
+    load.remove();
+    addMsg(respostaFinal, "bot");
+    const msgsAtt = getMensagens();
+    msgsAtt.push({ role: "assistant", content: respostaFinal });
+    setMensagens(msgsAtt);
+  } catch (err) {
+    console.error("Erro foto:", err);
+    load.innerHTML = "<span>Erro ao processar imagem.</span>";
+  }
+}
+
+function _criarLoading(texto) {
+  const load = document.createElement("div");
+  load.className = "msg bot";
+  load.innerHTML = `<div class="thinking-indicator">
+    <div class="thinking-dots"><span></span><span></span><span></span></div>
+    <span>${texto}</span>
+  </div>`;
+  return load;
+}
+
+/* ====================================================
+   ENVIO UNIFICADO (com ou sem anexo)
+   ==================================================== */
+async function enviarComAnexo() {
+  if (_arquivoPendente) {
+    const txt = input.value.trim();
+    const arq = _arquivoPendente;
+    if (arq.tipo === "pdf")  { await enviarComPDF(txt, arq);  return; }
+    if (arq.tipo === "foto") { await enviarComFoto(txt, arq); return; }
+  }
+  await enviar();
+}
+
+// Eventos do botão enviar e teclado
+btn.onclick = enviarComAnexo;
+input.addEventListener("keypress", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarComAnexo(); }
+});
 
 /* ====================================================
    INIT

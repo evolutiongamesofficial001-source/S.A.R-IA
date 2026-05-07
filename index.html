@@ -110,13 +110,39 @@
 
   <!-- INPUT -->
   <footer class="input-bar">
+    <!-- Preview de arquivo anexado -->
+    <div id="attachPreview" class="attach-preview" style="display:none"></div>
     <div class="input-wrap">
+      <button class="attach-btn" id="attachBtn" aria-label="Anexar arquivo" title="Anexar PDF ou foto">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.5 7.5l-6 6a3.5 3.5 0 01-4.95-4.95l6.5-6.5a2 2 0 012.83 2.83L5.88 11.4a.5.5 0 01-.71-.71l5.5-5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <!-- Inputs ocultos -->
+      <input type="file" id="inputPDF"  accept="application/pdf" style="display:none">
+      <input type="file" id="inputFoto" accept="image/*"          style="display:none" capture="environment">
       <input id="input" placeholder="Escreva sua mensagem…" autocomplete="off" spellcheck="false" aria-label="Mensagem">
       <button class="send-btn" id="btn" aria-label="Enviar">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg>
       </button>
     </div>
   </footer>
+
+  <!-- MENU DE ANEXO -->
+  <div id="attachMenu" class="attach-menu" style="display:none">
+    <button class="attach-option" id="optPDF">
+      <span class="attach-opt-icon">📄</span>
+      <div class="attach-opt-info">
+        <span class="attach-opt-name">PDF</span>
+        <span class="attach-opt-quota" id="quotaPDF">2 por dia</span>
+      </div>
+    </button>
+    <button class="attach-option" id="optFoto">
+      <span class="attach-opt-icon">📷</span>
+      <div class="attach-opt-info">
+        <span class="attach-opt-name">Foto</span>
+        <span class="attach-opt-quota" id="quotaFoto">3 por dia</span>
+      </div>
+    </button>
+  </div>
 
   <button id="scrollBtn" aria-label="Rolar para baixo">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
