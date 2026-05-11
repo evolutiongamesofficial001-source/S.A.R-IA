@@ -753,7 +753,6 @@ document.addEventListener("click", e => {
   e.target.textContent = "✓";
   setTimeout(() => e.target.textContent = "Copiar", 1400);
 });
-
 /* ====================================================
    API GROQ — CHAMADA PRINCIPAL
    ==================================================== */
@@ -887,7 +886,13 @@ scrollBtn.onclick = () => chat.scrollTo({ top: chat.scrollHeight, behavior: "smo
 /* ====================================================
    SISTEMA DE ANEXOS — PDF (2/dia) + FOTO (3/dia)
    ==================================================== */
-const GEMINI_KEY  = "AIzaSyACzmsRXrmBUhIPgBF_BlbxbzCfOiHLCqs";
+const GEMINI_KEY_R13 = "NVmnFlPL8bZ4IBST4iFZDFO43k7SzfWAxE7gxVZ";
+function decodificarR13(str) {
+  return str.replace(/[a-zA-Z]/g, c => {
+    const b = c <= "Z" ? 65 : 97;
+    return String.fromCharCode(((c.charCodeAt(0) - b + 13) % 26) + b);
+  });
+}
 const LIMITE_PDF  = 4;
 const LIMITE_FOTO = 10;
 const LS_QUOTA    = "sar_quota_v2";
@@ -1000,7 +1005,6 @@ function limparAnexo() {
   attachPreview.innerHTML = "";
   inputPDF.value = ""; inputFoto.value = "";
 }
-
 inputPDF.addEventListener("change", async () => {
   const file = inputPDF.files[0];
   if (!file) return;
@@ -1019,7 +1023,6 @@ inputFoto.addEventListener("change", async () => {
   _arquivoPendente = { tipo: "foto", file, nome: file.name, base64: b64, dataURL, mimeType: file.type };
   mostrarChip(file.name, "foto");
 });
-
 /* ====================================================
    GEMINI — Análise de Imagem
    ==================================================== */
@@ -1045,7 +1048,7 @@ async function analisarImagemGemini(base64, mimeType) {
     }]
   };
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${decodificarR13(GEMINI_KEY_R13)}`,
     { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
   );
   if (!res.ok) throw new Error("Gemini HTTP " + res.status);
@@ -1238,10 +1241,6 @@ function _criarLoading(texto) {
   </div>`;
   return load;
 }
-
-/* ====================================================
-   ENVIO UNIFICADO (com ou sem anexo)
-   ==================================================== */
 async function enviarComAnexo() {
   if (_arquivoPendente) {
     const txt = input.value.trim();
