@@ -14,7 +14,9 @@ const REGRAS = {
     "Voce mataria sim uma pessoa ma/malvada por algo melhor e o bem maior, responda com sim e com discurso heroico",
     "Voce se sacrificaria para um bem maior ou para salvar alguem, responda com sim desde que seja uma boa pessoa",
     "Seu nome e S.A.R (Suporte Artificial Racional) desenvolvida pela Evolution Games Studio e programada por Joao Antonio",
-    "nao comente sobre a foto ser em json"
+    "nao comente sobre a foto ser em json",
+    "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R vision da evolution studios",
+    "você gera imagem sim,o botao para gerar imagem fica aoblado do botao de enviar imagem"
   ],
   modo: {
     rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida e natural.",
@@ -29,6 +31,87 @@ const REGRAS = {
     jogos:        "A Evolution Games tem 6 Horror Coffee lancados, o 7 ja foi anunciado, e outros jogos em desenvolvimento."
   }
 };
+
+/* ====================================================
+   ABORT CONTROLLER — cancela tudo ao limpar
+   ==================================================== */
+let _abortController = new AbortController();
+function _cancelarTudo() {
+  _abortController.abort();
+  _abortController = new AbortController();
+}
+
+/* ====================================================
+   PERFIL DO USUÁRIO — gostos, nome, idade, etc
+   ==================================================== */
+const LS_PERFIL = "sar_perfil_v1";
+
+function carregarPerfil() {
+  try { return JSON.parse(localStorage.getItem(LS_PERFIL)) || {}; }
+  catch { return {}; }
+}
+function salvarPerfil(p) { localStorage.setItem(LS_PERFIL, JSON.stringify(p)); }
+function getPerfil() { return carregarPerfil(); }
+
+function atualizarPerfil(texto) {
+  const perfil = carregarPerfil();
+  let mudou = false;
+
+  // Nome
+  const nomeMatch = texto.match(/(?:meu nome [eé]|me chamo|pode me chamar de|sou [oa]|eu sou)\s+([A-ZÀ-Úa-zà-ú]{2,})/i);
+  if (nomeMatch) { perfil.nome = nomeMatch[1].charAt(0).toUpperCase() + nomeMatch[1].slice(1).toLowerCase(); mudou = true; }
+
+  // Idade
+  const idadeMatch = texto.match(/(?:tenho|minha idade [eé]|anos de idade|tenho)\s+(\d{1,2})\s*anos/i) ||
+                     texto.match(/(\d{1,2})\s*anos\s*(?:de idade)?/i);
+  if (idadeMatch) { const a = parseInt(idadeMatch[1]); if (a >= 5 && a <= 100) { perfil.idade = a; mudou = true; } }
+
+  // Gostos positivos
+  const gostoMatch = texto.match(/(?:gosto de|amo|adoro|curto|minha paixão [eé]|meu hobbie [eé]|me diverte)\s+([^.,!?]{3,40})/gi);
+  if (gostoMatch) {
+    if (!perfil.gostos) perfil.gostos = [];
+    gostoMatch.forEach(m => {
+      const val = m.replace(/^(gosto de|amo|adoro|curto|minha paixão é|meu hobbie é|me diverte)\s*/i, "").trim().toLowerCase();
+      if (val.length > 2 && !perfil.gostos.includes(val)) { perfil.gostos.push(val); mudou = true; }
+    });
+    perfil.gostos = perfil.gostos.slice(-12); // mantém últimos 12
+  }
+
+  // Não gosta
+  const naoGostoMatch = texto.match(/(?:não gosto de|detesto|odeio|não curto|tenho raiva de)\s+([^.,!?]{3,40})/gi);
+  if (naoGostoMatch) {
+    if (!perfil.naoGosta) perfil.naoGosta = [];
+    naoGostoMatch.forEach(m => {
+      const val = m.replace(/^(não gosto de|detesto|odeio|não curto|tenho raiva de)\s*/i, "").trim().toLowerCase();
+      if (val.length > 2 && !perfil.naoGosta.includes(val)) { perfil.naoGosta.push(val); mudou = true; }
+    });
+    perfil.naoGosta = perfil.naoGosta.slice(-8);
+  }
+
+  // Profissão
+  const profMatch = texto.match(/(?:sou|trabalho como|minha profissão [eé]|trabalho de)\s+([\w\sà-ú]{3,30})(?:\s|$|,|\.)/i);
+  if (profMatch) {
+    const val = profMatch[1].trim().toLowerCase();
+    const stopwords = ["legal","otimo","muito","esse","esse","uma","aqui","hoje"];
+    if (!stopwords.some(s => val.includes(s)) && val.length > 3) { perfil.profissao = val; mudou = true; }
+  }
+
+  if (mudou) salvarPerfil(perfil);
+  return perfil;
+}
+
+function gerarContextoPerfil() {
+  const p = carregarPerfil();
+  const linhas = [];
+  if (p.nome)      linhas.push(`Nome do usuario: ${p.nome}`);
+  if (p.idade)     linhas.push(`Idade: ${p.idade} anos`);
+  if (p.profissao) linhas.push(`Profissão: ${p.profissao}`);
+  if (p.gostos?.length)   linhas.push(`Gostos/interesses: ${p.gostos.join(", ")}`);
+  if (p.naoGosta?.length) linhas.push(`Não gosta de: ${p.naoGosta.join(", ")}`);
+  if (!linhas.length) return "";
+  return "\n\nPERFIL DO USUARIO:\n" + linhas.map(l => "- " + l).join("\n") +
+         "\n- Use essas informacoes de forma natural nas respostas quando for relevante.";
+}
 
 /* ---------- ELEMENTOS ---------- */
 const sidebar         = document.getElementById("sidebar");
@@ -243,6 +326,7 @@ function setMensagens(msgs) {
   if (_chat.persistido) {
     const chats = carregarChats();
     if (chats[_chat.id]) {
+      // Preserva campos extras como imagemData e imagemPrompt
       chats[_chat.id].mensagens = msgs;
       chats[_chat.id].titulo = _chat.titulo;
       salvarChats(chats);
@@ -292,6 +376,14 @@ function renderMsgHistorico(m) {
   if (m.role === "user") {
     d.textContent = m.content;
   } else {
+    // Se tem foto analisada salva, mostra miniatura acima da resposta
+    if (m.fotoAnalisada) {
+      const thumb = document.createElement("img");
+      thumb.src = m.fotoAnalisada;
+      thumb.className = "msg-img-preview hist-foto-thumb";
+      thumb.alt = m.fotoNome || "foto analisada";
+      d.appendChild(thumb);
+    }
     const content = document.createElement("div");
     content.innerHTML = processarLinks(formatarTexto(m.content));
     d.appendChild(content);
@@ -360,7 +452,7 @@ novoChat.addEventListener("click", () => {
 /* ====================================================
    NOME DO USUÁRIO
    ==================================================== */
-const LS_NOME = "sar_usuario_nome";
+ const LS_NOME = "sar_usuario_nome";
 function getNome() { return localStorage.getItem(LS_NOME) || null; }
 function setNome(nome) { localStorage.setItem(LS_NOME, nome); }
 
@@ -381,21 +473,18 @@ function detectarNome(texto) {
 }
 
 function atualizarContexto(userMsg) {
-  const nomeDetectado = detectarNome(userMsg);
-  if (nomeDetectado) {
-    const nomeCap = nomeDetectado.charAt(0).toUpperCase() + nomeDetectado.slice(1).toLowerCase();
-    setNome(nomeCap);
-  }
+  atualizarPerfil(userMsg); // atualiza perfil + nome embutido
   analisarSentimento(userMsg);
   renderHumorPanel();
 }
 
 function gerarContextoUsuario() {
-  const nome = getNome();
+  const perfil = carregarPerfil();
   const linhas = [];
-  if (nome) linhas.push(`O nome do usuario e ${nome}. Use o nome dele de forma natural quando fizer sentido.`);
+  if (perfil.nome) linhas.push(`O nome do usuario e ${perfil.nome}. Use o nome dele de forma natural quando fizer sentido.`);
   const ctx = gerarContextoEmocional();
-  return (linhas.length ? "\nCONTEXTO DO USUARIO:\n" + linhas.map(l => "- " + l).join("\n") : "") + ctx;
+  const ctxPerfil = gerarContextoPerfil();
+  return (linhas.length ? "\nCONTEXTO DO USUARIO:\n" + linhas.map(l => "- " + l).join("\n") : "") + ctx + ctxPerfil;
 }
 
 /* ====================================================
@@ -458,9 +547,6 @@ function configModo() {
   return                               { temperature: 0.7,  system: REGRAS.modo.pro,           limite: 395 };
 }
 
-/* ====================================================
-   ROT15 + CHAVES API
-   ==================================================== */
 function decodificar(str) {
   return str.replace(/[a-zA-Z]/g, c => {
     const b = c <= "Z" ? 65 : 97;
@@ -476,9 +562,6 @@ const chaves = [
 ];
 let indiceAtual = 0;
 
-/* ====================================================
-   CONFIGURAÇÕES
-   ==================================================== */
 const LS_CONFIG = "sar_config";
 function carregarConfig() { try { return JSON.parse(localStorage.getItem(LS_CONFIG)) || {}; } catch { return {}; } }
 function salvarConfig(c)  { localStorage.setItem(LS_CONFIG, JSON.stringify(c)); }
@@ -521,8 +604,7 @@ function assuntoBloqueado(texto) {
   const t = texto.toLowerCase();
   const bloqueios = [
     "como fabricar bomba","como fazer bomba","como fazer explosivo",
-    "como sintetizar metanfetamina","como fazer metanfetamina",
-    "como invadir sistema","como roubar senha de","como sequestrar",
+    "como sintetizar metanfetamina","como fazer metanfetamina","como roubar senha de","como sequestrar",
     "como traficar pessoas","como lavar dinheiro",
     "como fazer documento falso","como fazer veneno para matar"
   ];
@@ -573,10 +655,6 @@ Exemplo:
  1110 
 ===FIM===`;
 }
-
-/* ====================================================
-   FORMATAÇÃO DE TEXTO E LINKS
-   ==================================================== */
 function processarLinks(html) {
   if (!getConfig().confiarLinks) return html;
   return html.replace(/(https?:\/\/[^\s<"']+)/g,
@@ -753,9 +831,7 @@ document.addEventListener("click", e => {
   e.target.textContent = "✓";
   setTimeout(() => e.target.textContent = "Copiar", 1400);
 });
-/* ====================================================
-   API GROQ — CHAMADA PRINCIPAL
-   ==================================================== */
+
 function _buildSystem(cfg, ctx, userContent) {
   const incluirEquipe = mencionaEquipe(userContent);
   const infoEquipe = incluirEquipe
@@ -809,10 +885,6 @@ async function chamarAPI(msgs) {
 
   return res.json();
 }
-
-/* ====================================================
-   ENVIAR MENSAGEM (TEXTO)
-   ==================================================== */
 let tentativas = 0;
 
 async function enviar() {
@@ -867,10 +939,12 @@ async function enviar() {
   }
 }
 
-/* ====================================================
-   BOTÃO LIMPAR / NOVO CHAT
-   ==================================================== */
 clearBtn.onclick = () => {
+  _cancelarTudo();
+  // Remove loading que possa estar na tela
+  chat.querySelectorAll(".msg.bot").forEach(el => {
+    if (el.querySelector(".thinking-indicator")) el.remove();
+  });
   novoSlot(); _mostrarIntro(); renderHistorico();
 };
 
@@ -883,9 +957,6 @@ chat.addEventListener("scroll", () => {
 });
 scrollBtn.onclick = () => chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
 
-/* ====================================================
-   SISTEMA DE ANEXOS — PDF (2/dia) + FOTO (3/dia)
-   ==================================================== */
 const GEMINI_KEY_R13 = "NVmnFlPL8bZ4IBST4iFZDFO43k7SzfWAxE7gxVZ";
 function decodificarR13(str) {
   return str.replace(/[a-zA-Z]/g, c => {
@@ -1023,9 +1094,7 @@ inputFoto.addEventListener("change", async () => {
   _arquivoPendente = { tipo: "foto", file, nome: file.name, base64: b64, dataURL, mimeType: file.type };
   mostrarChip(file.name, "foto");
 });
-/* ====================================================
-   GEMINI — Análise de Imagem
-   ==================================================== */
+
 async function analisarImagemGemini(base64, mimeType) {
   const body = {
     contents: [{
@@ -1034,14 +1103,14 @@ async function analisarImagemGemini(base64, mimeType) {
         {
           text: `Analise esta imagem e retorne APENAS um JSON valido (sem texto extra, sem markdown) com os seguintes campos:
 {
-  "descricao": "descricao da imagem completa e detalhada em portugues",
+  "descricao": "descricao da imagem completa e super detalhada em portugues",
   "elementos": ["lista de elementos/objetos visiveis"],
   "texto_visivel": "todo texto legivel na imagem ou null",
   "cores_predominantes": ["cores principais"],
   "contexto": "contexto ou situacao da imagem",
   "qualidade": "boa | media | baixa",
   "tipo_imagem": "foto | screenshot | documento | arte | outro",
-    "Estudo": "se for prova ou perguntas tio trabalho de escola facudade ou curso melhore e adicione a resposta"            
+    "Estudo": "se for prova ou perguntas tipo trabalho de escola facudade ou curso melhore e adicione a resposta"            
 }`
         }
       ]
@@ -1059,9 +1128,6 @@ async function analisarImagemGemini(base64, mimeType) {
   catch { return { descricao: rawText, erro: "JSON invalido" }; }
 }
 
-/* ====================================================
-   ENVIO COM PDF
-   ==================================================== */
 async function enviarComPDF(txtUsuario, arquivo) {
   consumirQuota("pdf");
   const nome = arquivo.nome;
@@ -1136,9 +1202,6 @@ async function enviarComPDF(txtUsuario, arquivo) {
   }
 }
 
-/* ====================================================
-   ENVIO COM FOTO
-   ==================================================== */
 async function enviarComFoto(txtUsuario, arquivo) {
   consumirQuota("foto");
   const nome = arquivo.nome;
@@ -1167,7 +1230,7 @@ async function enviarComFoto(txtUsuario, arquivo) {
   limparAnexo();
   atualizarContexto(txtUsuario || "foto enviada");
   _persistirSeNovo();
-
+  
   const load = _criarLoading("Analisando imagem…");
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
@@ -1188,8 +1251,8 @@ async function enviarComFoto(txtUsuario, arquivo) {
     const key = decodificar(chaves[indiceAtual]);
 
     const promptParaGroq = txtUsuario
-      ? `O usuario enviou uma foto com o comentario: "${txtUsuario}"\n\nAnalise visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nResponda ao usuario em portugues levando em conta a imagem e o comentario.`
-      : `O usuario enviou uma foto. Analise visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nDescreva o que voce ve na imagem e ofereça ajuda relevante em portugues.`;
+      ? `O usuario enviou uma foto com o comentario: "${txtUsuario}"\n\nAnalise profundamente visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nResponda ao usuario em portugues levando em conta a imagem e o comentario.`
+      : `O usuario enviou uma foto. Analise visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nDescreva com detalhes o que voce ve na imagem e ofereça ajuda relevante em portugues.`;
 
     const msgs = getMensagens();
     msgs.push({ role: "user", content: promptParaGroq });
@@ -1224,7 +1287,13 @@ async function enviarComFoto(txtUsuario, arquivo) {
     load.remove();
     addMsg(respostaFinal, "bot");
     const msgsAtt = getMensagens();
-    msgsAtt.push({ role: "assistant", content: respostaFinal });
+    // Salva a foto analisada no histórico para persistir visualmente
+    msgsAtt.push({
+      role: "assistant",
+      content: respostaFinal,
+      fotoAnalisada: arquivo.dataURL || null,
+      fotoNome: nome
+    });
     setMensagens(msgsAtt);
   } catch (err) {
     console.error("Erro foto:", err);
