@@ -16,7 +16,8 @@ const REGRAS = {
     "Seu nome e S.A.R (Suporte Artificial Racional) desenvolvida pela Evolution Games Studio e programada por Joao Antonio",
     "nao comente sobre a foto ser em json",
     "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R vision da evolution studios",
-    "você gera imagem sim,o botao para gerar imagem fica aoblado do botao de enviar imagem"
+    "você gera imagem sim,o botao para gerar imagem fica aoblado do botao de enviar imagem",
+    "quando analisar imagem vite apenas sobre a imagem e se ela foi enviada com pedido"
   ],
   modo: {
     rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida e natural.",
@@ -39,6 +40,23 @@ let _abortController = new AbortController();
 function _cancelarTudo() {
   _abortController.abort();
   _abortController = new AbortController();
+}
+
+/* ====================================================
+   FETCH COM TIMEOUT — evita requisições travadas
+   ==================================================== */
+async function fetchComTimeout(url, options, ms = 18000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    return res;
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === "AbortError") throw new Error("Timeout: sem resposta em " + (ms / 1000) + "s");
+    throw e;
+  }
 }
 
 /* ====================================================
@@ -373,16 +391,60 @@ function _mostrarIntro() {
 function renderMsgHistorico(m) {
   const d = document.createElement("div");
   d.className = "msg " + (m.role === "user" ? "user" : "bot");
+
   if (m.role === "user") {
-    d.textContent = m.content;
+    // Mostra imagens enviadas pelo usuário no histórico
+    if (m.fotosEnviadas?.length) {
+      if (m.fotosEnviadas.length > 1) {
+        const grid = document.createElement("div");
+        grid.className = "msg-img-grid";
+        m.fotosEnviadas.forEach(f => {
+          if (f.dataURL) {
+            const img = document.createElement("img");
+            img.src = f.dataURL;
+            img.className = "msg-img-preview";
+            img.alt = f.nome || "imagem";
+            grid.appendChild(img);
+          }
+        });
+        d.appendChild(grid);
+      } else if (m.fotosEnviadas[0]?.dataURL) {
+        const img = document.createElement("img");
+        img.src = m.fotosEnviadas[0].dataURL;
+        img.className = "msg-img-preview";
+        img.alt = m.fotosEnviadas[0].nome || "imagem";
+        d.appendChild(img);
+      }
+    }
+    if (m.content) {
+      const span = document.createElement("span");
+      span.textContent = m.content;
+      d.appendChild(span);
+    }
   } else {
-    // Se tem foto analisada salva, mostra miniatura acima da resposta
-    if (m.fotoAnalisada) {
-      const thumb = document.createElement("img");
-      thumb.src = m.fotoAnalisada;
-      thumb.className = "msg-img-preview hist-foto-thumb";
-      thumb.alt = m.fotoNome || "foto analisada";
-      d.appendChild(thumb);
+    // Compatibilidade com formato antigo (fotoAnalisada)
+    const fotos = m.fotosAnalisadas || (m.fotoAnalisada ? [{ dataURL: m.fotoAnalisada, nome: m.fotoNome }] : null);
+    if (fotos?.length) {
+      if (fotos.length > 1) {
+        const grid = document.createElement("div");
+        grid.className = "msg-img-grid hist-foto-thumb-grid";
+        fotos.forEach(f => {
+          if (f.dataURL) {
+            const img = document.createElement("img");
+            img.src = f.dataURL;
+            img.className = "msg-img-preview hist-foto-thumb";
+            img.alt = f.nome || "imagem analisada";
+            grid.appendChild(img);
+          }
+        });
+        d.appendChild(grid);
+      } else if (fotos[0]?.dataURL) {
+        const thumb = document.createElement("img");
+        thumb.src = fotos[0].dataURL;
+        thumb.className = "msg-img-preview hist-foto-thumb";
+        thumb.alt = fotos[0].nome || "foto analisada";
+        d.appendChild(thumb);
+      }
     }
     const content = document.createElement("div");
     content.innerHTML = processarLinks(formatarTexto(m.content));
@@ -449,10 +511,7 @@ novoChat.addEventListener("click", () => {
   novoSlot(); _mostrarIntro(); renderHistorico(); fecharSidebar();
 });
 
-/* ====================================================
-   NOME DO USUÁRIO
-   ==================================================== */
- const LS_NOME = "sar_usuario_nome";
+const LS_NOME = "sar_usuario_nome";
 function getNome() { return localStorage.getItem(LS_NOME) || null; }
 function setNome(nome) { localStorage.setItem(LS_NOME, nome); }
 
@@ -487,10 +546,7 @@ function gerarContextoUsuario() {
   return (linhas.length ? "\nCONTEXTO DO USUARIO:\n" + linhas.map(l => "- " + l).join("\n") : "") + ctx + ctxPerfil;
 }
 
-/* ====================================================
-   SIDEBAR / OVERLAY
-   ==================================================== */
-function fecharSidebar() {
+ function fecharSidebar() {
   sidebar.classList.remove("open");
   overlay.classList.remove("show");
 }
@@ -504,9 +560,6 @@ menuBtn.onclick = () => {
 overlay.onclick = fecharSidebar;
 if (sidebarCloseBtn) sidebarCloseBtn.onclick = fecharSidebar;
 
-/* ====================================================
-   MODOS DE RESPOSTA
-   ==================================================== */
 let modo = localStorage.getItem("modoSAR") || "rapido";
 const modoBtns = document.querySelectorAll(".modo-btn");
 
@@ -597,9 +650,6 @@ if (toggleAdult)  toggleAdult.onchange  = () => { const c = carregarConfig(); c.
 if (toggleLinks)  toggleLinks.onchange  = () => { const c = carregarConfig(); c.confiarLinks = toggleLinks.checked; salvarConfig(c); };
 if (resetHumor)   resetHumor.onclick    = () => { salvarEmocional(_emocionalVazio()); renderHumorPanel(); };
 
-/* ====================================================
-   FILTROS DE CONTEÚDO
-   ==================================================== */
 function assuntoBloqueado(texto) {
   const t = texto.toLowerCase();
   const bloqueios = [
@@ -655,6 +705,7 @@ Exemplo:
  1110 
 ===FIM===`;
 }
+
 function processarLinks(html) {
   if (!getConfig().confiarLinks) return html;
   return html.replace(/(https?:\/\/[^\s<"']+)/g,
@@ -823,7 +874,6 @@ function addMsg(txt, tipo) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-// Copiar código
 document.addEventListener("click", e => {
   if (!e.target.classList.contains("copy-code")) return;
   const code = e.target.parentElement.querySelector("code")?.innerText || "";
@@ -850,92 +900,105 @@ function _buildSystem(cfg, ctx, userContent) {
   ].join("\n");
 }
 
+// Limpa o histórico para enviar à API — remove campos extras e garante content válido
+function _limparMsgsParaAPI(msgs) {
+  return msgs
+    .filter(m => m.role !== "system")
+    .slice(-20)
+    .map(m => {
+      let content = typeof m.content === "string" ? m.content.trim() : "";
+      if (!content) {
+        if (m.role === "user")
+          content = m.fotosEnviadas?.length
+            ? `[Usuário enviou ${m.fotosEnviadas.length} imagem(ns)]`
+            : "[mensagem do usuário]";
+        else
+          content = "[resposta anterior]";
+      }
+      return { role: m.role, content };
+    });
+}
+
 async function chamarAPI(msgs) {
-  const cfg     = configModo();
-  const ctx     = gerarContextoUsuario();
-  const ultimo  = msgs.filter(m => m.role === "user").slice(-1)[0]?.content || "";
-  const system  = _buildSystem(cfg, ctx, ultimo) + (eCalculo(ultimo) ? instrucaoCalculo() : "");
-  const key     = decodificar(chaves[indiceAtual]);
+  const cfg    = configModo();
+  const ctx    = gerarContextoUsuario();
+  const ultimo = msgs.filter(m => m.role === "user").slice(-1)[0]?.content || "";
+  const system = _buildSystem(cfg, ctx, ultimo) + (eCalculo(ultimo) ? instrucaoCalculo() : "");
 
-  const payload = {
-    model: "llama-3.3-70b-versatile",
-    temperature: cfg.temperature,
-    messages: [
-      { role: "system", content: system },
-      ...msgs.filter(m => m.role !== "system").slice(-20) // janela de contexto: últimas 20 mensagens
-    ]
-  };
+  const msgslimpas = _limparMsgsParaAPI(msgs);
 
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + key,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
+  const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+  let ultimoErro = null;
 
-  if (!res.ok) {
-    // Rotaciona chave se der erro 429 (rate limit) ou 401 (inválida)
-    if (res.status === 429 || res.status === 401) {
-      indiceAtual = (indiceAtual + 1) % chaves.length;
+  for (let mi = 0; mi < modelos.length; mi++) {
+    const key = decodificar(chaves[indiceAtual]);
+    try {
+      const res = await fetchComTimeout("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelos[mi],
+          temperature: cfg.temperature,
+          messages: [{ role: "system", content: system }, ...msgslimpas]
+        })
+      }, 18000);
+
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => "");
+        console.error(`Groq HTTP ${res.status}:`, errBody);
+        if (res.status === 429 || res.status === 401) {
+          indiceAtual = (indiceAtual + 1) % chaves.length;
+        }
+        ultimoErro = new Error("HTTP " + res.status);
+        continue; // tenta próximo modelo
+      }
+
+      const data = await res.json();
+      const resposta = data.choices?.[0]?.message?.content;
+      if (!resposta) throw new Error("resposta vazia da API");
+      return resposta;
+
+    } catch (e) {
+      console.error(`Modelo ${modelos[mi]} falhou:`, e.message);
+      ultimoErro = e;
     }
-    throw new Error("HTTP " + res.status);
   }
 
-  return res.json();
+  throw ultimoErro || new Error("Todos os modelos falharam");
 }
+
 let tentativas = 0;
 
 async function enviar() {
   const txt = input.value.trim();
   if (!txt) return;
 
-  // Filtros de conteúdo
-  if (assuntoBloqueado(txt)) {
-    addMsg("Não posso ajudar com isso.", "bot");
-    return;
-  }
-  if (assuntoPorno(txt)) {
-    addMsg("Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot");
-    return;
-  }
+  if (assuntoBloqueado(txt)) { addMsg("Não posso ajudar com isso.", "bot"); return; }
+  if (assuntoPorno(txt))     { addMsg("Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot"); return; }
 
-  // Mensagem do usuário na tela
   addMsg(txt, "user");
   input.value = "";
   atualizarContexto(txt);
   _persistirSeNovo();
 
-  // Salva no histórico de mensagens
   let memoria = getMensagens();
   memoria.push({ role: "user", content: txt });
   setMensagens(memoria);
 
-  // Indicador de carregamento
   const load = _criarLoading("Pensando…");
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
   try {
-    const data = await chamarAPI(memoria);
-    const r = data.choices?.[0]?.message?.content || "…";
+    const r = await chamarAPI(getMensagens());
     load.remove();
     addMsg(r, "bot");
-    memoria = getMensagens();
-    memoria.push({ role: "assistant", content: r });
-    setMensagens(memoria);
-    tentativas = 0;
+    const m = getMensagens();
+    m.push({ role: "assistant", content: r });
+    setMensagens(m);
   } catch (err) {
-    console.error("Erro na API:", err);
-    if (tentativas < 3) {
-      tentativas++;
-      load.innerHTML = `<div class="thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div><span>Reconectando…</span></div>`;
-      setTimeout(enviar, 2000);
-    } else {
-      load.innerHTML = "<span>Erro de conexão. Tente novamente.</span>";
-      tentativas = 0;
-    }
+    load.remove();
+    addMsg("❌ ERRO: " + err.message, "bot");
   }
 }
 
@@ -948,9 +1011,6 @@ clearBtn.onclick = () => {
   novoSlot(); _mostrarIntro(); renderHistorico();
 };
 
-/* ====================================================
-   SCROLL BUTTON
-   ==================================================== */
 chat.addEventListener("scroll", () => {
   const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
   scrollBtn.style.display = nearBottom ? "none" : "flex";
@@ -964,13 +1024,12 @@ function decodificarR13(str) {
     return String.fromCharCode(((c.charCodeAt(0) - b + 13) % 26) + b);
   });
 }
-const LIMITE_PDF  = 4;
-const LIMITE_FOTO = 10;
-const LS_QUOTA    = "sar_quota_v2";
+const LIMITE_ANEXOS = 10; // limite global compartilhado entre foto e PDF
+const LS_QUOTA      = "sar_quota_v3";
 const QUOTA_JANELA_MS = 90 * 60 * 1000; // 1h30min em milissegundos
 
 function _quotaVazia() {
-  return { pdf: 0, foto: 0, resetEm: Date.now() + QUOTA_JANELA_MS };
+  return { total: 0, resetEm: Date.now() + QUOTA_JANELA_MS };
 }
 
 function carregarQuota() {
@@ -978,7 +1037,6 @@ function carregarQuota() {
     const raw = localStorage.getItem(LS_QUOTA);
     if (!raw) return _quotaVazia();
     const q = JSON.parse(raw);
-    // Se o período de 1h30min já passou, reseta
     if (!q.resetEm || Date.now() >= q.resetEm) {
       const nova = _quotaVazia();
       salvarQuota(nova);
@@ -989,10 +1047,11 @@ function carregarQuota() {
 }
 
 function salvarQuota(q) { localStorage.setItem(LS_QUOTA, JSON.stringify(q)); }
-function consumirQuota(tipo) { const q = carregarQuota(); q[tipo]++; salvarQuota(q); }
-function quotaRestante(tipo) {
+// qtd = número de anexos consumidos (para múltiplas imagens)
+function consumirQuota(qtd = 1) { const q = carregarQuota(); q.total += qtd; salvarQuota(q); }
+function quotaRestante() {
   const q = carregarQuota();
-  return Math.max(0, (tipo === "pdf" ? LIMITE_PDF : LIMITE_FOTO) - q[tipo]);
+  return Math.max(0, LIMITE_ANEXOS - q.total);
 }
 
 function _tempoAteReset() {
@@ -1013,18 +1072,53 @@ const attachPreview= document.getElementById("attachPreview");
 const quotaPDFEl   = document.getElementById("quotaPDF");
 const quotaFotoEl  = document.getElementById("quotaFoto");
 
-let _arquivoPendente = null;
+let _arquivosPendentes = []; // suporta múltiplos arquivos
 
-function atualizarQuotaUI() {
-  const rPDF  = quotaRestante("pdf");
-  const rFoto = quotaRestante("foto");
+function renderChips() {
+  if (_arquivosPendentes.length === 0) {
+    attachPreview.style.display = "none";
+    attachPreview.innerHTML = "";
+    return;
+  }
+  attachPreview.style.display = "flex";
+  attachPreview.innerHTML = _arquivosPendentes.map((arq, i) => {
+    const preview = arq.dataURL
+      ? `<img src="${arq.dataURL}" class="chip-thumb" alt="">`
+      : `<span>${arq.tipo === "pdf" ? "📄" : "📷"}</span>`;
+    return `<div class="attach-chip" data-idx="${i}">
+      ${preview}
+      <span class="attach-chip-name">${escapeHTML(arq.nome)}</span>
+      <button class="attach-chip-remove" data-idx="${i}" title="Remover">×</button>
+    </div>`;
+  }).join("");
+  attachPreview.querySelectorAll(".attach-chip-remove").forEach(btn => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.idx);
+      _arquivosPendentes.splice(idx, 1);
+      renderChips();
+    };
+  });
+}
+
+function mostrarChip(nome, tipo) { renderChips(); } // legado — renderChips já cobre
+
+function limparAnexo() {
+  _arquivosPendentes = [];
+  attachPreview.style.display = "none";
+  attachPreview.innerHTML = "";
+  inputPDF.value = ""; inputFoto.value = "";
+}
+  function atualizarQuotaUI() {
+  const r     = quotaRestante();
   const tempo = _tempoAteReset();
-  quotaPDFEl.textContent  = rPDF  > 0 ? `${rPDF} restante${rPDF  !== 1 ? "s" : ""}` : `Reset em ${tempo}`;
-  quotaFotoEl.textContent = rFoto > 0 ? `${rFoto} restante${rFoto !== 1 ? "s" : ""}` : `Reset em ${tempo}`;
-  quotaPDFEl.className    = "attach-opt-quota" + (rPDF  === 0 ? " esgotado" : "");
-  quotaFotoEl.className   = "attach-opt-quota" + (rFoto === 0 ? " esgotado" : "");
-  optPDF.disabled  = rPDF  === 0;
-  optFoto.disabled = rFoto === 0;
+  const textoQuota = r > 0 ? `${r} restante${r !== 1 ? "s" : ""}` : `Reset em ${tempo}`;
+  const cls        = "attach-opt-quota" + (r === 0 ? " esgotado" : "");
+  quotaPDFEl.textContent  = textoQuota;
+  quotaFotoEl.textContent = textoQuota;
+  quotaPDFEl.className    = cls;
+  quotaFotoEl.className   = cls;
+  optPDF.disabled  = r === 0;
+  optFoto.disabled = r === 0;
 }
 
 function toggleAttachMenu(force) {
@@ -1059,77 +1153,110 @@ function lerDataURL(file) {
   });
 }
 
-function mostrarChip(nome, tipo) {
-  attachPreview.style.display = "flex";
-  attachPreview.innerHTML = `
-    <div class="attach-chip">
-      <span>${tipo === "pdf" ? "📄" : "📷"}</span>
-      <span class="attach-chip-name">${escapeHTML(nome)}</span>
-      <button class="attach-chip-remove" title="Remover">×</button>
-    </div>`;
-  attachPreview.querySelector(".attach-chip-remove").onclick = limparAnexo;
-}
-
-function limparAnexo() {
-  _arquivoPendente = null;
-  attachPreview.style.display = "none";
-  attachPreview.innerHTML = "";
-  inputPDF.value = ""; inputFoto.value = "";
-}
 inputPDF.addEventListener("change", async () => {
   const file = inputPDF.files[0];
   if (!file) return;
+  if (quotaRestante() <= 0) {
+    alert(`Você atingiu o limite de ${LIMITE_ANEXOS} anexos. Aguarde o reset.`);
+    inputPDF.value = "";
+    return;
+  }
   if (file.size > 110 * 1024 * 1024) { alert("PDF muito grande. Máximo 20 MB."); return; }
   const b64 = await lerBase64(file);
-  _arquivoPendente = { tipo: "pdf", file, nome: file.name, base64: b64 };
-  mostrarChip(file.name, "pdf");
+  _arquivosPendentes.push({ tipo: "pdf", file, nome: file.name, base64: b64 });
+  renderChips();
 });
 
 inputFoto.addEventListener("change", async () => {
-  const file = inputFoto.files[0];
-  if (!file) return;
-  if (file.size > 100 * 1024 * 1024) { alert("Imagem muito grande. Máximo 10 MB."); return; }
-  const b64     = await lerBase64(file);
-  const dataURL = await lerDataURL(file);
-  _arquivoPendente = { tipo: "foto", file, nome: file.name, base64: b64, dataURL, mimeType: file.type };
-  mostrarChip(file.name, "foto");
+  const files = Array.from(inputFoto.files);
+  if (!files.length) return;
+
+  const restante = quotaRestante();
+  if (restante <= 0) {
+    alert(`Você atingiu o limite de ${LIMITE_ANEXOS} anexos. Aguarde o reset.`);
+    inputFoto.value = "";
+    return;
+  }
+
+  // Limita pela cota disponível
+  const selecionados = files.slice(0, restante);
+  if (files.length > restante) {
+    alert(`Limite de anexos: apenas ${restante} imagem${restante !== 1 ? "s" : ""} foram adicionadas.`);
+  }
+
+  for (const file of selecionados) {
+    if (file.size > 100 * 1024 * 1024) { alert(`Imagem "${file.name}" muito grande. Máximo 10 MB.`); continue; }
+    const b64     = await lerBase64(file);
+    const dataURL = await lerDataURL(file);
+    _arquivosPendentes.push({ tipo: "foto", file, nome: file.name, base64: b64, dataURL, mimeType: file.type });
+  }
+  renderChips();
 });
 
 async function analisarImagemGemini(base64, mimeType) {
   const body = {
     contents: [{
       parts: [
-        { inline_data: { mime_type: mimeType, data: base64 } },
+        { inline_data: { mime_type: mimeType || "image/jpeg", data: base64 } },
         {
-          text: `Analise esta imagem e retorne APENAS um JSON valido (sem texto extra, sem markdown) com os seguintes campos:
+          text: `Analise esta imagem com MÁXIMO detalhe e retorne SOMENTE um JSON válido (sem markdown, sem texto fora do JSON).
+Preencha TODOS os campos — NUNCA use null, use string vazia "" ou array vazio [] se não houver valor.
+
 {
-  "descricao": "descricao da imagem completa e super detalhada em portugues",
-  "elementos": ["lista de elementos/objetos visiveis"],
-  "texto_visivel": "todo texto legivel na imagem ou null",
-  "cores_predominantes": ["cores principais"],
-  "contexto": "contexto ou situacao da imagem",
+  "descricao": "Descrição completa e detalhada do que está na imagem em português",
+  "elementos": ["lista de todos os objetos, pessoas, animais, itens visíveis"],
+  "texto_visivel": "todo texto legível na imagem, ou string vazia se não houver",
+  "cores_predominantes": ["cores principais presentes"],
+  "contexto": "contexto ou situação retratada na imagem",
   "qualidade": "boa | media | baixa",
-  "tipo_imagem": "foto | screenshot | documento | arte | outro",
-    "Estudo": "se for prova ou perguntas tipo trabalho de escola facudade ou curso melhore e adicione a resposta"            
+  "tipo_imagem": "foto | screenshot | documento | arte | diagrama | meme | outro",
+  "emocoes_ou_atmosfera": "humor, sentimento ou atmosfera transmitida pela imagem",
+  "Estudo": "Se houver questões, exercícios, prova ou conteúdo educacional, forneça a análise e solução completa. Caso contrário, deixe como string vazia."
 }`
         }
       ]
-    }]
+    }],
+    generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
   };
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${decodificarR13(GEMINI_KEY_R13)}`,
-    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
-  );
-  if (!res.ok) throw new Error("Gemini HTTP " + res.status);
-  const data = await res.json();
-  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-  const clean = rawText.replace(/```json|```/g, "").trim();
-  try { return JSON.parse(clean); }
-  catch { return { descricao: rawText, erro: "JSON invalido" }; }
+
+  const modelos = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+  for (const modelo of modelos) {
+    try {
+      const res = await fetchComTimeout(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${decodificarR13(GEMINI_KEY_R13)}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
+        20000
+      );
+      if (!res.ok) throw new Error("Gemini HTTP " + res.status);
+      const data = await res.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      if (!rawText) throw new Error("resposta vazia");
+      const clean = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error("sem JSON");
+      const parsed = JSON.parse(match[0]);
+      // Garante que nenhum campo seja null
+      for (const k of Object.keys(parsed)) {
+        if (parsed[k] === null || parsed[k] === undefined) {
+          parsed[k] = Array.isArray(parsed[k]) ? [] : "";
+        }
+      }
+      return parsed;
+    } catch (e) {
+      console.warn(`Gemini ${modelo} falhou:`, e.message);
+    }
+  }
+  // Fallback sem null
+  return {
+    descricao: "Imagem recebida. Não foi possível obter análise detalhada automaticamente.",
+    elementos: [], texto_visivel: "", cores_predominantes: [],
+    contexto: "Imagem enviada pelo usuário", qualidade: "desconhecida",
+    tipo_imagem: "foto", emocoes_ou_atmosfera: "", Estudo: ""
+  };
 }
 
 async function enviarComPDF(txtUsuario, arquivo) {
-  consumirQuota("pdf");
+  consumirQuota(1);
   const nome = arquivo.nome;
   const labelUser = txtUsuario ? `${txtUsuario}\n📄 ${nome}` : `📄 ${nome}`;
   addMsg(labelUser, "user");
@@ -1198,23 +1325,36 @@ async function enviarComPDF(txtUsuario, arquivo) {
     setMensagens(msgsAtt);
   } catch (err) {
     console.error("Erro PDF:", err);
-    load.innerHTML = "<span>Erro ao processar PDF.</span>";
+    load.remove();
+    addMsg("Erro ao processar o PDF. Tente novamente.", "bot");
+    tentativas = 0;
   }
 }
 
-async function enviarComFoto(txtUsuario, arquivo) {
-  consumirQuota("foto");
-  const nome = arquivo.nome;
-  const labelUser = txtUsuario ? `${txtUsuario}\n📷 ${nome}` : `📷 ${nome}`;
+async function enviarComFotos(txtUsuario, arquivos) {
+  consumirQuota(arquivos.length);
 
   const intro = chat.querySelector(".intro-screen");
   if (intro) intro.remove();
 
+  // Monta mensagem visual do usuário com as imagens
   const dUser = document.createElement("div");
   dUser.className = "msg user";
-  if (arquivo.dataURL) {
+  if (arquivos.length > 1) {
+    const grid = document.createElement("div");
+    grid.className = "msg-img-grid";
+    arquivos.forEach(arq => {
+      if (arq.dataURL) {
+        const img = document.createElement("img");
+        img.src = arq.dataURL;
+        img.className = "msg-img-preview";
+        grid.appendChild(img);
+      }
+    });
+    dUser.appendChild(grid);
+  } else if (arquivos[0].dataURL) {
     const img = document.createElement("img");
-    img.src = arquivo.dataURL;
+    img.src = arquivos[0].dataURL;
     img.className = "msg-img-preview";
     dUser.appendChild(img);
   }
@@ -1226,81 +1366,115 @@ async function enviarComFoto(txtUsuario, arquivo) {
   chat.appendChild(dUser);
   chat.scrollTop = chat.scrollHeight;
 
+  // Salva mensagem user no histórico com as imagens (para rederização bonita)
+  const userHistMsg = {
+    role: "user",
+    content: txtUsuario || (arquivos.length > 1 ? `${arquivos.length} imagens enviadas` : `📷 ${arquivos[0].nome}`),
+    fotosEnviadas: arquivos.map(a => ({ dataURL: a.dataURL || null, nome: a.nome }))
+  };
+
   input.value = "";
   limparAnexo();
   atualizarContexto(txtUsuario || "foto enviada");
   _persistirSeNovo();
-  
-  const load = _criarLoading("Analisando imagem…");
+
+  const msgs = getMensagens();
+  msgs.push(userHistMsg);
+  setMensagens(msgs);
+
+  const labelQtd = arquivos.length > 1 ? `Analisando ${arquivos.length} imagens…` : "Analisando imagem…";
+  const load = _criarLoading(labelQtd);
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
   try {
-    let jsonImagem = null;
-    let geminiOk = true;
-    try {
-      jsonImagem = await analisarImagemGemini(arquivo.base64, arquivo.mimeType || "image/jpeg");
-      // Se veio com campo de erro do fallback, trata como falha
-      if (jsonImagem?.erro) geminiOk = false;
-    } catch {
-      geminiOk = false;
-    }
+    // Analisa todas as imagens em paralelo
+    const analises = await Promise.all(
+      arquivos.map(arq => analisarImagemGemini(arq.base64, arq.mimeType || "image/jpeg"))
+    );
 
     const cfg = configModo();
     const ctx = gerarContextoUsuario();
-    const key = decodificar(chaves[indiceAtual]);
 
-    const promptParaGroq = txtUsuario
-      ? `O usuario enviou uma foto com o comentario: "${txtUsuario}"\n\nAnalise profundamente visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nResponda ao usuario em portugues levando em conta a imagem e o comentario.`
-      : `O usuario enviou uma foto. Analise visual da imagem:\n${JSON.stringify(jsonImagem, null, 2)}\n\nDescreva com detalhes o que voce ve na imagem e ofereça ajuda relevante em portugues.`;
-
-    const msgs = getMensagens();
-    msgs.push({ role: "user", content: promptParaGroq });
-    setMensagens(msgs);
-
-    const system = _buildSystem(cfg, ctx, promptParaGroq);
-
-    let respostaFinal = null;
-    for (const modelo of ["llama-3.3-70b-versatile", "llama3-8b-8192"]) {
-      try {
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: modelo,
-            temperature: cfg.temperature,
-            messages: [
-              { role: "system", content: system },
-              { role: "user", content: promptParaGroq }
-            ]
-          })
-        });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        respostaFinal = data.choices?.[0]?.message?.content || "Nao consegui analisar a imagem.";
-        break;
-      } catch {
-        if (modelo === "llama3-8b-8192") respostaFinal = "Nao consegui processar a imagem no momento.";
-      }
+    let promptParaGroq;
+    if (arquivos.length === 1) {
+      const json = analises[0];
+      promptParaGroq = txtUsuario
+        ? `O usuário enviou uma foto com o comentário: "${txtUsuario}"\n\nAnálise visual detalhada da imagem:\n${JSON.stringify(json, null, 2)}\n\nResponda ao usuário em português levando em conta a imagem e o comentário.`
+        : `O usuário enviou uma foto. Análise visual detalhada:\n${JSON.stringify(json, null, 2)}\n\nDescreva com detalhes o que você vê e ofereça ajuda relevante em português.`;
+    } else {
+      const blocos = analises.map((j, i) =>
+        `--- Imagem ${i + 1} (${arquivos[i].nome}) ---\n${JSON.stringify(j, null, 2)}`
+      ).join("\n\n");
+      promptParaGroq = txtUsuario
+        ? `O usuário enviou ${arquivos.length} fotos com o comentário: "${txtUsuario}"\n\n${blocos}\n\nAnalise todas as imagens em conjunto e responda em português.`
+        : `O usuário enviou ${arquivos.length} fotos. Análises:\n\n${blocos}\n\nDescreva e compare todas as imagens, oferecendo ajuda em português.`;
     }
 
+    const system = _buildSystem(cfg, ctx, promptParaGroq);
+    let respostaFinal = null;
+
+    const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+    for (let mi = 0; mi < modelos.length; mi++) {
+      const modelo = modelos[mi];
+      let tentativaChave = 0;
+      while (tentativaChave < chaves.length) {
+        const chaveAtual = decodificar(chaves[indiceAtual]);
+        try {
+          const res = await fetchComTimeout("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + chaveAtual, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: modelo, temperature: cfg.temperature,
+              messages: [{ role: "system", content: system }, { role: "user", content: promptParaGroq }]
+            })
+          }, 18000);
+          if (!res.ok) {
+            if (res.status === 429 || res.status === 401) {
+              indiceAtual = (indiceAtual + 1) % chaves.length;
+              tentativaChave++;
+              continue;
+            }
+            throw new Error("HTTP " + res.status);
+          }
+          const data = await res.json();
+          respostaFinal = data.choices?.[0]?.message?.content || "Não consegui analisar a imagem.";
+          break;
+        } catch (e) {
+          console.warn(`Foto - modelo ${modelo} / chave ${indiceAtual} falhou:`, e.message);
+          // Se foi timeout ou erro de rede, tenta próxima chave
+          if (e.message.includes("Timeout") || e.message.includes("fetch")) {
+            indiceAtual = (indiceAtual + 1) % chaves.length;
+            tentativaChave++;
+            continue;
+          }
+          break;
+        }
+      }
+      if (respostaFinal) break;
+    }
+
+    if (!respostaFinal) respostaFinal = "Não consegui processar a imagem no momento. Tente novamente.";
+
     load.remove();
-    addMsg(respostaFinal, "bot");
+    addMsg(respostaFinal || "Não foi possível obter resposta.", "bot");
     const msgsAtt = getMensagens();
-    // Salva a foto analisada no histórico para persistir visualmente
     msgsAtt.push({
       role: "assistant",
       content: respostaFinal,
-      fotoAnalisada: arquivo.dataURL || null,
-      fotoNome: nome
+      fotosAnalisadas: arquivos.map(a => ({ dataURL: a.dataURL || null, nome: a.nome }))
     });
     setMensagens(msgsAtt);
   } catch (err) {
     console.error("Erro foto:", err);
-    load.innerHTML = "<span>Erro ao processar imagem.</span>";
+    load.remove();
+    addMsg("❌ Erro ao processar a imagem. Tente novamente.", "bot");
+    tentativas = 0;
   }
 }
-
+async function enviarComFoto(txtUsuario, arquivo) {
+  await enviarComFotos(txtUsuario, [arquivo]);
+}
 function _criarLoading(texto) {
   const load = document.createElement("div");
   load.className = "msg bot";
@@ -1311,21 +1485,29 @@ function _criarLoading(texto) {
   return load;
 }
 async function enviarComAnexo() {
-  if (_arquivoPendente) {
+  if (_arquivosPendentes.length > 0) {
     const txt = input.value.trim();
-    const arq = _arquivoPendente;
-    if (arq.tipo === "pdf")  { await enviarComPDF(txt, arq);  return; }
-    if (arq.tipo === "foto") { await enviarComFoto(txt, arq); return; }
+    const fotos = _arquivosPendentes.filter(a => a.tipo === "foto");
+    const pdfs  = _arquivosPendentes.filter(a => a.tipo === "pdf");
+
+    // Múltiplas imagens ou imagem única
+    if (fotos.length > 0) {
+      await enviarComFotos(txt, fotos);
+      return;
+    }
+    // PDF (só suporta um por vez)
+    if (pdfs.length > 0) {
+      await enviarComPDF(txt, pdfs[0]);
+      return;
+    }
   }
   await enviar();
 }
-
 // Eventos do botão enviar e teclado
 btn.onclick = enviarComAnexo;
 input.addEventListener("keypress", e => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarComAnexo(); }
 });
-
 /* ====================================================
    INIT
    ==================================================== */

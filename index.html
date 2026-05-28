@@ -137,7 +137,7 @@
       </a>
       <!-- Inputs ocultos -->
       <input type="file" id="inputPDF"  accept="application/pdf" style="display:none">
-      <input type="file" id="inputFoto" accept="image/*"          style="display:none" capture="environment">
+      <input type="file" id="inputFoto" accept="image/*" style="display:none" multiple>
       <input id="input" placeholder="Escreva sua mensagem…" autocomplete="off" spellcheck="false" aria-label="Mensagem">
       <button class="send-btn" id="btn" aria-label="Enviar">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg>
@@ -151,14 +151,14 @@
       <span class="attach-opt-icon">📄</span>
       <div class="attach-opt-info">
         <span class="attach-opt-name">PDF</span>
-        <span class="attach-opt-quota" id="quotaPDF">2 por dia</span>
+        <span class="attach-opt-quota" id="quotaPDF">10 por sessão</span>
       </div>
     </button>
     <button class="attach-option" id="optFoto">
       <span class="attach-opt-icon">📷</span>
       <div class="attach-opt-info">
         <span class="attach-opt-name">Foto</span>
-        <span class="attach-opt-quota" id="quotaFoto">3 por dia</span>
+        <span class="attach-opt-quota" id="quotaFoto">10 por sessão</span>
       </div>
     </button>
   </div>
