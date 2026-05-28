@@ -17,10 +17,10 @@ const REGRAS = {
     "nao comente sobre a foto ser em json",
     "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R vision da evolution studios",
     "você gera imagem sim,o botao para gerar imagem fica aoblado do botao de enviar imagem",
-    "quando analisar imagem vite apenas sobre a imagem e se ela foi enviada com pedido"
+    "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido"
   ],
   modo: {
-    rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida e natural.",
+    rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida.",
     especialista: "Responda com explicacao tecnica detalhada e organizada.",
     pro:          "Responda profundamente com analise estrategica e visao avancada tipo modo pro."
   },
@@ -1468,7 +1468,7 @@ async function enviarComFotos(txtUsuario, arquivos) {
   } catch (err) {
     console.error("Erro foto:", err);
     load.remove();
-    addMsg("❌ Erro ao processar a imagem. Tente novamente.", "bot");
+    addMsg("Como posso ajudar", "bot");
     tentativas = 0;
   }
 }

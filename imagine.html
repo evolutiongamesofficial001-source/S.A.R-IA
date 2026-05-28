@@ -473,7 +473,14 @@
   <div class="toast" id="toast"></div>
 </div>
 
-<script>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.run/@google/genai"
+  }
+}
+</script>
+<script type="module">
 /* ====================================================
    S.A.R Imagine — gerador de imagens
    Evolution Games Studio
@@ -600,17 +607,31 @@ function renderPrompts() {
   });
 }
 
-/* ---------- PROMPT NEGATIVO (oculto, automático) ---------- */
-const NEGATIVE_PROMPT = "blurry, deformed, ugly, low quality, pixelated, distorted anatomy, extra limbs, disfigured, mutated, bad proportions, out of focus, overexposed, watermark, text, logo, signature, artifacts, noise, grain, worst quality, low resolution, jpeg artifacts, duplicate, cloned faces, bad hands, missing fingers, extra fingers, fused fingers, long neck, cropped, frame, border";
+/* ---------- GEMINI SDK — chave em ROT13 ---------- */
+import { GoogleGenAI } from "@google/genai";
 
-/* ---------- BUILD URL ---------- */
-function buildURL(texto) {
+function rot13(s) {
+  return s.replace(/[A-Za-z]/g, c => {
+    const b = c <= 'Z' ? 65 : 97;
+    return String.fromCharCode(((c.charCodeAt(0) - b + 13) % 26) + b);
+  });
+}
+// Chave ROT13 — substitua pelo valor codificado da sua chave real
+const _GK = rot13("ND.No8EA6W8qV1_IVJ28Nh4VnZ7tfYgu1EH7TCmYcEBVR5SVnRSED");   // ← coloque aqui sua chave Google em ROT13
+
+async function gerarImagemGemini(texto) {
   const estilo = ESTILOS.find(e => e.id === estiloAtivo);
   const promptFinal = texto + (estilo?.sufixo || "");
-  const seed = Math.floor(Math.random() * 999999);
-  const models = ["flux", "flux-realism", "flux-cablyai", "turbo"];
-  const model = models[Math.floor(Math.random()*models.length)];
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFinal)}?width=${resW}&height=${resH}&seed=${seed}&model=${model}&nologo=true&enhance=true&safe=false&negative_prompt=${encodeURIComponent(NEGATIVE_PROMPT)}`;
+  const ai = new GoogleGenAI({ apiKey: _GK });
+  const resp = await ai.models.generateContent({
+    model: "gemini-2.0-flash-preview-image-generation",
+    contents: promptFinal,
+    config: { responseModalities: ["IMAGE", "TEXT"] }
+  });
+  const parts = resp?.candidates?.[0]?.content?.parts || [];
+  const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith("image/"));
+  if (!imgPart) throw new Error("Sem imagem na resposta");
+  return `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
 }
 
 /* ---------- DOWNLOAD REAL (fetch + blob) ---------- */
@@ -618,13 +639,21 @@ async function downloadImagem(url, btn) {
   btn.disabled = true;
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="animation:skSpin .8s linear infinite"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="20 14"/></svg> Baixando…`;
   try {
-    const resp = await fetch(url, { mode: "cors" });
-    if (!resp.ok) throw new Error("fetch failed");
-    const blob = await resp.blob();
-    const blobUrl = URL.createObjectURL(blob);
+    let blobUrl;
+    if (url.startsWith("data:")) {
+      // Base64 data URL (Gemini) — converte direto para blob
+      const res = await fetch(url);
+      const blob = await res.blob();
+      blobUrl = URL.createObjectURL(blob);
+    } else {
+      const resp = await fetch(url, { mode: "cors" });
+      if (!resp.ok) throw new Error("fetch failed");
+      const blob = await resp.blob();
+      blobUrl = URL.createObjectURL(blob);
+    }
     const a = document.createElement("a");
     a.href = blobUrl;
-    a.download = `SAR_imagine_${Date.now()}.jpg`;
+    a.download = `SAR_imagine_${Date.now()}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -637,9 +666,8 @@ async function downloadImagem(url, btn) {
       btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4.5 6.5L7 9l2.5-2.5M1.5 12h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Baixar`;
     }, 3000);
   } catch {
-    // fallback: link direto
     const a = document.createElement("a");
-    a.href = url; a.download = `SAR_imagine_${Date.now()}.jpg`; a.target="_blank";
+    a.href = url; a.download = `SAR_imagine_${Date.now()}.png`; a.target="_blank";
     a.click();
     btn.disabled = false;
     btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4.5 6.5L7 9l2.5-2.5M1.5 12h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Baixar`;
@@ -829,7 +857,6 @@ async function gerar() {
   // Melhora o prompt antes de gerar
   showToast("✨ Melhorando prompt…", "");
   const txtMelhorado = await melhorarPrompt(txt);
-  const url = buildURL(txtMelhorado);
 
   removerCardAtual(() => {
     emptyState.style.display = "none";
@@ -838,31 +865,27 @@ async function gerar() {
     gallery.scrollTop = gallery.scrollHeight;
     animarProgresso(sk);
 
-    const img = new Image();
-    img.onload = () => {
+    gerarImagemGemini(txtMelhorado).then(dataUrl => {
       consumir(); atualizarQuotaUI();
-      // Completa progresso antes de revelar
       const bar = sk.querySelector("#skBar");
       const lbl = sk.querySelector("#skLabel");
       if (bar) bar.style.width = "100%";
       if (lbl) lbl.textContent = "Pronto!";
 
       setTimeout(() => {
-        const card = criarCard(url, txtMelhorado, estiloUsado, ar);
+        const card = criarCard(dataUrl, txtMelhorado, estiloUsado, ar);
         sk.replaceWith(card); cardAtual = card;
         gallery.scrollTop = gallery.scrollHeight;
         promptEl.value = "";
         gerando = false; promptEl.disabled = false; atualizarQuotaUI(); promptEl.focus();
         showToast("Imagem gerada!", "success");
       }, 350);
-    };
-    img.onerror = () => {
+    }).catch(err => {
       sk.remove();
       if (!cardAtual) emptyState.style.display = "";
-      showToast("Erro ao gerar. Tente novamente.", "error");
+      showToast("Erro: " + (err.message || "Tente novamente."), "error");
       gerando = false; promptEl.disabled = false; atualizarQuotaUI();
-    };
-    img.src = url;
+    });
   });
 }
 
