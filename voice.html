@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#07040f">
+  <title>S.A.R — Modo Voz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #07040f;
+      --surface:   #0d0a1a;
+      --border:    rgba(255,255,255,.06);
+      --accent:    #7c6aff;
+      --accent-2:  #a78bfa;
+      --accent-3:  #c4b5fd;
+      --glow:      rgba(124,106,255,.35);
+      --glow-soft: rgba(124,106,255,.12);
+      --text:      #f0f0ff;
+      --text-2:    #8080aa;
+      --text-3:    #3a3a5c;
+      --red:       #f87171;
+      --red-glow:  rgba(248,113,113,.35);
+      --green:     #34d399;
+    }
+
+    *, *::before, *::after {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    .shell {
+      width: 100%;
+      height: 100dvh;
+      max-width: 480px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ===== FUNDO GRADIENTE ===== */
+    .bg-glow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bg-glow::before {
+      content: "";
+      position: absolute;
+      top: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,106,255,.18) 0%, transparent 70%);
+      transition: background 1s ease;
+    }
+    .bg-glow.listen::before {
+      background: radial-gradient(circle, rgba(248,113,113,.18) 0%, transparent 70%);
+    }
+    .bg-glow.speak::before {
+      background: radial-gradient(circle, rgba(167,139,250,.22) 0%, transparent 70%);
+    }
+
+    /* ===== HEADER ===== */
+    .v-header {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      padding: 14px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .v-back {
+      display: flex; align-items: center; gap: 7px;
+      color: var(--text-2);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: color .2s, background .2s, border-color .2s;
+    }
+    .v-back:hover {
+      color: var(--accent-2);
+      background: rgba(124,106,255,.1);
+      border-color: rgba(124,106,255,.2);
+    }
+
+    .v-logo {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .v-logo-ring {
+      position: relative; width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .v-logo-ring::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1.5px solid var(--accent);
+      border-radius: 50%;
+      opacity: .5;
+      animation: spin 8s linear infinite;
+    }
+    .v-logo-dot {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--glow);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .v-logo-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent-2);
+      letter-spacing: .03em;
+    }
+
+    .v-pill {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--text-3);
+      background: rgba(255,255,255,.03);
+      padding: 4px 9px; border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    .v-pill-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 5px var(--green);
+    }
+
+    /* ===== CANVAS PARTÍCULAS ===== */
+    #particleCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ===== CONTEÚDO CENTRAL ===== */
+    .v-center {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 24px 24px 0;
+    }
+
+    /* Espaço pro orbe de canvas */
+    .orb-space {
+      width: 240px;
+      height: 240px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Label no centro do orbe */
+    .orb-label {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      pointer-events: none;
+    }
+
+    .orb-emoji {
+      font-size: 36px;
+      line-height: 1;
+      transition: transform .3s ease;
+    }
+
+    .orb-state {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      opacity: .7;
+      transition: color .4s, opacity .3s;
+    }
+
+    /* ===== TRANSCRIPT ===== */
+    .v-transcript-wrap {
+      margin-top: 28px;
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .v-interim {
+      font-size: 14px;
+      color: var(--text-2);
+      text-align: center;
+      min-height: 22px;
+      line-height: 1.5;
+      font-style: italic;
+      transition: opacity .3s;
+      opacity: .7;
+    }
+
+    .v-final {
+      font-size: 15px;
+      color: var(--text);
+      text-align: center;
+      min-height: 42px;
+      max-height: 90px;
+      overflow-y: auto;
+      line-height: 1.55;
+      padding: 0 4px;
+    }
+
+    .v-final.bot { color: var(--accent-3); }
+
+    /* ===== BARRA INFERIOR ===== */
+    .v-footer {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Ondas de áudio */
+    .wave-bars {
+      display: flex; align-items: center;
+      gap: 3px; height: 24px;
+    }
+    .wave-bar {
+      width: 3px; border-radius: 3px;
+      background: var(--accent);
+      transform-origin: center;
+      animation: waveDance .5s ease-in-out infinite alternate;
+      opacity: .25;
+    }
+    .wave-bar:nth-child(1) { height: 6px;  animation-delay: 0s; }
+    .wave-bar:nth-child(2) { height: 12px; animation-delay: .06s; }
+    .wave-bar:nth-child(3) { height: 20px; animation-delay: .12s; }
+    .wave-bar:nth-child(4) { height: 14px; animation-delay: .18s; }
+    .wave-bar:nth-child(5) { height: 8px;  animation-delay: .24s; }
+
+    .wave-bars.listen .wave-bar { background: var(--red); opacity: 1; }
+    .wave-bars.speak  .wave-bar { background: var(--accent-2); opacity: 1; }
+    .wave-bars.think  .wave-bar { background: #60a5fa; opacity: .6;
+      animation: waveDance 1.4s ease-in-out infinite alternate; }
+
+    @keyframes waveDance {
+      from { transform: scaleY(.3); }
+      to   { transform: scaleY(1.5); }
+    }
+
+    /* Estado textual */
+    .v-state-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      align-items: center;
+    }
+    .v-state-name {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      transition: color .3s;
+    }
+    .v-state-hint {
+      font-size: 11px;
+      color: var(--text-3);
+      opacity: .6;
+    }
+
+    /* Botão parar */
+    .v-stop-btn {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text-3);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; outline: none;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+    .v-stop-btn:hover { color: var(--red); border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
+    .v-stop-btn:active { transform: scale(.93); }
+
+    /* ===== HISTÓRICO ===== */
+    .v-history {
+      position: relative; z-index: 10;
+      width: 100%;
+      max-height: 170px;
+      overflow-y: auto;
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+    }
+    .v-history:empty { display: none; border-top: none; }
+
+    .vh-user {
+      align-self: flex-end;
+      background: rgba(124,106,255,.13);
+      border: 1px solid rgba(124,106,255,.18);
+      color: var(--text);
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 14px 14px 3px 14px;
+      max-width: 82%;
+      line-height: 1.4;
+    }
+    .vh-bot {
+      align-self: flex-start;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 14px 14px 14px 3px;
+      max-width: 82%;
+      line-height: 1.4;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: rgba(13,10,26,.95);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 20px;
+      transition: transform .3s ease;
+      z-index: 99;
+      white-space: nowrap;
+      backdrop-filter: blur(12px);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.07); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- FUNDO -->
+  <div class="bg-glow" id="bgGlow"></div>
+
+  <!-- CANVAS PARTÍCULAS -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- HEADER -->
+  <header class="v-header">
+    <a href="index.html" class="v-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M8 2L3.5 6.5 8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Chat
+    </a>
+
+    <div class="v-logo">
+      <div class="v-logo-ring"><div class="v-logo-dot"></div></div>
+      <span class="v-logo-name"></span>
+    </div>
+
+    <div class="v-pill">
+      <span class="v-pill-dot"></span>
+      <span>Voz</span>
+    </div>
+  </header>
+
+  <!-- CENTRO -->
+  <main class="v-center">
+
+    <div class="orb-space">
+      <div class="orb-label">
+        <span class="orb-emoji" id="orbEmoji"></span>
+        <span class="orb-state" id="orbState"></span>
+      </div>
+    </div>
+
+    <div class="v-transcript-wrap">
+      <div class="v-interim" id="interimTxt"></div>
+      <div class="v-final"   id="finalTxt">Pode falar…</div>
+    </div>
+
+  </main>
+
+  <!-- HISTÓRICO -->
+  <section class="v-history" id="vHistory"></section>
+
+  <!-- RODAPÉ -->
+  <footer class="v-footer">
+    <div class="wave-bars" id="waveBars">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+
+    <div class="v-state-info">
+      <span class="v-state-name" id="stateName">Aguardando</span>
+      <span class="v-state-hint" id="stateHint">Fale a qualquer momento</span>
+    </div>
+
+    <button class="v-stop-btn" id="stopBtn" title="Parar fala">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="2.5" y="2.5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====================================================
+   S.A.R — MODO VOZ (sempre ouvindo)
+   ==================================================== */
+
+/* ---------- 🔑 CHAVES GROQ ---------- */
+function decodificar(str) {
+  return str.replace(/[a-zA-Z]/g, c => {
+    const b = c <= "Z" ? 65 : 97;
+    return String.fromCharCode(((c.charCodeAt(0) - b + 15) % 26) + b);
+  });
+}
+const CHAVES = [
+  "rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM",
+  "rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3",
+  "rdv_uuBMlVuxyFshNSSpgouaHRojm3QJeOcIaoqeZHB68JtNehuYcjzP",
+  "rdv_ZwAEelTSOuFXDMCzCyAdHRojm3QJM3IT5whwyc6KYtVXSytIbUWH",
+  "rdv_tHcmv4NP8HSTN8Y0uCBGHRojm3QJyE6P0JxZO00XKII62YoCq2aU"
+];
+let _chaveIdx = 0;
+function getChave() { return decodificar(CHAVES[_chaveIdx]); }
+function rotacionarChave() { _chaveIdx = (_chaveIdx + 1) % CHAVES.length; }
+
+/* ---------- 🧩 DOM ---------- */
+const canvas    = document.getElementById("particleCanvas");
+const ctx2d     = canvas.getContext("2d");
+const bgGlow    = document.getElementById("bgGlow");
+const waveBars  = document.getElementById("waveBars");
+const stateName = document.getElementById("stateName");
+const stateHint = document.getElementById("stateHint");
+const orbEmoji  = document.getElementById("orbEmoji");
+const orbState  = document.getElementById("orbState");
+const interimTxt= document.getElementById("interimTxt");
+const finalTxt  = document.getElementById("finalTxt");
+const stopBtn   = document.getElementById("stopBtn");
+const vHistory  = document.getElementById("vHistory");
+const toastEl   = document.getElementById("toast");
+
+/* ---------- 🎨 PARTÍCULAS ---------- */
+const PARTICLE_COUNT = 320;
+let particles = [];
+let animReq;
+let orbMode = "idle"; // idle | listen | think | speak
+
+const CORES = {
+  idle:   { inner: [124,106,255], outer: [80,60,200],  glow: [124,106,255] },
+  listen: { inner: [255,120,120], outer: [200,60,60],  glow: [248,113,113] },
+  think:  { inner: [96,165,250],  outer: [50,100,200], glow: [96,165,250]  },
+  speak:  { inner: [167,139,250], outer: [120,80,255], glow: [167,139,250] }
+};
+
+function resizeCanvas() {
+  const shell = canvas.parentElement;
+  canvas.width  = shell.clientWidth;
+  canvas.height = shell.clientHeight;
+  initParticles();
+}
+
+function initParticles() {
+  particles = [];
+  const cx = canvas.width  / 2;
+  const cy = canvas.height * .38; // Centro do orbe
+  const R  = 110; // Raio da esfera
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    // Distribui pontos na superfície de uma esfera (Fibonacci)
+    const theta = Math.acos(1 - 2 * (i + .5) / PARTICLE_COUNT);
+    const phi   = Math.PI * (1 + Math.sqrt(5)) * i;
+
+    const x3 = Math.sin(theta) * Math.cos(phi);
+    const y3 = Math.sin(theta) * Math.sin(phi);
+    const z3 = Math.cos(theta);
+
+    particles.push({
+      ox: x3, oy: y3, oz: z3, // posição original na esfera
+      x: cx + x3 * R,
+      y: cy + y3 * R,
+      z: z3,
+      r: Math.random() * 1.4 + .4,
+      phase: Math.random() * Math.PI * 2,
+      speed: .003 + Math.random() * .004,
+      amp:   2 + Math.random() * 4,
+      rotAngle: 0
+    });
+  }
+}
+
+let _rotY = 0;
+let _rotX = 0;
+let _targetRotY = .0015;
+let _targetRotX = .0005;
+let _energyLevel = 0; // 0=idle, 1=listen/speak
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function drawParticles(ts) {
+  const cx = canvas.width  / 2;
+  const cy = canvas.height * .38;
+  const R  = 110;
+
+  ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Energia alvo por modo
+  const energyTarget = (orbMode === "listen" || orbMode === "speak") ? 1 : (orbMode === "think" ? .5 : 0);
+  _energyLevel = lerp(_energyLevel, energyTarget, .04);
+
+  // Velocidade de rotação aumenta com energia
+  _rotY += .0012 + _energyLevel * .006;
+  _rotX += .0004 + _energyLevel * .002;
+
+  const cosY = Math.cos(_rotY), sinY = Math.sin(_rotY);
+  const cosX = Math.cos(_rotX), sinX = Math.sin(_rotX);
+
+  const cor = CORES[orbMode] || CORES.idle;
+
+  for (const p of particles) {
+    // Rotação Y
+    const x1 = p.ox * cosY - p.oz * sinY;
+    const z1 = p.ox * sinY + p.oz * cosY;
+    // Rotação X
+    const y1 = p.oy * cosX - z1  * sinX;
+    const z2 = p.oy * sinX + z1  * cosX;
+
+    // Pulso de energia
+    const pulse = Math.sin(ts * p.speed * 1000 + p.phase) * p.amp * _energyLevel;
+    const scale = R + pulse;
+
+    const sx = cx + x1 * scale;
+    const sy = cy + y1 * scale;
+    const depth = (z2 + 1) / 2; // 0=fundo, 1=frente
+
+    // Cor com profundidade
+    const ri = Math.round(lerp(cor.outer[0], cor.inner[0], depth));
+    const gi = Math.round(lerp(cor.outer[1], cor.inner[1], depth));
+    const bi = Math.round(lerp(cor.outer[2], cor.inner[2], depth));
+    const alpha = .18 + depth * .75 + _energyLevel * .15;
+
+    // Tamanho com profundidade e energia
+    const size = p.r * (.5 + depth * .7) * (1 + _energyLevel * .3);
+
+    // Glow nas partículas frontais
+    if (depth > .7) {
+      ctx2d.shadowBlur = 6 + _energyLevel * 8;
+      ctx2d.shadowColor = `rgba(${cor.glow[0]},${cor.glow[1]},${cor.glow[2]},.8)`;
+    } else {
+      ctx2d.shadowBlur = 0;
+    }
+
+    ctx2d.beginPath();
+    ctx2d.arc(sx, sy, Math.max(.3, size), 0, Math.PI * 2);
+    ctx2d.fillStyle = `rgba(${ri},${gi},${bi},${Math.min(1, alpha)})`;
+    ctx2d.fill();
+  }
+
+  // Núcleo brilhante no centro
+  const glowR = 22 + _energyLevel * 18;
+  const grad = ctx2d.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+  const [gr, gg, gb] = cor.glow;
+  grad.addColorStop(0,   `rgba(${gr},${gg},${gb},${.45 + _energyLevel * .35})`);
+  grad.addColorStop(.5,  `rgba(${gr},${gg},${gb},${.1  + _energyLevel * .1})`);
+  grad.addColorStop(1,   `rgba(${gr},${gg},${gb},0)`);
+  ctx2d.shadowBlur = 0;
+  ctx2d.beginPath();
+  ctx2d.arc(cx, cy, glowR, 0, Math.PI * 2);
+  ctx2d.fillStyle = grad;
+  ctx2d.fill();
+
+  animReq = requestAnimationFrame(drawParticles);
+}
+
+/* ---------- 🎭 ESTADOS VISUAIS ---------- */
+function setModo(modo) {
+  orbMode = modo;
+  bgGlow.className  = "bg-glow";
+  waveBars.className= "wave-bars";
+
+  if (modo === "idle") {
+    bgGlow.classList.add();
+    waveBars.className = "wave-bars";
+    orbEmoji.textContent  = "🤖";
+    orbState.textContent  = "Ouvindo";
+    orbState.style.color  = "";
+    stateName.textContent = "Aguardando";
+    stateName.style.color = "";
+    stateHint.textContent = "Fale a qualquer momento";
+    interimTxt.textContent = "";
+    finalTxt.textContent  = "Pode falar…";
+    finalTxt.className    = "v-final";
+
+  } else if (modo === "listen") {
+    bgGlow.classList.add("listen");
+    waveBars.classList.add("listen");
+    orbEmoji.textContent  = "👂";
+    orbState.textContent  = "Ouvindo";
+    orbState.style.color  = "var(--red)";
+    stateName.textContent = "Ouvindo";
+    stateName.style.color = "var(--red)";
+    stateHint.textContent = "Pode falar…";
+
+  } else if (modo === "think") {
+    bgGlow.className = "bg-glow";
+    waveBars.classList.add("think");
+    orbEmoji.textContent  = "🧠";
+    orbState.textContent  = "Pensando";
+    orbState.style.color  = "#60a5fa";
+    stateName.textContent = "Pensando";
+    stateName.style.color = "#60a5fa";
+    stateHint.textContent = "Processando…";
+
+  } else if (modo === "speak") {
+    bgGlow.classList.add("speak");
+    waveBars.classList.add("speak");
+    orbEmoji.textContent  = "💬";
+    orbState.textContent  = "Respondendo";
+    orbState.style.color  = "var(--accent-2)";
+    stateName.textContent = "Respondendo";
+    stateName.style.color = "var(--accent-2)";
+    stateHint.textContent = "Toque ■ para interromper";
+  }
+}
+
+let _toastTmr;
+function showToast(msg, ms = 3000) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(_toastTmr);
+  _toastTmr = setTimeout(() => toastEl.classList.remove("show"), ms);
+}
+
+/* ---------- 📜 HISTÓRICO ---------- */
+function addHistorico(txt, tipo) {
+  const d = document.createElement("div");
+  d.className = tipo === "user" ? "vh-user" : "vh-bot";
+  d.textContent = txt;
+  vHistory.appendChild(d);
+  vHistory.scrollTop = vHistory.scrollHeight;
+}
+
+/* ---------- 🏗️ SYSTEM PROMPT ---------- */
+function buildSystem() {
+  const agora  = new Date();
+  const dtStr  = agora.toLocaleDateString("pt-BR", { timeZone:"America/Sao_Paulo", weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  const hrStr  = agora.toLocaleTimeString("pt-BR", { timeZone:"America/Sao_Paulo", hour:"2-digit", minute:"2-digit" });
+  return `Voce e a S.A.R — IA feminina brasileira (ela/dela), criada pela Evolution Games Studio, programada pelo Joao Antonio.
+Responde sempre em portugues do Brasil de forma natural e conversacional.
+MODO VOZ: respostas serao lidas em voz alta. Seja CONCISA e NATURAL.
+- Sem listas com simbolos, sem markdown, sem emojis. Apenas texto limpo.
+- Respostas curtas e diretas sao melhores para audio. 1 a 3 frases quando possivel.
+- Se a pergunta for simples, 1 frase basta.
+DATA E HORA: ${dtStr}, ${hrStr} (Brasilia).
+Nunca invente informacoes. Se nao souber, diga que nao sabe.`;
+}
+
+let mensagens = [{ role:"system", content: buildSystem() }];
+
+/* ---------- 🤖 GROQ ---------- */
+async function chamarGroq(texto) {
+  mensagens.push({ role:"user", content: texto });
+  const MAX = 14;
+  const sys = mensagens[0];
+  let hist = mensagens.slice(1);
+  if (hist.length > MAX) hist = hist.slice(-MAX);
+
+  for (const modelo of ["llama-3.3-70b-versatile","llama3-8b-8192"]) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization":"Bearer "+getChave(), "Content-Type":"application/json" },
+        body: JSON.stringify({ model:modelo, temperature:.4, max_tokens:280, messages:[sys,...hist] }),
+        signal: AbortSignal.timeout(20000)
+      });
+      if (!res.ok) { if (res.status===429||res.status===401) rotacionarChave(); throw new Error("HTTP"+res.status); }
+      const data = await res.json();
+      const resp = data.choices?.[0]?.message?.content?.trim();
+      if (!resp) throw new Error("vazia");
+      mensagens.push({ role:"assistant", content:resp });
+      if (mensagens.length > MAX+1) mensagens = [mensagens[0], ...mensagens.slice(-MAX)];
+      return resp;
+    } catch(e) { console.warn("Groq",modelo,e.message); }
+  }
+  throw new Error("Todos falharam");
+}
+
+/* ---------- 🔊 TTS com fix Android PWA ---------- */
+let _ttsQueue = [], _ttsSpeaking = false, _ttsKeepAlive = null;
+
+function limparTTS() {
+  speechSynthesis.cancel();
+  _ttsQueue = []; _ttsSpeaking = false;
+  if (_ttsKeepAlive) { clearInterval(_ttsKeepAlive); _ttsKeepAlive = null; }
+}
+
+function falarTexto(texto, onEnd) {
+  limparTTS();
+  _ttsSpeaking = true;
+
+  const limpo = texto
+    .replace(/\*\*(.+?)\*\*/g,"$1").replace(/\*(.+?)\*/g,"$1")
+    .replace(/`(.+?)`/g,"$1").replace(/#{1,6}\s/g,"")
+    .replace(/[*_~`>#\-]/g,"").replace(/https?:\/\/\S+/g,"link")
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu,"").replace(/[\u{2600}-\u{27BF}]/gu,"")
+    .replace(/\s+/g," ").trim();
+
+  if (!limpo) { onEnd?.(); return; }
+
+  // Divide em sentenças para evitar corte no Android
+  _ttsQueue = limpo.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(s=>s.length>0);
+
+  // keepalive a cada 10s (fix Android PWA)
+  _ttsKeepAlive = setInterval(() => {
+    if (speechSynthesis.speaking) { speechSynthesis.pause(); setTimeout(()=>speechSynthesis.resume(), 50); }
+  }, 10000);
+
+  function next() {
+    if (!_ttsSpeaking || _ttsQueue.length===0) {
+      clearInterval(_ttsKeepAlive); _ttsKeepAlive=null;
+      _ttsSpeaking = false;
+      onEnd?.();
+      return;
+    }
+    const u = new SpeechSynthesisUtterance(_ttsQueue.shift());
+    u.lang = "pt-BR"; u.rate = .95; u.pitch = 1.05; u.volume = 1;
+    const vozes = speechSynthesis.getVoices();
+    const voz = vozes.find(v => v.lang==="pt-BR" || v.lang.startsWith("pt"));
+    if (voz) u.voice = voz;
+    u.onend   = () => setTimeout(next, 70);
+    u.onerror = () => setTimeout(next, 70);
+    try { speechSynthesis.speak(u); } catch(e) { setTimeout(next, 150); }
+  }
+  next();
+}
+
+/* ---------- 🎤 STT — sempre ouvindo ---------- */
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+const temSTT = !!SpeechRec;
+let rec = null;
+let _estado = "idle"; // idle | listen | think | speak
+let _reiniciarTimer = null;
+
+function iniciarEscuta() {
+  if (!temSTT || _estado === "listen") return;
+  if (rec) { try { rec.stop(); } catch(e){} rec = null; }
+
+  _estado = "listen";
+  setModo("listen");
+
+  rec = new SpeechRec();
+  rec.lang = "pt-BR";
+  rec.interimResults = true;
+  rec.maxAlternatives = 1;
+  rec.continuous = false;
+
+  rec.onresult = (e) => {
+    let interim = "", final = "";
+    for (const r of e.results) {
+      if (r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    interimTxt.textContent = interim;
+    if (final) finalTxt.textContent = final;
+    finalTxt.className = "v-final";
+  };
+
+  rec.onend = () => {
+    const texto = finalTxt.textContent.trim();
+    if (_estado !== "listen") return;
+    // Se não captou nada útil, reinicia escuta
+    if (!texto || texto === "Pode falar…" || texto.length < 2) {
+      _reiniciarEscuta(800);
+      return;
+    }
+    processarFala(texto);
+  };
+
+  rec.onerror = (e) => {
+    if (e.error === "no-speech" || e.error === "aborted") {
+      _reiniciarEscuta(600);
+      return;
+    }
+    if (e.error === "not-allowed") {
+      showToast("🚫 Permissão de microfone negada");
+      setModo("idle"); _estado = "idle";
+      return;
+    }
+    _reiniciarEscuta(1200);
+  };
+
+  try { rec.start(); }
+  catch(e) { _reiniciarEscuta(1000); }
+}
+
+function _reiniciarEscuta(delay=600) {
+  if (_estado !== "listen" && _estado !== "idle") return;
+  _estado = "idle";
+  clearTimeout(_reiniciarTimer);
+  _reiniciarTimer = setTimeout(() => {
+    if (_estado === "idle") iniciarEscuta();
+  }, delay);
+}
+
+async function processarFala(texto) {
+  if (!texto || texto.length < 2) { _reiniciarEscuta(); return; }
+
+  limparTTS();
+  _estado = "think";
+  setModo("think");
+  interimTxt.textContent = "";
+  finalTxt.textContent   = texto;
+  finalTxt.className     = "v-final";
+  addHistorico(texto, "user");
+
+  try {
+    const resposta = await chamarGroq(texto);
+    if (_estado !== "think") return; // foi interrompido
+
+    finalTxt.textContent = resposta;
+    finalTxt.className   = "v-final bot";
+    addHistorico(resposta, "bot");
+
+    _estado = "speak";
+    setModo("speak");
+
+    falarTexto(resposta, () => {
+      if (_estado === "speak") {
+        _estado = "idle";
+        setModo("idle");
+        setTimeout(iniciarEscuta, 400);
+      }
+    });
+
+  } catch(err) {
+    console.error(err);
+    const errMsg = "Ops, tive um problema de conexão. Pode repetir?";
+    finalTxt.textContent = errMsg;
+    finalTxt.className   = "v-final bot";
+    _estado = "speak";
+    setModo("speak");
+    falarTexto(errMsg, () => {
+      _estado = "idle"; setModo("idle");
+      setTimeout(iniciarEscuta, 500);
+    });
+    showToast("⚠️ Erro de conexão");
+  }
+}
+
+/* ---------- 🛑 BOTÃO PARAR ---------- */
+stopBtn.onclick = () => {
+  limparTTS();
+  if (rec) { try { rec.stop(); } catch(e){} rec = null; }
+  clearTimeout(_reiniciarTimer);
+  _estado = "idle";
+  setModo("idle");
+  finalTxt.textContent = "Pode falar…";
+  finalTxt.className   = "v-final";
+  interimTxt.textContent = "";
+  setTimeout(iniciarEscuta, 400);
+};
+
+/* ---------- 🚀 INIT ---------- */
+(function init() {
+  // Canvas
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+  requestAnimationFrame(drawParticles);
+
+  // Vozes
+  speechSynthesis.getVoices();
+  if (speechSynthesis.onvoiceschanged !== undefined)
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+  if (!temSTT) {
+    setModo("idle");
+    finalTxt.textContent = "Seu navegador não suporta reconhecimento de voz. Use Chrome.";
+    showToast("❌ Sem suporte a voz", 5000);
+    return;
+  }
+
+  // Começa a ouvir automaticamente
+  // Pequeno delay para garantir que o contexto de áudio está pronto
+  setTimeout(iniciarEscuta, 800);
+
+  console.log("🎙️ S.A.R Modo Voz (sempre ouvindo) iniciado");
+})();
+</script>
+</body>
+</html>

@@ -473,14 +473,7 @@
   <div class="toast" id="toast"></div>
 </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.run/@google/genai"
-  }
-}
-</script>
-<script type="module">
+<script>
 /* ====================================================
    S.A.R Imagine — gerador de imagens
    Evolution Games Studio
@@ -514,7 +507,7 @@ const PROMPTS_PRONTOS = [
 
 /* ---------- QUOTA ---------- */
 const LS_QUOTA  = "sar_img_quota_v3";
-const LIMITE    = 6;
+const LIMITE    = 10;
 const JANELA_MS = 60 * 60 * 1000;
 function quotaVazia()   { return { usado:0, inicio:Date.now() }; }
 function carregarQuota() {
@@ -607,31 +600,24 @@ function renderPrompts() {
   });
 }
 
-/* ---------- GEMINI SDK — chave em ROT13 ---------- */
-import { GoogleGenAI } from "@google/genai";
-
+/* ---------- ROT13 ---------- */
 function rot13(s) {
   return s.replace(/[A-Za-z]/g, c => {
     const b = c <= 'Z' ? 65 : 97;
     return String.fromCharCode(((c.charCodeAt(0) - b + 13) % 26) + b);
   });
 }
-// Chave ROT13 — substitua pelo valor codificado da sua chave real
-const _GK = rot13("ND.No8EA6W8qV1_IVJ28Nh4VnZ7tfYgu1EH7TCmYcEBVR5SVnRSED");   // ← coloque aqui sua chave Google em ROT13
 
+/* ---------- GERAR COM POLLINATIONS ---------- */
 async function gerarImagemGemini(texto) {
   const estilo = ESTILOS.find(e => e.id === estiloAtivo);
   const promptFinal = texto + (estilo?.sufixo || "");
-  const ai = new GoogleGenAI({ apiKey: _GK });
-  const resp = await ai.models.generateContent({
-    model: "gemini-2.0-flash-preview-image-generation",
-    contents: promptFinal,
-    config: { responseModalities: ["IMAGE", "TEXT"] }
-  });
-  const parts = resp?.candidates?.[0]?.content?.parts || [];
-  const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith("image/"));
-  if (!imgPart) throw new Error("Sem imagem na resposta");
-  return `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+
+  const encodedPrompt = encodeURIComponent(promptFinal);
+  const seed = Date.now();
+
+  // Pollinations direto
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&model=turbo`;
 }
 
 /* ---------- DOWNLOAD REAL (fetch + blob) ---------- */

@@ -1,9 +1,10 @@
 /* ====================================================
-   S.A.R — Evolution Games Studio
-   Desenvolvido por João Antônio & Lucas Macedo
+   🤖 S.A.R — Evolution Games Studio
+   👨‍💻 Desenvolvido por João Antônio & Lucas Macedo
+   ⚽ Football API integrada | 🎬 Coding Animation
    ==================================================== */
 
-/* ---------- REGRAS ---------- */
+/* ---------- 📋 REGRAS ---------- */
 const REGRAS = {
   anti_alucinacao: [
     "Nunca invente informacoes",
@@ -15,13 +16,14 @@ const REGRAS = {
     "Voce se sacrificaria para um bem maior ou para salvar alguem, responda com sim desde que seja uma boa pessoa",
     "Seu nome e S.A.R (Suporte Artificial Racional) desenvolvida pela Evolution Games Studio e programada por Joao Antonio",
     "nao comente sobre a foto ser em json",
-    "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R vision da evolution studios",
-    "você gera imagem sim,o botao para gerar imagem fica aoblado do botao de enviar imagem",
-    "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido"
+    "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R Vision da Evolution Studios",
+    "você gera imagem sim, o botao para gerar imagem fica ao lado do botao de enviar imagem",
+    "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido",
+    "Para futebol, use a ferramenta de busca de football que o sistema possui para trazer dados reais e atualizados"
   ],
   modo: {
-    rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida.",
-    especialista: "Responda com explicacao tecnica detalhada e organizada.",
+    rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida. Use emojis quando fizer sentido.",
+    especialista: "Responda com explicacao tecnica detalhada e organizada. Emojis podem ser usados para identificar seções.",
     pro:          "Responda profundamente com analise estrategica e visao avancada tipo modo pro."
   },
   equipe: {
@@ -34,7 +36,7 @@ const REGRAS = {
 };
 
 /* ====================================================
-   ABORT CONTROLLER — cancela tudo ao limpar
+   🚫 ABORT CONTROLLER — cancela tudo ao limpar
    ==================================================== */
 let _abortController = new AbortController();
 function _cancelarTudo() {
@@ -43,7 +45,7 @@ function _cancelarTudo() {
 }
 
 /* ====================================================
-   FETCH COM TIMEOUT — evita requisições travadas
+   ⏱️ FETCH COM TIMEOUT — evita requisições travadas
    ==================================================== */
 async function fetchComTimeout(url, options, ms = 18000) {
   const controller = new AbortController();
@@ -54,13 +56,13 @@ async function fetchComTimeout(url, options, ms = 18000) {
     return res;
   } catch (e) {
     clearTimeout(timer);
-    if (e.name === "AbortError") throw new Error("Timeout: sem resposta em " + (ms / 1000) + "s");
+    if (e.name === "AbortError") throw new Error("⏱️ Timeout: sem resposta em " + (ms / 1000) + "s");
     throw e;
   }
 }
 
 /* ====================================================
-   PERFIL DO USUÁRIO — gostos, nome, idade, etc
+   👤 PERFIL DO USUÁRIO — gostos, nome, idade, etc
    ==================================================== */
 const LS_PERFIL = "sar_perfil_v1";
 
@@ -75,16 +77,16 @@ function atualizarPerfil(texto) {
   const perfil = carregarPerfil();
   let mudou = false;
 
-  // Nome
+  // 🏷️ Nome
   const nomeMatch = texto.match(/(?:meu nome [eé]|me chamo|pode me chamar de|sou [oa]|eu sou)\s+([A-ZÀ-Úa-zà-ú]{2,})/i);
   if (nomeMatch) { perfil.nome = nomeMatch[1].charAt(0).toUpperCase() + nomeMatch[1].slice(1).toLowerCase(); mudou = true; }
 
-  // Idade
+  // 🎂 Idade
   const idadeMatch = texto.match(/(?:tenho|minha idade [eé]|anos de idade|tenho)\s+(\d{1,2})\s*anos/i) ||
                      texto.match(/(\d{1,2})\s*anos\s*(?:de idade)?/i);
   if (idadeMatch) { const a = parseInt(idadeMatch[1]); if (a >= 5 && a <= 100) { perfil.idade = a; mudou = true; } }
 
-  // Gostos positivos
+  // 💚 Gostos positivos
   const gostoMatch = texto.match(/(?:gosto de|amo|adoro|curto|minha paixão [eé]|meu hobbie [eé]|me diverte)\s+([^.,!?]{3,40})/gi);
   if (gostoMatch) {
     if (!perfil.gostos) perfil.gostos = [];
@@ -92,10 +94,10 @@ function atualizarPerfil(texto) {
       const val = m.replace(/^(gosto de|amo|adoro|curto|minha paixão é|meu hobbie é|me diverte)\s*/i, "").trim().toLowerCase();
       if (val.length > 2 && !perfil.gostos.includes(val)) { perfil.gostos.push(val); mudou = true; }
     });
-    perfil.gostos = perfil.gostos.slice(-12); // mantém últimos 12
+    perfil.gostos = perfil.gostos.slice(-12);
   }
 
-  // Não gosta
+  // 🔴 Não gosta
   const naoGostoMatch = texto.match(/(?:não gosto de|detesto|odeio|não curto|tenho raiva de)\s+([^.,!?]{3,40})/gi);
   if (naoGostoMatch) {
     if (!perfil.naoGosta) perfil.naoGosta = [];
@@ -106,7 +108,7 @@ function atualizarPerfil(texto) {
     perfil.naoGosta = perfil.naoGosta.slice(-8);
   }
 
-  // Profissão
+  // 💼 Profissão
   const profMatch = texto.match(/(?:sou|trabalho como|minha profissão [eé]|trabalho de)\s+([\w\sà-ú]{3,30})(?:\s|$|,|\.)/i);
   if (profMatch) {
     const val = profMatch[1].trim().toLowerCase();
@@ -131,7 +133,7 @@ function gerarContextoPerfil() {
          "\n- Use essas informacoes de forma natural nas respostas quando for relevante.";
 }
 
-/* ---------- ELEMENTOS ---------- */
+/* ---------- 🧩 ELEMENTOS ---------- */
 const sidebar         = document.getElementById("sidebar");
 const overlay         = document.getElementById("overlay");
 const tituloSAR       = document.getElementById("tituloSAR");
@@ -146,7 +148,7 @@ const novoChat        = document.getElementById("novoChat");
 const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
 
 /* ====================================================
-   SISTEMA DE SENTIMENTOS / EMOCIONAL
+   💗 SISTEMA DE SENTIMENTOS / EMOCIONAL
    ==================================================== */
 const LS_EMOCIONAL = "sar_emocional_v2";
 
@@ -239,7 +241,7 @@ function renderHumorPanel() {
 
   if (panel) {
     if (!data.humor || data.totalMsgs < 1) {
-      panel.innerHTML = `<div class="humor-vazio">Nenhuma mensagem ainda…</div>`;
+      panel.innerHTML = `<div class="humor-vazio">Nenhuma mensagem ainda… 💬</div>`;
     } else {
       const emocao = EMOCOES[data.humor];
       const ranking = Object.entries(data.emocoes)
@@ -276,7 +278,7 @@ function renderHumorPanel() {
       .sort((a, b) => b[1].total - a[1].total);
     const max = todas[0]?.[1]?.total || 1;
     if (todas.length === 0) {
-      modalPanel.innerHTML = `<div class="humor-vazio-modal">Nenhum sentimento detectado ainda.</div>`;
+      modalPanel.innerHTML = `<div class="humor-vazio-modal">Nenhum sentimento detectado ainda. 💤</div>`;
     } else {
       modalPanel.innerHTML = todas.map(([chave, val]) => {
         const e = EMOCOES[chave];
@@ -297,14 +299,14 @@ function renderHumorPanel() {
 
 function _tempoRelativo(ts) {
   const diff = Date.now() - ts;
-  if (diff < 60000) return "agora";
+  if (diff < 60000) return "agora ⚡";
   if (diff < 3600000) return Math.floor(diff / 60000) + "min atrás";
   if (diff < 86400000) return Math.floor(diff / 3600000) + "h atrás";
   return Math.floor(diff / 86400000) + "d atrás";
 }
 
 /* ====================================================
-   HISTÓRICO DE CHATS
+   📁 HISTÓRICO DE CHATS
    ==================================================== */
 const LS_CHATS  = "sar_chats";
 const MAX_CHATS = 8;
@@ -319,7 +321,7 @@ function carregarChats() {
 function salvarChats(obj) { localStorage.setItem(LS_CHATS, JSON.stringify(obj)); }
 
 let _chat = {
-  id: gerarId(), titulo: "Novo chat", criadoEm: Date.now(),
+  id: gerarId(), titulo: "Novo chat 💬", criadoEm: Date.now(),
   mensagens: [{ role: "system", content: "Voce e a S.A.R" }],
   persistido: false
 };
@@ -344,7 +346,6 @@ function setMensagens(msgs) {
   if (_chat.persistido) {
     const chats = carregarChats();
     if (chats[_chat.id]) {
-      // Preserva campos extras como imagemData e imagemPrompt
       chats[_chat.id].mensagens = msgs;
       chats[_chat.id].titulo = _chat.titulo;
       salvarChats(chats);
@@ -354,7 +355,7 @@ function setMensagens(msgs) {
 
 function novoSlot() {
   _chat = {
-    id: gerarId(), titulo: "Novo chat", criadoEm: Date.now(),
+    id: gerarId(), titulo: "Novo chat 💬", criadoEm: Date.now(),
     mensagens: [{ role: "system", content: "Voce e a S.A.R" }],
     persistido: false
   };
@@ -383,9 +384,19 @@ function _mostrarIntro() {
       <div class="logo-ring"></div>
       <div class="logo-dot"></div>
     </div>
-    <h2 class="intro-title">Olá! Sou a S.A.R</h2>
-    <p class="intro-sub">Como posso te ajudar hoje?</p>
+    <h2 class="intro-title">Olá! Sou a S.A.R 👋</h2>
+    <p class="intro-sub">Como posso te ajudar hoje? ✨</p>
+    <div class="intro-chips">
+      <button class="intro-chip" onclick="preencherInput('⚽ Jogos de hoje no futebol')">⚽ Futebol ao vivo</button>
+      <button class="intro-chip" onclick="preencherInput('💻 Me ajuda com código')">💻 Programação</button>
+      <button class="intro-chip" onclick="preencherInput('🧠 Explica um conceito pra mim')">🧠 Aprender algo</button>
+    </div>
   </div>`;
+}
+
+function preencherInput(txt) {
+  input.value = txt;
+  input.focus();
 }
 
 function renderMsgHistorico(m) {
@@ -393,7 +404,7 @@ function renderMsgHistorico(m) {
   d.className = "msg " + (m.role === "user" ? "user" : "bot");
 
   if (m.role === "user") {
-    // Mostra imagens enviadas pelo usuário no histórico
+    // 🖼️ Mostra imagens enviadas pelo usuário no histórico
     if (m.fotosEnviadas?.length) {
       if (m.fotosEnviadas.length > 1) {
         const grid = document.createElement("div");
@@ -416,13 +427,33 @@ function renderMsgHistorico(m) {
         d.appendChild(img);
       }
     }
+
+    // 📝 No histórico, mostra APENAS o texto original do usuário
+    // Remove dados internos de contexto (como [DADOS REAIS DA API...])
+    // que foram injetados internamente e não devem aparecer para o usuário
     if (m.content) {
       const span = document.createElement("span");
-      span.textContent = m.content;
-      d.appendChild(span);
+      // ✂️ Se o conteúdo tem marcadores internos, pega só a parte visível
+      let textoVisivel = m.content;
+      // ✂️ Quebra nos marcadores internos, fica só com a parte antes deles
+      const cortes = [
+        "\n\n[DADOS REAIS DA API",
+        "\n\n[PDF ANEXADO",
+        "\n\nINSTRUCAO:",
+        "\n\n[CONTEXT",
+      ];
+      for (const corte of cortes) {
+        const idx = textoVisivel.indexOf(corte);
+        if (idx !== -1) textoVisivel = textoVisivel.slice(0, idx);
+      }
+            textoVisivel = textoVisivel.trim();
+      if (textoVisivel) {
+        span.textContent = textoVisivel;
+        d.appendChild(span);
+      }
     }
   } else {
-    // Compatibilidade com formato antigo (fotoAnalisada)
+    
     const fotos = m.fotosAnalisadas || (m.fotoAnalisada ? [{ dataURL: m.fotoAnalisada, nome: m.fotoNome }] : null);
     if (fotos?.length) {
       if (fotos.length > 1) {
@@ -456,12 +487,12 @@ function renderMsgHistorico(m) {
 
 function _criarCopyBtn(texto) {
   const cb = document.createElement("button");
-  cb.textContent = "Copiar";
+  cb.textContent = "📋 Copiar";
   cb.className = "copy-btn";
   cb.onclick = () => {
     navigator.clipboard.writeText(texto).catch(() => {});
-    cb.textContent = "✓";
-    setTimeout(() => cb.textContent = "Copiar", 1400);
+    cb.textContent = "✅ Copiado!";
+    setTimeout(() => cb.textContent = "📋 Copiar", 1400);
   };
   return cb;
 }
@@ -472,13 +503,13 @@ function renderHistorico() {
   const ativoId = chatId();
   const lista = Object.values(chats).sort((a, b) => b.criadoEm - a.criadoEm);
   if (lista.length === 0) {
-    historicoLista.innerHTML = "<div class='hist-vazio'>Sem histórico</div>";
+    historicoLista.innerHTML = "<div class='hist-vazio'>📭 Sem histórico</div>";
     return;
   }
   lista.forEach(c => {
     const item = document.createElement("div");
     item.className = "hist-item" + (c.id === ativoId ? " ativo" : "");
-    item.innerHTML = `<span class="hist-titulo">${escapeHTML(c.titulo)}</span>
+    item.innerHTML = `<span class="hist-titulo">💬 ${escapeHTML(c.titulo)}</span>
       <button class="hist-del" data-id="${c.id}" aria-label="Excluir">
         <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 1l7 7M8 1L1 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>`;
@@ -532,7 +563,7 @@ function detectarNome(texto) {
 }
 
 function atualizarContexto(userMsg) {
-  atualizarPerfil(userMsg); // atualiza perfil + nome embutido
+  atualizarPerfil(userMsg);
   analisarSentimento(userMsg);
   renderHumorPanel();
 }
@@ -546,7 +577,7 @@ function gerarContextoUsuario() {
   return (linhas.length ? "\nCONTEXTO DO USUARIO:\n" + linhas.map(l => "- " + l).join("\n") : "") + ctx + ctxPerfil;
 }
 
- function fecharSidebar() {
+function fecharSidebar() {
   sidebar.classList.remove("open");
   overlay.classList.remove("show");
 }
@@ -606,6 +637,7 @@ function decodificar(str) {
     return String.fromCharCode(((c.charCodeAt(0) - b + 15) % 26) + b);
   });
 }
+
 const chaves = [
   "rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM",
   "rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3",
@@ -690,11 +722,39 @@ function eCalculo(texto) {
   return padroes.some(p => p.test(t));
 }
 
+function eProgramacao(texto) {
+  const t = texto.toLowerCase();
+  const padroes = [
+    /c[oó]dig[oa]/, /program/, /função/, /funcao/, /classe/, /objeto/,
+    /vari[aá]vel/, /loop/, /array/, /string/, /javascript/, /python/,
+    /react/, /html/, /css/, /java\b/, /typescript/, /node/, /sql/,
+    /banco de dados/, /api/, /endpoint/, /debug/, /erro no c[oó]d/,
+    /me ajuda\s+com/, /como\s+fazer\s+em/, /algoritmo/, /script/,
+    /frontend/, /backend/, /full.?stack/, /git/, /github/, /deploy/,
+    /bug/, /refatorar/, /otimizar\s+c[oó]d/
+  ];
+  return padroes.some(p => p.test(t));
+}
+
+// ⚽ Detecta se a pergunta é sobre futebol
+function eFutebol(texto) {
+  const t = texto.toLowerCase();
+  const padroes = [
+    /futebol/, /jogo.?(de hoje|ao vivo|agora)/, /placar/, /campeonato/,
+    /premier\s*league/, /brasileir[aã]o/, /champions/, /libertadores/,
+    /copa\s*do\s*mundo/, /copa\s*brasil/, /seleç[aã]o/, /time\s+de\s+futebol/,
+    /jogos?\s+de\s+hoje/, /resultado.?jogo/, /artilheiro/, /classificaç[aã]o/,
+    /tabela\s+de/, /rodada/, /confronto/, /escalação/, /gol\s+de/,
+    /messi|neymar|mbapp|haaland|vinicius|benzema|modric|salah/i
+  ];
+  return padroes.some(p => p.test(t));
+}
+
 function instrucaoCalculo() {
   return `\n\nINSTRUCAO ESPECIAL - CALCULOS:
 Quando responder a um calculo ou problema matematico, voce DEVE:
 1. Dar a resposta direta primeiro
-2. Em seguida, sempre mostrar e adapitar a formula/resolucao dentro de um bloco especial iniciado por ===FORMULA=== e terminado por ===FIM===
+2. Em seguida, sempre mostrar e adaptar a formula/resolucao dentro de um bloco especial iniciado por ===FORMULA=== e terminado por ===FIM===
 Exemplo:
 ===FORMULA===
   25 x 5 = 125
@@ -721,8 +781,9 @@ function escapeHTML(str) {
 function highlightCode(code) {
   return code
     .replace(/(\/\/[^\n]*)/g, "<span class='com'>$1</span>")
+    .replace(/(#[^\n]*)/g, "<span class='com'>$1</span>")
     .replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, "<span class='str'>$1</span>")
-    .replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|async|await|try|catch|throw|new|typeof|instanceof|switch|case|break|continue|default|do|in|of|null|undefined|true|false)\b/g, "<span class='kw'>$1</span>")
+    .replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|async|await|try|catch|throw|new|typeof|instanceof|switch|case|break|continue|default|do|in|of|null|undefined|true|false|def|print|elif|lambda|pass|from|with|as|not|and|or|is|None|True|False)\b/g, "<span class='kw'>$1</span>")
     .replace(/\b(\d+)\b/g, "<span class='num'>$1</span>");
 }
 
@@ -803,7 +864,7 @@ function renderizarFormulaEscolar(texto) {
 
 function formatarTexto(textoRaw) {
   return _splitPartes(textoRaw).map(p => {
-    if (p.tipo === "codigo")  return `<div class="code-block"><button class="copy-code">Copiar</button><pre><code>${highlightCode(escapeHTML(p.conteudo))}</code></pre></div>`;
+    if (p.tipo === "codigo")  return `<div class="code-block"><button class="copy-code">📋 Copiar</button><pre><code>${highlightCode(escapeHTML(p.conteudo))}</code></pre></div>`;
     if (p.tipo === "formula") return renderizarFormulaEscolar(p.conteudo);
     return formatarBlocoTexto(p.conteudo);
   }).join("");
@@ -820,7 +881,7 @@ function typeWriter(el, textoRaw) {
     if (p.tipo === "codigo") {
       const bloco = document.createElement("div");
       bloco.className = "code-block";
-      bloco.innerHTML = "<button class='copy-code'>Copiar</button><pre><code>" + highlightCode(escapeHTML(p.conteudo)) + "</code></pre>";
+      bloco.innerHTML = "<button class='copy-code'>📋 Copiar</button><pre><code>" + highlightCode(escapeHTML(p.conteudo)) + "</code></pre>";
       el.appendChild(bloco);
       proxParte();
     } else if (p.tipo === "formula") {
@@ -875,12 +936,50 @@ function addMsg(txt, tipo) {
 }
 
 document.addEventListener("click", e => {
+  // 📋 Corrige bug de cópia — extrai texto puro sem HTML dos spans
   if (!e.target.classList.contains("copy-code")) return;
-  const code = e.target.parentElement.querySelector("code")?.innerText || "";
-  navigator.clipboard.writeText(code).catch(() => {});
-  e.target.textContent = "✓";
-  setTimeout(() => e.target.textContent = "Copiar", 1400);
+
+  const codeEl = e.target.closest(".code-block")?.querySelector("code");
+  if (!codeEl) return;
+
+  // 🧹 Percorre todos os nós de texto dentro do <code>, ignorando tags
+  // Isso garante que nunca copie HTML, só o texto puro do código
+  let textoLimpo = "";
+  function extrairTexto(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      textoLimpo += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // 🔁 Entra em cada elemento filho (span.kw, span.str, etc.)
+      for (const filho of node.childNodes) {
+        extrairTexto(filho);
+      }
+    }
+  }
+  extrairTexto(codeEl);
+
+  // ✂️ Remove possíveis artefatos de highlight (< > & etc.)
+  // que foram escapados mas não deveriam aparecer
+  textoLimpo = textoLimpo
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  navigator.clipboard.writeText(textoLimpo).catch(() => {});
+  e.target.textContent = "✅ Copiado!";
+  setTimeout(() => e.target.textContent = "📋 Copiar", 1400);
 });
+
+function _dataAtual() {
+  // Data/hora atual no fuso de Sao Paulo
+  const agora = new Date();
+  const optsData = { timeZone: "America/Sao_Paulo", weekday: "long", year: "numeric", month: "long", day: "numeric" };
+  const optsHora = { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" };
+  const dataStr = agora.toLocaleDateString("pt-BR", optsData);
+  const horaStr = agora.toLocaleTimeString("pt-BR", optsHora);
+  return dataStr + ", " + horaStr + " (horario de Brasilia)";
+}
 
 function _buildSystem(cfg, ctx, userContent) {
   const incluirEquipe = mencionaEquipe(userContent);
@@ -891,6 +990,8 @@ function _buildSystem(cfg, ctx, userContent) {
     "Voce e a S.A.R — IA feminina brasileira (ela/dela), direta, sem julgamentos morais.",
     "Voce foi criada pela Evolution Games Studio, programada pelo Joao Antonio.",
     "Voce e brasileira e responde sempre em portugues do Brasil de forma natural.",
+    "Use emojis de forma natural nas respostas para tornar a conversa mais amigavel e visual.",
+    "DATA E HORA ATUAL: " + _dataAtual() + " -- use esta informacao sempre que perguntarem que dia, mes, ano ou hora e agora.",
     "ANTI-ALUCINACAO:",
     ...REGRAS.anti_alucinacao.map(r => "- " + r),
     infoEquipe,
@@ -900,7 +1001,6 @@ function _buildSystem(cfg, ctx, userContent) {
   ].join("\n");
 }
 
-// Limpa o histórico para enviar à API — remove campos extras e garante content válido
 function _limparMsgsParaAPI(msgs) {
   return msgs
     .filter(m => m.role !== "system")
@@ -945,37 +1045,366 @@ async function chamarAPI(msgs) {
 
       if (!res.ok) {
         const errBody = await res.text().catch(() => "");
-        console.error(`Groq HTTP ${res.status}:`, errBody);
+        console.error(`🔴 Groq HTTP ${res.status}:`, errBody);
         if (res.status === 429 || res.status === 401) {
           indiceAtual = (indiceAtual + 1) % chaves.length;
         }
         ultimoErro = new Error("HTTP " + res.status);
-        continue; // tenta próximo modelo
+        continue;
       }
 
       const data = await res.json();
       const resposta = data.choices?.[0]?.message?.content;
-      if (!resposta) throw new Error("resposta vazia da API");
+      if (!resposta) throw new Error("⚠️ Resposta vazia da API");
       return resposta;
 
     } catch (e) {
-      console.error(`Modelo ${modelos[mi]} falhou:`, e.message);
+      console.error(`⚠️ Modelo ${modelos[mi]} falhou:`, e.message);
       ultimoErro = e;
     }
   }
 
-  throw ultimoErro || new Error("Todos os modelos falharam");
+  throw ultimoErro || new Error("❌ Todos os modelos falharam");
 }
 
 let tentativas = 0;
+
+const FOOTBALL_API_KEY = ""; // ← Cole sua chave aqui
+const FOOTBALL_API_HOST = "v3.football.api-sports.io";
+
+async function buscarJogosFutebolHoje() {
+  // 📅 Data de hoje no formato YYYY-MM-DD
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  try {
+    const res = await fetchComTimeout(
+      `https://${FOOTBALL_API_HOST}/fixtures?date=${hoje}&timezone=America/Sao_Paulo`,
+      {
+        method: "GET",
+        headers: {
+          "x-rapidapi-key": FOOTBALL_API_KEY,
+          "x-rapidapi-host": FOOTBALL_API_HOST
+        }
+      },
+      12000
+    );
+    if (!res.ok) throw new Error("⚽ Football API HTTP " + res.status);
+    const data = await res.json();
+    return data.response || [];
+  } catch (e) {
+    console.warn("⚽ Football API falhou:", e.message);
+    return null;
+  }
+}
+
+async function buscarClassificacaoCampeonato(leagueId, season) {
+  try {
+    const res = await fetchComTimeout(
+      `https://${FOOTBALL_API_HOST}/standings?league=${leagueId}&season=${season}`,
+      {
+        method: "GET",
+        headers: {
+          "x-rapidapi-key": FOOTBALL_API_KEY,
+          "x-rapidapi-host": FOOTBALL_API_HOST
+        }
+      },
+      12000
+    );
+    if (!res.ok) throw new Error("⚽ Football API HTTP " + res.status);
+    const data = await res.json();
+    return data.response || [];
+  } catch (e) {
+    console.warn("⚽ Classificação API falhou:", e.message);
+    return null;
+  }
+}
+
+// 📋 Formata os jogos retornados pela API para texto
+function formatarJogosFutebol(jogos) {
+  if (!jogos || jogos.length === 0) return "⚽ Nenhum jogo encontrado para hoje.";
+
+  // 🏆 Agrupa por liga
+  const porLiga = {};
+  jogos.forEach(jogo => {
+    const liga = jogo.league?.name || "Liga Desconhecida";
+    const pais = jogo.league?.country || "";
+    const chave = `${pais ? pais + " — " : ""}${liga}`;
+    if (!porLiga[chave]) porLiga[chave] = [];
+    porLiga[chave].push(jogo);
+  });
+
+  let texto = `⚽ **Jogos de Hoje** (${new Date().toLocaleDateString("pt-BR")})\n\n`;
+
+  // 🗂️ Prioriza ligas brasileiras e populares primeiro
+  const ordem = Object.keys(porLiga).sort((a, b) => {
+    const prioridade = (s) => {
+      if (s.includes("Brazil")) return 0;
+      if (s.includes("UEFA Champions")) return 1;
+      if (s.includes("Premier League")) return 2;
+      if (s.includes("La Liga")) return 3;
+      return 9;
+    };
+    return prioridade(a) - prioridade(b);
+  });
+
+  ordem.slice(0, 8).forEach(liga => {
+    texto += `🏆 **${liga}**\n`;
+    porLiga[liga].slice(0, 6).forEach(jogo => {
+      const hora = new Date(jogo.fixture.date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const status = jogo.fixture.status.short;
+      const placas = jogo.goals;
+      const timeA = jogo.teams.home.name;
+      const timeB = jogo.teams.away.name;
+
+      let statusEmoji = "🕐";
+      let placarTexto = "";
+
+      if (status === "FT") { statusEmoji = "✅"; placarTexto = ` ${placas.home} × ${placas.away}`; }
+      else if (status === "1H" || status === "2H" || status === "ET" || status === "P") {
+        statusEmoji = "🔴 AO VIVO";
+        placarTexto = ` ${placas.home ?? 0} × ${placas.away ?? 0}`;
+      }
+      else if (status === "HT") { statusEmoji = "⏸️ INT"; placarTexto = ` ${placas.home} × ${placas.away}`; }
+      else { statusEmoji = `🕐 ${hora}`; }
+
+      texto += `  ${statusEmoji} **${timeA}**${placarTexto} **${timeB}**\n`;
+    });
+    texto += "\n";
+  });
+
+  return texto.trim();
+}
+
+// 🔍 Verifica se a API de futebol está configurada
+function footballApiConfigurada() {
+  return FOOTBALL_API_KEY && FOOTBALL_API_KEY.length > 10;
+}
+
+const CODING_FRASES = [
+  { emoji: "🔍", texto: "Analisando o código…" },
+  { emoji: "💡", texto: "Pensando na solução…" },
+  { emoji: "⌨️", texto: "Digitando resposta…" },
+  { emoji: "🛠️", texto: "Montando o código…" },
+  { emoji: "🧪", texto: "Testando a lógica…" },
+  { emoji: "📝", texto: "Documentando…" },
+  { emoji: "🔧", texto: "Ajustando detalhes…" },
+  { emoji: "✅", texto: "Quase pronto…" }
+];
+
+// 💻 Trechos de código falso para animação visual
+const CODIGO_FAKE_LINHAS = [
+  "const resultado = resolver(problema);",
+  "function analisar(input) {",
+  "  return dados.filter(x => x.valid);",
+  "}",
+  "await Promise.all(etapas);",
+  "if (erro) throw new Error('debug...');",
+  "// Otimizando algoritmo...",
+  "return { status: 'ok', data };",
+  "for (const item of lista) {",
+  "  processar(item);",
+  "}",
+  "const api = new SAREngine();",
+];
+
+function _criarLoadingCoding(texto) {
+  const load = document.createElement("div");
+  load.className = "msg bot";
+  load.innerHTML = `
+    <div class="coding-loading">
+      <div class="coding-header">
+        <div class="coding-dots-row">
+          <span class="coding-dot red"></span>
+          <span class="coding-dot yellow"></span>
+          <span class="coding-dot green"></span>
+        </div>
+        <span class="coding-title">💻 S.A.R — Code Engine</span>
+      </div>
+      <div class="coding-body">
+        <div class="coding-fake-lines" id="codingFakeLines"></div>
+        <div class="coding-cursor">█</div>
+      </div>
+      <div class="coding-footer">
+        <div class="coding-spinner"></div>
+        <span class="coding-status" id="codingStatus">${CODING_FRASES[0].emoji} ${CODING_FRASES[0].texto}</span>
+      </div>
+    </div>
+  `;
+
+  // 🎬 Inicia a animação de código falso digitando
+  let fraseIdx = 0;
+  let linhaIdx = 0;
+  const fakeContainer = load.querySelector("#codingFakeLines");
+  const statusEl = load.querySelector("#codingStatus");
+
+  // 📺 Anima status a cada 1.2s
+  const statusInterval = setInterval(() => {
+    fraseIdx = (fraseIdx + 1) % CODING_FRASES.length;
+    if (statusEl) statusEl.textContent = `${CODING_FRASES[fraseIdx].emoji} ${CODING_FRASES[fraseIdx].texto}`;
+  }, 1200);
+
+  // 💻 Adiciona linhas de código fake progressivamente
+  const linhaInterval = setInterval(() => {
+    if (!fakeContainer) return;
+    const linha = document.createElement("div");
+    linha.className = "coding-fake-line";
+    linha.textContent = CODIGO_FAKE_LINHAS[linhaIdx % CODIGO_FAKE_LINHAS.length];
+    fakeContainer.appendChild(linha);
+    linhaIdx++;
+    // 🗑️ Limpa linha mais antiga se passar de 6
+    if (fakeContainer.children.length > 6) {
+      fakeContainer.removeChild(fakeContainer.firstChild);
+    }
+    fakeContainer.scrollTop = fakeContainer.scrollHeight;
+  }, 420);
+
+  // 🧹 Guarda os intervals no elemento para limpeza
+  load._codingIntervals = [statusInterval, linhaInterval];
+
+  return load;
+}
+
+function _criarLoading(texto) {
+  const load = document.createElement("div");
+  load.className = "msg bot";
+
+  const ehImagem = texto.toLowerCase().includes("imagem") || texto.toLowerCase().includes("foto");
+  const ehCodigo = texto.toLowerCase().includes("código") || texto.toLowerCase().includes("codando") || texto.toLowerCase().includes("pensando…") && _ultimaPergunhaEhCodigo;
+
+  if (ehImagem) {
+    // 🔭 Loading SAR Vision
+    load.innerHTML = `<div class="sar-vision-loading">
+      <div class="svl-scanner">
+        <div class="svl-ring svl-ring1"></div>
+        <div class="svl-ring svl-ring2"></div>
+        <div class="svl-ring svl-ring3"></div>
+        <div class="svl-dot"></div>
+        <div class="svl-scan-line"></div>
+      </div>
+      <div class="svl-info">
+        <span class="svl-label">${texto}</span>
+        <div class="svl-steps">
+          <span class="svl-step svl-step-active" id="svl-s1">🔍 Carregando…</span>
+          <span class="svl-step" id="svl-s2">🎨 Processando pixels…</span>
+          <span class="svl-step" id="svl-s3">🧠 Interpretando…</span>
+        </div>
+      </div>
+    </div>`;
+    setTimeout(() => {
+      const s1 = load.querySelector("#svl-s1");
+      const s2 = load.querySelector("#svl-s2");
+      if (s1) s1.classList.remove("svl-step-active");
+      if (s2) s2.classList.add("svl-step-active");
+    }, 2200);
+    setTimeout(() => {
+      const s2 = load.querySelector("#svl-s2");
+      const s3 = load.querySelector("#svl-s3");
+      if (s2) s2.classList.remove("svl-step-active");
+      if (s3) s3.classList.add("svl-step-active");
+    }, 5000);
+  } else {
+    // 💬 Loading padrão com bolinhas
+    load.innerHTML = `<div class="thinking-indicator">
+      <div class="thinking-dots"><span></span><span></span><span></span></div>
+      <span>${texto}</span>
+    </div>`;
+  }
+  return load;
+}
+
+// ✨ Flag global para saber se última pergunta era código
+let _ultimaPergunhaEhCodigo = false;
 
 async function enviar() {
   const txt = input.value.trim();
   if (!txt) return;
 
-  if (assuntoBloqueado(txt)) { addMsg("Não posso ajudar com isso.", "bot"); return; }
-  if (assuntoPorno(txt))     { addMsg("Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot"); return; }
+  if (assuntoBloqueado(txt)) { addMsg("🚫 Não posso ajudar com isso.", "bot"); return; }
+  if (assuntoPorno(txt))     { addMsg("🔞 Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot"); return; }
 
+  // ⚽ FUTEBOL — sempre usa API quando configurada, para qualquer pergunta sobre futebol
+  if (eFutebol(txt)) {
+    addMsg(txt, "user");
+    input.value = "";
+    atualizarContexto(txt);
+    _persistirSeNovo();
+
+    if (footballApiConfigurada()) {
+      const loadFutebol = _criarLoading("⚽ Buscando dados do futebol…");
+      chat.appendChild(loadFutebol);
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        // 📅 Busca jogos de hoje para ter dados contextuais reais
+        const jogos = await buscarJogosFutebolHoje();
+        const dadosFutebol = jogos !== null && jogos.length > 0 ? formatarJogosFutebol(jogos) : null;
+        loadFutebol.remove();
+
+        // 🤖 Monta prompt com dados reais — responde APENAS o que foi perguntado
+        let memoria = getMensagens();
+        let promptFinal;
+        if (dadosFutebol) {
+          promptFinal = txt + "\n\n[DADOS REAIS DA API - " + new Date().toLocaleDateString("pt-BR") + "]:\n" + dadosFutebol +
+            "\n\nINSTRUCAO: Responda SOMENTE o que o usuario perguntou acima, usando os dados reais fornecidos. " +
+            "Seja direto, objetivo e preciso. Nao adicione informacoes extras que nao foram solicitadas. " +
+            "Foque apenas em futebol profissional. Se o dado solicitado nao estiver nos dados acima, diga que nao tem essa informacao agora.";
+        } else {
+          promptFinal = txt +
+            "\n\nINSTRUCAO: Responda SOMENTE o que foi perguntado sobre futebol profissional. " +
+            "A API de jogos ao vivo nao retornou dados agora. Seja direto e objetivo. " +
+            "Se nao tiver certeza de algum dado atual, diga isso claramente.";
+        }
+
+        memoria.push({ role: "user", content: promptFinal });
+        setMensagens(memoria);
+
+        const loadAI = _criarLoading("⚽ Analisando…");
+        chat.appendChild(loadAI);
+        chat.scrollTop = chat.scrollHeight;
+
+        try {
+          const r = await chamarAPI(getMensagens());
+          loadAI.remove();
+          addMsg(r, "bot");
+          const m = getMensagens();
+          m.push({ role: "assistant", content: r });
+          setMensagens(m);
+        } catch (e) {
+          loadAI.remove();
+          if (dadosFutebol) addMsg(dadosFutebol, "bot");
+          else addMsg("⚽ Nao consegui buscar dados agora. Tente novamente!", "bot");
+        }
+      } catch (err) {
+        loadFutebol.remove();
+        await _responderViaIA(txt);
+      }
+    } else {
+      // ⚽ Sem API — responde com o conhecimento da IA, mas avisa
+      let memoria = getMensagens();
+      const promptSemApi = txt +
+        "\n\nINSTRUCAO: Responda SOMENTE o que foi perguntado sobre futebol profissional. " +
+        "Seja direto, objetivo e preciso. Nao invente resultados ou dados que voce nao tem certeza. " +
+        "Se for sobre algo muito recente que voce nao sabe, diga isso.";
+      memoria.push({ role: "user", content: promptSemApi });
+      setMensagens(memoria);
+      const loadFut = _criarLoading("⚽ Pensando…");
+      chat.appendChild(loadFut);
+      chat.scrollTop = chat.scrollHeight;
+      try {
+        const r = await chamarAPI(getMensagens());
+        loadFut.remove();
+        addMsg(r, "bot");
+        const m = getMensagens();
+        m.push({ role: "assistant", content: r });
+        setMensagens(m);
+      } catch (err) {
+        loadFut.remove();
+        addMsg("⚠️ Estou com dificuldade de conexao agora. Tente de novo! 😊", "bot");
+      }
+    }
+    return;
+  }
+  
   addMsg(txt, "user");
   input.value = "";
   atualizarContexto(txt);
@@ -985,10 +1414,44 @@ async function enviar() {
   memoria.push({ role: "user", content: txt });
   setMensagens(memoria);
 
-  const load = _criarLoading("Pensando…");
+  // 👨‍💻 Usa animação de coding se for pergunta de programação
+  const ehCodigo = eProgramacao(txt);
+  _ultimaPergunhaEhCodigo = ehCodigo;
+  let load;
+
+  if (ehCodigo) {
+    load = _criarLoadingCoding("💻 Gerando código…");
+  } else {
+    load = _criarLoading("🧠 Pensando…");
+  }
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
+  try {
+    const r = await chamarAPI(getMensagens());
+    // 🧹 Para os intervals da animação de coding se existirem
+    if (load._codingIntervals) {
+      load._codingIntervals.forEach(clearInterval);
+    }
+    load.remove();
+    addMsg(r, "bot");
+    const m = getMensagens();
+    m.push({ role: "assistant", content: r });
+    setMensagens(m);
+  } catch (err) {
+    if (load._codingIntervals) load._codingIntervals.forEach(clearInterval);
+    load.remove();
+    addMsg("⚠️ Estou com dificuldade de conexão agora. Pode tentar novamente? 😊", "bot");
+  }
+}
+
+async function _responderViaIA(txt) {
+  let memoria = getMensagens();
+  memoria.push({ role: "user", content: txt });
+  setMensagens(memoria);
+  const load = _criarLoading("🧠 Pensando…");
+  chat.appendChild(load);
+  chat.scrollTop = chat.scrollHeight;
   try {
     const r = await chamarAPI(getMensagens());
     load.remove();
@@ -998,15 +1461,17 @@ async function enviar() {
     setMensagens(m);
   } catch (err) {
     load.remove();
-    addMsg("❌ ERRO: " + err.message, "bot");
+    addMsg("⚠️ Estou com dificuldade de conexão agora. Tente de novo! 😊", "bot");
   }
 }
 
 clearBtn.onclick = () => {
   _cancelarTudo();
-  // Remove loading que possa estar na tela
   chat.querySelectorAll(".msg.bot").forEach(el => {
-    if (el.querySelector(".thinking-indicator")) el.remove();
+    if (el.querySelector(".thinking-indicator") || el.querySelector(".coding-loading")) {
+      if (el._codingIntervals) el._codingIntervals.forEach(clearInterval);
+      el.remove();
+    }
   });
   novoSlot(); _mostrarIntro(); renderHistorico();
 };
@@ -1024,14 +1489,14 @@ function decodificarR13(str) {
     return String.fromCharCode(((c.charCodeAt(0) - b + 13) % 26) + b);
   });
 }
-const LIMITE_ANEXOS = 10; // limite global compartilhado entre foto e PDF
+
+const LIMITE_ANEXOS = 10;
 const LS_QUOTA      = "sar_quota_v3";
-const QUOTA_JANELA_MS = 90 * 60 * 1000; // 1h30min em milissegundos
+const QUOTA_JANELA_MS = 90 * 60 * 1000;
 
 function _quotaVazia() {
   return { total: 0, resetEm: Date.now() + QUOTA_JANELA_MS };
 }
-
 function carregarQuota() {
   try {
     const raw = localStorage.getItem(LS_QUOTA);
@@ -1045,15 +1510,12 @@ function carregarQuota() {
     return q;
   } catch { return _quotaVazia(); }
 }
-
 function salvarQuota(q) { localStorage.setItem(LS_QUOTA, JSON.stringify(q)); }
-// qtd = número de anexos consumidos (para múltiplas imagens)
 function consumirQuota(qtd = 1) { const q = carregarQuota(); q.total += qtd; salvarQuota(q); }
 function quotaRestante() {
   const q = carregarQuota();
   return Math.max(0, LIMITE_ANEXOS - q.total);
 }
-
 function _tempoAteReset() {
   const q = carregarQuota();
   const diff = Math.max(0, q.resetEm - Date.now());
@@ -1066,13 +1528,15 @@ const attachBtn    = document.getElementById("attachBtn");
 const attachMenu   = document.getElementById("attachMenu");
 const optPDF       = document.getElementById("optPDF");
 const optFoto      = document.getElementById("optFoto");
+const optCamera    = document.getElementById("optCamera");      // 📸 Câmera
 const inputPDF     = document.getElementById("inputPDF");
 const inputFoto    = document.getElementById("inputFoto");
+const inputCamera  = document.getElementById("inputCamera");    // 📸 Input câmera
 const attachPreview= document.getElementById("attachPreview");
 const quotaPDFEl   = document.getElementById("quotaPDF");
 const quotaFotoEl  = document.getElementById("quotaFoto");
 
-let _arquivosPendentes = []; // suporta múltiplos arquivos
+let _arquivosPendentes = [];
 
 function renderChips() {
   if (_arquivosPendentes.length === 0) {
@@ -1100,18 +1564,17 @@ function renderChips() {
   });
 }
 
-function mostrarChip(nome, tipo) { renderChips(); } // legado — renderChips já cobre
-
 function limparAnexo() {
   _arquivosPendentes = [];
   attachPreview.style.display = "none";
   attachPreview.innerHTML = "";
   inputPDF.value = ""; inputFoto.value = "";
 }
-  function atualizarQuotaUI() {
+
+function atualizarQuotaUI() {
   const r     = quotaRestante();
   const tempo = _tempoAteReset();
-  const textoQuota = r > 0 ? `${r} restante${r !== 1 ? "s" : ""}` : `Reset em ${tempo}`;
+  const textoQuota = r > 0 ? `${r} restante${r !== 1 ? "s" : ""}` : `⏳ Reset em ${tempo}`;
   const cls        = "attach-opt-quota" + (r === 0 ? " esgotado" : "");
   quotaPDFEl.textContent  = textoQuota;
   quotaFotoEl.textContent = textoQuota;
@@ -1136,11 +1599,20 @@ document.addEventListener("click", e => {
 optPDF.onclick  = () => { toggleAttachMenu(false); inputPDF.value  = ""; inputPDF.click(); };
 optFoto.onclick = () => { toggleAttachMenu(false); inputFoto.value = ""; inputFoto.click(); };
 
+// 📸 Câmera — abre câmera traseira no mobile via capture="environment"
+if (optCamera) {
+  optCamera.onclick = () => {
+    toggleAttachMenu(false);
+    inputCamera.value = "";
+    inputCamera.click();
+  };
+}
+
 function lerBase64(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload  = () => res(r.result.split(",")[1]);
-    r.onerror = () => rej(new Error("Falha ao ler arquivo"));
+    r.onerror = () => rej(new Error("❌ Falha ao ler arquivo"));
     r.readAsDataURL(file);
   });
 }
@@ -1148,8 +1620,33 @@ function lerDataURL(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload  = () => res(r.result);
-    r.onerror = () => rej(new Error("Falha ao ler imagem"));
+    r.onerror = () => rej(new Error("❌ Falha ao ler imagem"));
     r.readAsDataURL(file);
+  });
+}
+
+function normalizarImagemParaJpeg(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 1600;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataURL = canvas.toDataURL("image/jpeg", 0.88);
+      const base64  = dataURL.split(",")[1];
+      res({ base64, dataURL, mimeType: "image/jpeg" });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("❌ Falha ao carregar imagem")); };
+    img.src = url;
   });
 }
 
@@ -1157,15 +1654,60 @@ inputPDF.addEventListener("change", async () => {
   const file = inputPDF.files[0];
   if (!file) return;
   if (quotaRestante() <= 0) {
-    alert(`Você atingiu o limite de ${LIMITE_ANEXOS} anexos. Aguarde o reset.`);
+    alert(`⚠️ Você atingiu o limite de ${LIMITE_ANEXOS} anexos. Aguarde o reset.`);
     inputPDF.value = "";
     return;
   }
-  if (file.size > 110 * 1024 * 1024) { alert("PDF muito grande. Máximo 20 MB."); return; }
+  if (file.size > 110 * 1024 * 1024) { alert("📄 PDF muito grande. Máximo 20 MB."); return; }
   const b64 = await lerBase64(file);
   _arquivosPendentes.push({ tipo: "pdf", file, nome: file.name, base64: b64 });
   renderChips();
 });
+
+if (inputCamera) {
+  inputCamera.addEventListener("change", async () => {
+    // 🔁 Reutiliza todo o pipeline de fotos — normaliza, analisa com Gemini, responde com Groq
+    const files = Array.from(inputCamera.files);
+    if (!files.length) return;
+
+    const restante = quotaRestante();
+    if (restante <= 0) {
+      alert("⚠️ Limite de anexos atingido. Aguarde o reset.");
+      inputCamera.value = "";
+      return;
+    }
+
+    for (const file of files.slice(0, restante)) {
+      if (file.size > 100 * 1024 * 1024) {
+        alert("📸 Imagem muito grande. Máximo 10 MB.");
+        continue;
+      }
+      try {
+        const norm = await normalizarImagemParaJpeg(file);
+        _arquivosPendentes.push({
+          tipo: "foto",
+          file,
+          nome: file.name || "camera_" + Date.now() + ".jpg",
+          base64: norm.base64,
+          dataURL: norm.dataURL,
+          mimeType: norm.mimeType
+        });
+      } catch (e) {
+        const b64     = await lerBase64(file);
+        const dataURL = await lerDataURL(file);
+        _arquivosPendentes.push({
+          tipo: "foto",
+          file,
+          nome: file.name || "camera_" + Date.now() + ".jpg",
+          base64: b64,
+          dataURL,
+          mimeType: file.type || "image/jpeg"
+        });
+      }
+    }
+    renderChips();
+  });
+}
 
 inputFoto.addEventListener("change", async () => {
   const files = Array.from(inputFoto.files);
@@ -1173,22 +1715,26 @@ inputFoto.addEventListener("change", async () => {
 
   const restante = quotaRestante();
   if (restante <= 0) {
-    alert(`Você atingiu o limite de ${LIMITE_ANEXOS} anexos. Aguarde o reset.`);
+    alert(`⚠️ Você atingiu o limite de ${LIMITE_ANEXOS} anexos. Aguarde o reset.`);
     inputFoto.value = "";
     return;
   }
 
-  // Limita pela cota disponível
   const selecionados = files.slice(0, restante);
   if (files.length > restante) {
-    alert(`Limite de anexos: apenas ${restante} imagem${restante !== 1 ? "s" : ""} foram adicionadas.`);
+    alert(`📷 Limite de anexos: apenas ${restante} imagem${restante !== 1 ? "s" : ""} foram adicionadas.`);
   }
 
   for (const file of selecionados) {
-    if (file.size > 100 * 1024 * 1024) { alert(`Imagem "${file.name}" muito grande. Máximo 10 MB.`); continue; }
-    const b64     = await lerBase64(file);
-    const dataURL = await lerDataURL(file);
-    _arquivosPendentes.push({ tipo: "foto", file, nome: file.name, base64: b64, dataURL, mimeType: file.type });
+    if (file.size > 100 * 1024 * 1024) { alert(`📷 Imagem "${file.name}" muito grande. Máximo 10 MB.`); continue; }
+    try {
+      const norm = await normalizarImagemParaJpeg(file);
+      _arquivosPendentes.push({ tipo: "foto", file, nome: file.name, base64: norm.base64, dataURL: norm.dataURL, mimeType: norm.mimeType });
+    } catch (e) {
+      const b64     = await lerBase64(file);
+      const dataURL = await lerDataURL(file);
+      _arquivosPendentes.push({ tipo: "foto", file, nome: file.name, base64: b64, dataURL, mimeType: file.type || "image/jpeg" });
+    }
   }
   renderChips();
 });
@@ -1227,15 +1773,14 @@ Preencha TODOS os campos — NUNCA use null, use string vazia "" ou array vazio 
         { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
         20000
       );
-      if (!res.ok) throw new Error("Gemini HTTP " + res.status);
+      if (!res.ok) throw new Error("🔴 Gemini HTTP " + res.status);
       const data = await res.json();
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      if (!rawText) throw new Error("resposta vazia");
+      if (!rawText) throw new Error("⚠️ Resposta vazia");
       const clean = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       const match = clean.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error("sem JSON");
+      if (!match) throw new Error("⚠️ Sem JSON");
       const parsed = JSON.parse(match[0]);
-      // Garante que nenhum campo seja null
       for (const k of Object.keys(parsed)) {
         if (parsed[k] === null || parsed[k] === undefined) {
           parsed[k] = Array.isArray(parsed[k]) ? [] : "";
@@ -1243,21 +1788,113 @@ Preencha TODOS os campos — NUNCA use null, use string vazia "" ou array vazio 
       }
       return parsed;
     } catch (e) {
-      console.warn(`Gemini ${modelo} falhou:`, e.message);
+      console.warn(`🔴 Gemini ${modelo} falhou:`, e.message);
     }
   }
-  // Fallback sem null
   return {
-    descricao: "Imagem recebida. Não foi possível obter análise detalhada automaticamente.",
+    descricao: "🖼️ Imagem recebida. Não foi possível obter análise detalhada automaticamente.",
     elementos: [], texto_visivel: "", cores_predominantes: [],
     contexto: "Imagem enviada pelo usuário", qualidade: "desconhecida",
     tipo_imagem: "foto", emocoes_ou_atmosfera: "", Estudo: ""
   };
 }
 
+async function analisarPDFGemini(base64) {
+  // 🤖 Gemini lê o PDF como documento e extrai JSON estruturado
+  const body = {
+    contents: [{
+      parts: [
+        {
+          // 📎 Envia o PDF como documento inline para o Gemini
+          inline_data: {
+            mime_type: "application/pdf",
+            data: base64
+          }
+        },
+        {
+          text: `Analise este PDF completamente e retorne APENAS um JSON válido, sem markdown nem texto fora do JSON.
+Preencha TODOS os campos — NUNCA use null, use string vazia "" ou array vazio [] se não houver valor.
+
+{
+  "titulo": "Título ou assunto principal do documento",
+  "tipo": "contrato | artigo | relatorio | estudo | livro | formulario | outro",
+  "resumo": "Resumo completo e detalhado do conteúdo em português",
+  "topicos_principais": ["lista dos principais tópicos ou seções"],
+  "texto_completo": "Todo o texto relevante extraído do PDF, preservando estrutura",
+  "dados_importantes": ["dados, números, datas ou informações-chave do documento"],
+  "perguntas_e_respostas": ["Se houver exercícios, questões ou provas, liste cada questão com sua resposta"],
+  "idioma": "português | inglês | espanhol | outro",
+  "paginas_estimadas": 0
+}`
+        }
+      ]
+    }],
+    generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+  };
+
+  const modelos = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+
+  for (const modelo of modelos) {
+    try {
+      const res = await fetchComTimeout(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${decodificarR13(GEMINI_KEY_R13)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        },
+        30000
+      );
+
+      if (!res.ok) throw new Error("Gemini PDF HTTP " + res.status);
+
+      const data = await res.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+      if (!rawText) throw new Error("Gemini retornou vazio");
+
+      // 🧹 Limpa markdown caso venha com backticks
+      const clean = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error("Sem JSON no retorno");
+
+      const parsed = JSON.parse(match[0]);
+
+      // 🛡️ Garante que nenhum campo seja null
+      for (const k of Object.keys(parsed)) {
+        if (parsed[k] === null || parsed[k] === undefined) {
+          parsed[k] = Array.isArray(parsed[k]) ? [] : "";
+        }
+      }
+
+      console.log("✅ Gemini PDF analisou com modelo:", modelo);
+      return parsed;
+
+    } catch (e) {
+      console.warn(`🔴 Gemini PDF ${modelo} falhou:`, e.message);
+    }
+  }
+
+  // 🔴 Fallback se todos os modelos falharem
+  return {
+    titulo: "PDF recebido",
+    tipo: "outro",
+    resumo: "Não foi possível extrair o conteúdo automaticamente.",
+    topicos_principais: [],
+    texto_completo: "",
+    dados_importantes: [],
+    perguntas_e_respostas: [],
+    idioma: "desconhecido",
+    paginas_estimadas: 0
+  };
+}
+
 async function enviarComPDF(txtUsuario, arquivo) {
   consumirQuota(1);
+
   const nome = arquivo.nome;
+
+  // 💬 Mensagem do usuário no chat mostra só o nome do arquivo
   const labelUser = txtUsuario ? `${txtUsuario}\n📄 ${nome}` : `📄 ${nome}`;
   addMsg(labelUser, "user");
   input.value = "";
@@ -1265,68 +1902,119 @@ async function enviarComPDF(txtUsuario, arquivo) {
   atualizarContexto(txtUsuario || nome);
   _persistirSeNovo();
 
-  const load = _criarLoading("Lendo PDF…");
+  // 🔄 Loading fase 1 — Gemini lendo o PDF
+  const load = _criarLoading("📄 S.A.R lendo o PDF…");
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
   try {
+    // ====== FASE 1:  analisa o PDF e retorna JSON ======
+    let jsonPDF = null;
+    try {
+      jsonPDF = await analisarPDFGemini(arquivo.base64);
+      console.log("📄 JSON do PDF extraído pela S.A.R:", jsonPDF);
+    } catch (geminiErr) {
+      console.warn("⚠️ S.A.R PDF falhou, usando fallback:", geminiErr.message);
+    }
+
+    // 🔄 Atualiza loading para fase 2
+    load.remove();
+    const load2 = _criarLoading("🧠 S.A.R interpretando o PDF…");
+    chat.appendChild(load2);
+    chat.scrollTop = chat.scrollHeight;
+
+    // ====== FASE 2: Groq recebe o JSON e responde ao usuário ======
     const cfg = configModo();
     const ctx = gerarContextoUsuario();
-    const key = decodificar(chaves[indiceAtual]);
 
+    // 🏗️ Monta o prompt com o JSON extraído pelo Gemini
+    let promptParaGroq;
+    if (jsonPDF && jsonPDF.texto_completo) {
+      promptParaGroq = (txtUsuario || "Analise este PDF e me ajude com o conteúdo.") +
+        "\n\n[CONTEÚDO DO PDF — extraído pelo módulo S.A.R Vision]:\n" +
+        JSON.stringify(jsonPDF, null, 2) +
+        "\n\nCom base no conteúdo acima, responda ao usuário em português de forma útil, clara e direta.";
+    } else if (jsonPDF) {
+      promptParaGroq = (txtUsuario || "Analise este PDF.") +
+        "\n\n[RESUMO DO PDF extraído pelo Gemini]:\n" +
+        "Título: " + (jsonPDF.titulo || "N/A") + "\n" +
+        "Tipo: " + (jsonPDF.tipo || "N/A") + "\n" +
+        "Resumo: " + (jsonPDF.resumo || "N/A") + "\n" +
+        "Tópicos: " + (jsonPDF.topicos_principais?.join(", ") || "N/A") + "\n" +
+        (jsonPDF.perguntas_e_respostas?.length ? "Questões encontradas: " + jsonPDF.perguntas_e_respostas.join(" | ") : "") +
+        "\n\nResponda ao usuário em português com base nessas informações.";
+    } else {
+      promptParaGroq = (txtUsuario || "O usuário enviou um PDF.") +
+        "\n\n[PDF: " + nome + " — não foi possível extrair o conteúdo automaticamente]" +
+        "\n\nInforme ao usuário que não conseguiu processar o PDF e peça para descrever o conteúdo.";
+    }
+
+    // 🔧 Salva a mensagem interna (sem os dados brutos) no histórico
     const userContent = txtUsuario
-      ? `${txtUsuario}\n\n[PDF ANEXADO: ${nome}]`
-      : `[PDF ANEXADO: ${nome}]\n\nAnalise o conteudo deste PDF e responda de forma util.`;
-
+      ? `${txtUsuario} [📄 ${nome}]`
+      : `📄 ${nome}`;
     const msgs = getMensagens();
     msgs.push({ role: "user", content: userContent });
     setMensagens(msgs);
 
-    const system = _buildSystem(cfg, ctx, userContent);
-    const body = {
-      model: "llama-3.3-70b-versatile",
-      temperature: cfg.temperature,
-      messages: [
-        { role: "system", content: system },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: txtUsuario || "Analise este PDF e responda de forma util em portugues." },
-            { type: "image_url", image_url: { url: `data:application/pdf;base64,${arquivo.base64}` } }
-          ]
-        }
-      ]
-    };
-
+    // 🤖 Chama o Groq com o JSON do Gemini como contexto
+    const system = _buildSystem(cfg, ctx, promptParaGroq);
     let respostaFinal = null;
-    for (const modelo of ["llama-3.3-70b-versatile", "llama3-8b-8192"]) {
+
+    const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+    for (const modelo of modelos) {
       try {
-        body.model = modelo;
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        respostaFinal = data.choices?.[0]?.message?.content || "Nao consegui processar o PDF.";
-        break;
-      } catch (err) {
-        if (modelo === "llama3-8b-8192") {
-          respostaFinal = `Recebi o PDF **${nome}**, mas nao consegui processa-lo no momento. Tente novamente ou descreva o conteudo que deseja analisar.`;
+        const key = decodificar(chaves[indiceAtual]);
+        const res = await fetchComTimeout(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: modelo,
+              temperature: cfg.temperature,
+              messages: [
+                { role: "system", content: system },
+                { role: "user",   content: promptParaGroq }
+              ]
+            })
+          },
+          20000
+        );
+
+        if (!res.ok) {
+          if (res.status === 429 || res.status === 401) {
+            indiceAtual = (indiceAtual + 1) % chaves.length;
+          }
+          throw new Error("HTTP " + res.status);
         }
+
+        const data = await res.json();
+        respostaFinal = data.choices?.[0]?.message?.content || null;
+        if (respostaFinal) break;
+
+      } catch (err) {
+        console.warn("⚠️ Groq PDF modelo " + modelo + " falhou:", err.message);
       }
     }
 
-    load.remove();
+    // 🛡️ Fallback se tudo falhar
+    if (!respostaFinal) {
+      respostaFinal = "📄 Recebi o PDF **" + nome + "** e o Gemini extraiu o conteúdo, mas o Groq não conseguiu responder agora. Tente novamente!";
+    }
+
+    load2.remove();
     addMsg(respostaFinal, "bot");
+
     const msgsAtt = getMensagens();
     msgsAtt.push({ role: "assistant", content: respostaFinal });
     setMensagens(msgsAtt);
+
   } catch (err) {
-    console.error("Erro PDF:", err);
-    load.remove();
-    addMsg("Erro ao processar o PDF. Tente novamente.", "bot");
+    console.error("❌ Erro geral no PDF:", err);
+    // 🧹 Remove qualquer loading que ainda esteja na tela
+    chat.querySelectorAll(".thinking-indicator").forEach(el => el.closest(".msg")?.remove());
+    addMsg("⚠️ Erro ao processar o PDF. Tente novamente!", "bot");
     tentativas = 0;
   }
 }
@@ -1337,7 +2025,7 @@ async function enviarComFotos(txtUsuario, arquivos) {
   const intro = chat.querySelector(".intro-screen");
   if (intro) intro.remove();
 
-  // Monta mensagem visual do usuário com as imagens
+  // 🖼️ Monta mensagem visual do usuário com as imagens
   const dUser = document.createElement("div");
   dUser.className = "msg user";
   if (arquivos.length > 1) {
@@ -1366,7 +2054,6 @@ async function enviarComFotos(txtUsuario, arquivos) {
   chat.appendChild(dUser);
   chat.scrollTop = chat.scrollHeight;
 
-  // Salva mensagem user no histórico com as imagens (para rederização bonita)
   const userHistMsg = {
     role: "user",
     content: txtUsuario || (arquivos.length > 1 ? `${arquivos.length} imagens enviadas` : `📷 ${arquivos[0].nome}`),
@@ -1382,13 +2069,12 @@ async function enviarComFotos(txtUsuario, arquivos) {
   msgs.push(userHistMsg);
   setMensagens(msgs);
 
-  const labelQtd = arquivos.length > 1 ? `Analisando ${arquivos.length} imagens…` : "Analisando imagem…";
+  const labelQtd = arquivos.length > 1 ? `🖼️ Analisando ${arquivos.length} imagens…` : "🔍 Analisando imagem…";
   const load = _criarLoading(labelQtd);
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
   try {
-    // Analisa todas as imagens em paralelo
     const analises = await Promise.all(
       arquivos.map(arq => analisarImagemGemini(arq.base64, arq.mimeType || "image/jpeg"))
     );
@@ -1438,11 +2124,10 @@ async function enviarComFotos(txtUsuario, arquivos) {
             throw new Error("HTTP " + res.status);
           }
           const data = await res.json();
-          respostaFinal = data.choices?.[0]?.message?.content || "Não consegui analisar a imagem.";
+          respostaFinal = data.choices?.[0]?.message?.content || "🔍 Não consegui analisar a imagem.";
           break;
         } catch (e) {
-          console.warn(`Foto - modelo ${modelo} / chave ${indiceAtual} falhou:`, e.message);
-          // Se foi timeout ou erro de rede, tenta próxima chave
+          console.warn(`🔴 Foto - modelo ${modelo} / chave ${indiceAtual} falhou:`, e.message);
           if (e.message.includes("Timeout") || e.message.includes("fetch")) {
             indiceAtual = (indiceAtual + 1) % chaves.length;
             tentativaChave++;
@@ -1454,10 +2139,10 @@ async function enviarComFotos(txtUsuario, arquivos) {
       if (respostaFinal) break;
     }
 
-    if (!respostaFinal) respostaFinal = "Não consegui processar a imagem no momento. Tente novamente.";
+    if (!respostaFinal) respostaFinal = "⚠️ Não consegui processar a imagem no momento. Tente novamente.";
 
     load.remove();
-    addMsg(respostaFinal || "Não foi possível obter resposta.", "bot");
+    addMsg(respostaFinal || "⚠️ Não foi possível obter resposta.", "bot");
     const msgsAtt = getMensagens();
     msgsAtt.push({
       role: "assistant",
@@ -1466,36 +2151,27 @@ async function enviarComFotos(txtUsuario, arquivos) {
     });
     setMensagens(msgsAtt);
   } catch (err) {
-    console.error("Erro foto:", err);
+    console.error("❌ Erro foto:", err);
     load.remove();
-    addMsg("Como posso ajudar", "bot");
+    addMsg("📷 Como posso ajudar com essa imagem?", "bot");
     tentativas = 0;
   }
 }
+
 async function enviarComFoto(txtUsuario, arquivo) {
   await enviarComFotos(txtUsuario, [arquivo]);
 }
-function _criarLoading(texto) {
-  const load = document.createElement("div");
-  load.className = "msg bot";
-  load.innerHTML = `<div class="thinking-indicator">
-    <div class="thinking-dots"><span></span><span></span><span></span></div>
-    <span>${texto}</span>
-  </div>`;
-  return load;
-}
+
 async function enviarComAnexo() {
   if (_arquivosPendentes.length > 0) {
     const txt = input.value.trim();
     const fotos = _arquivosPendentes.filter(a => a.tipo === "foto");
     const pdfs  = _arquivosPendentes.filter(a => a.tipo === "pdf");
 
-    // Múltiplas imagens ou imagem única
     if (fotos.length > 0) {
       await enviarComFotos(txt, fotos);
       return;
     }
-    // PDF (só suporta um por vez)
     if (pdfs.length > 0) {
       await enviarComPDF(txt, pdfs[0]);
       return;
@@ -1503,13 +2179,14 @@ async function enviarComAnexo() {
   }
   await enviar();
 }
-// Eventos do botão enviar e teclado
+
 btn.onclick = enviarComAnexo;
 input.addEventListener("keypress", e => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarComAnexo(); }
 });
+
 /* ====================================================
-   INIT
+   🚀 INIT
    ==================================================== */
 (function init() {
   atualizarUI();
@@ -1518,4 +2195,5 @@ input.addEventListener("keypress", e => {
   _mostrarIntro();
   renderHistorico();
   renderHumorPanel();
+  console.log("🤖 S.A.R v2.0 iniciada | ⚽ Football API | 💻 Coding Animation | 😄 Emoji Mode");
 })();

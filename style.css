@@ -471,9 +471,20 @@ strong { color: var(--accent-2); font-weight: 600; }
 
 /* ===== INPUT BAR ===== */
 .input-bar {
-  padding: 10px 12px;
+  padding: 10px 12px 14px;
+  /* 📱 Respeita a safe-area do iPhone/Android para não colidir com a barra do sistema */
+  padding-bottom: max(14px, calc(10px + env(safe-area-inset-bottom)));
   border-top: 1px solid var(--border);
-  background: var(--bg); flex-shrink: 0;
+  /* 🎨 Gradiente sutil para suavizar a transição com o fundo */
+  background: linear-gradient(
+    to bottom,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--bg) 97%, var(--accent) 3%) 100%
+  );
+  flex-shrink: 0;
+  /* 🌟 Leve blur para dar profundidade */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .input-wrap {
   display: flex; align-items: center; gap: 8px;
@@ -614,7 +625,102 @@ strong { color: var(--accent-2); font-weight: 600; }
   display: flex; align-items: center; gap: 5px;
 }
 
-/* SCROLL BTN */
+/* ===== SAR VISION LOADING ===== */
+.sar-vision-loading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0;
+}
+
+.svl-scanner {
+  position: relative;
+  width: 44px; height: 44px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.svl-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+}
+.svl-ring1 {
+  width: 44px; height: 44px;
+  border-color: rgba(124,106,255,.55) transparent transparent transparent;
+  animation: svl-spin 1.4s linear infinite;
+}
+.svl-ring2 {
+  width: 32px; height: 32px;
+  border-color: transparent rgba(167,139,250,.5) transparent transparent;
+  animation: svl-spin 1.0s linear infinite reverse;
+}
+.svl-ring3 {
+  width: 20px; height: 20px;
+  border-color: rgba(96,165,250,.6) transparent transparent transparent;
+  animation: svl-spin 1.8s linear infinite;
+}
+.svl-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 8px var(--accent);
+  animation: svl-pulse 1.2s ease-in-out infinite;
+}
+.svl-scan-line {
+  position: absolute;
+  left: 4px; right: 4px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124,106,255,.8), transparent);
+  animation: svl-scanmove 1.6s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+@keyframes svl-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes svl-pulse {
+  0%,100% { opacity:.5; transform:scale(.8); }
+  50%      { opacity:1;  transform:scale(1.25); }
+}
+@keyframes svl-scanmove {
+  0%   { top: 4px;  opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { top: 40px; opacity: 0; }
+}
+
+.svl-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.svl-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  letter-spacing: .02em;
+}
+.svl-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.svl-step {
+  font-size: .7rem;
+  color: var(--text-3);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity .35s ease, transform .35s ease, color .35s ease;
+}
+.svl-step-active {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--text-2);
+}
+
+/* ===== /SAR VISION LOADING ===== */
 #scrollBtn {
   position: absolute; bottom: 80px; right: 12px;
   width: 36px; height: 36px; border-radius: 50%;
@@ -638,7 +744,6 @@ strong { color: var(--accent-2); font-weight: 600; }
 }
 .modo-animacao { animation: modoFlash .25s ease forwards !important; }
 
-/* ===== MODAL ===== */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.75);
@@ -764,4 +869,210 @@ strong { color: var(--accent-2); font-weight: 600; }
   opacity: 1;
   transform: translateX(0);
   color: var(--card-cor, var(--accent-2));
+}
+
+.intro-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.intro-chip {
+  background: var(--surface-3);
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  font-size: .75rem;
+  font-family: var(--font);
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all .2s ease;
+  white-space: nowrap;
+}
+.intro-chip:hover {
+  background: rgba(124,106,255,.15);
+  border-color: rgba(124,106,255,.5);
+  color: var(--accent-2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(124,106,255,.2);
+}
+
+/* ====================================================
+   💻 CODING ANIMATION — animação de geração de código
+   ==================================================== */
+.coding-loading {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid rgba(124,106,255,.3);
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: var(--mono);
+}
+
+/* 🖥️ Barra de título estilo IDE */
+.coding-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface-3);
+  border-bottom: 1px solid rgba(124,106,255,.2);
+}
+.coding-dots-row {
+  display: flex;
+  gap: 5px;
+}
+.coding-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  animation: codingDotPulse 2s ease-in-out infinite;
+}
+.coding-dot.red    { background: #f87171; animation-delay: 0s; }
+.coding-dot.yellow { background: #fbbf24; animation-delay: .2s; }
+.coding-dot.green  { background: #34d399; animation-delay: .4s; }
+@keyframes codingDotPulse {
+  0%,100% { opacity:.6; transform: scale(1); }
+  50%     { opacity:1;  transform: scale(1.2); }
+}
+.coding-title {
+  font-size: .68rem;
+  color: var(--text-3);
+  letter-spacing: .04em;
+  flex: 1;
+  text-align: center;
+}
+
+/* 🖊️ Área do código fake */
+.coding-body {
+  padding: 10px 14px;
+  min-height: 90px;
+  max-height: 120px;
+  overflow: hidden;
+  position: relative;
+}
+.coding-fake-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.coding-fake-line {
+  font-size: .72rem;
+  color: #7dd3fc;
+  opacity: 0;
+  transform: translateX(-6px);
+  animation: codingLineIn .3s ease forwards;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@keyframes codingLineIn {
+  to { opacity: 1; transform: translateX(0); }
+}
+/* 🟩 Colorização nas linhas fake */
+.coding-fake-line:nth-child(odd)  { color: #c084fc; }
+.coding-fake-line:nth-child(3n)   { color: #86efac; }
+.coding-fake-line:nth-child(4n)   { color: #64748b; }
+
+/* 🔲 Cursor piscando */
+.coding-cursor {
+  font-size: .75rem;
+  color: var(--accent-2);
+  animation: codingCursorBlink .7s step-end infinite;
+  line-height: 1;
+  margin-top: 4px;
+}
+@keyframes codingCursorBlink {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0; }
+}
+
+.coding-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(124,106,255,.15);
+  background: var(--surface-3);
+}
+.coding-spinner {
+  width: 12px; height: 12px;
+  border: 1.5px solid rgba(124,106,255,.3);
+  border-top-color: var(--accent-2);
+  border-radius: 50%;
+  animation: codingSpinnerSpin .8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes codingSpinnerSpin { to { transform: rotate(360deg); } }
+.coding-status {
+  font-size: .7rem;
+  color: var(--accent-2);
+  font-family: var(--font);
+  transition: all .3s ease;
+}
+
+/* ====================================================
+   ⚽ FOOTBALL CARD — placar e resultados
+   ==================================================== */
+.football-card {
+  background: var(--surface-3);
+  border: 1px solid rgba(52,211,153,.2);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+.football-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(52,211,153,.08);
+  border-bottom: 1px solid rgba(52,211,153,.15);
+  font-size: .72rem;
+  font-weight: 600;
+  color: #34d399;
+  letter-spacing: .04em;
+}
+.football-match {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.football-match:last-child { border-bottom: none; }
+.football-team {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.football-team.away { text-align: right; }
+.football-score {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--accent-2);
+  font-family: var(--mono);
+  min-width: 50px;
+  text-align: center;
+}
+.football-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(248,113,113,.15);
+  border: 1px solid rgba(248,113,113,.3);
+  color: #f87171;
+  font-size: .6rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%,100% { opacity: 1; }
+  50%     { opacity: .65; }
 }
