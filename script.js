@@ -1027,7 +1027,10 @@ async function chamarAPI(msgs) {
 
   const msgslimpas = _limparMsgsParaAPI(msgs);
 
-  const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+  const modelos = [
+  "llama-3.3-70b-versatile",
+  "openai/gpt-oss-20b"
+];
   let ultimoErro = null;
 
   for (let mi = 0; mi < modelos.length; mi++) {
