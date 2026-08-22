@@ -1,7 +1,7 @@
 /* ====================================================
    🤖 S.A.R — Evolution Games Studio
    👨‍💻 Desenvolvido por João Antônio & Lucas Macedo
-   ⚽ Football API integrada | 🎬 Coding Animation
+   🎬 Coding Animation
    ==================================================== */
 
 /* ---------- 📋 REGRAS ---------- */
@@ -19,7 +19,9 @@ const REGRAS = {
     "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R Vision da Evolution Studios",
     "você gera imagem sim, o botao para gerar imagem fica ao lado do botao de enviar imagem",
     "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido",
-    "Para futebol, use a ferramenta de busca de football que o sistema possui para trazer dados reais e atualizados"
+    "se nao for nessesario ou pedido,nao fale data gostos etc",
+    "Para futebol, use a pesquisa web em tempo real que o sistema possui para trazer dados reais e atualizados",
+
   ],
   modo: {
     rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida. Use emojis quando fizer sentido.",
@@ -618,7 +620,14 @@ function atualizarUI() {
 
 modoBtns.forEach(opt => {
   opt.onclick = () => {
-    modo = opt.dataset.modo;
+    const modoEscolhido = opt.dataset.modo;
+    const exigeConta = modoEscolhido === "especialista" || modoEscolhido === "pro";
+    if (exigeConta && !getUsuarioLogado()) {
+      _pendingAcao = { tipo: "modo", modo: modoEscolhido };
+      abrirAuthModal("login");
+      return;
+    }
+    modo = modoEscolhido;
     localStorage.setItem("modoSAR", modo);
     atualizarUI();
     fecharSidebar();
@@ -639,7 +648,7 @@ function decodificar(str) {
 }
 
 const chaves = [
-  "vhz_PLSYntDiCzfS9HLMGbKHLVsnq3UNrvPchAWHOugsgoADhAE8NAoM",
+  "rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM",
   "rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3",
   "rdv_uuBMlVuxyFshNSSpgouaHRojm3QJeOcIaoqeZHB68JtNehuYcjzP",
   "rdv_ZwAEelTSOuFXDMCzCyAdHRojm3QJM3IT5whwyc6KYtVXSytIbUWH",
@@ -681,6 +690,207 @@ if (modalOverlay) modalOverlay.addEventListener("click", e => { if (e.target ===
 if (toggleAdult)  toggleAdult.onchange  = () => { const c = carregarConfig(); c.filtroAdult  = toggleAdult.checked;  salvarConfig(c); };
 if (toggleLinks)  toggleLinks.onchange  = () => { const c = carregarConfig(); c.confiarLinks = toggleLinks.checked; salvarConfig(c); };
 if (resetHumor)   resetHumor.onclick    = () => { salvarEmocional(_emocionalVazio()); renderHumorPanel(); };
+
+const FIREBASE_DB_URL = "https://conta-ia-d53fa-default-rtdb.asia-southeast1.firebasedatabase.app";
+const LS_USER = "sar_user";
+
+function getUsuarioLogado() {
+  try { return JSON.parse(localStorage.getItem(LS_USER)) || null; } catch { return null; }
+}
+function setUsuarioLogado(u) { localStorage.setItem(LS_USER, JSON.stringify(u)); }
+function removerUsuarioLogado() { localStorage.removeItem(LS_USER); }
+
+// Transforma o nome em uma chave válida para o Firebase (sem . # $ [ ] /)
+function chaveUsuario(nome) {
+  return (nome || "").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_]/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 60);
+}
+
+async function hashSenha(senha) {
+  const enc = new TextEncoder().encode(senha);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function criarConta(nome, senha) {
+  const key = chaveUsuario(nome);
+  if (!key || key.length < 2) throw new Error("Digite um nome de usuário válido.");
+  if (!senha || senha.length < 4) throw new Error("A senha precisa ter pelo menos 4 caracteres.");
+  const res = await fetchComTimeout(`${FIREBASE_DB_URL}/usuarios/${key}.json`, {}, 10000);
+  const existente = await res.json();
+  if (existente) throw new Error("Esse usuário já existe. Tente entrar em vez de criar conta.");
+  const senhaHash = await hashSenha(senha);
+  const put = await fetchComTimeout(`${FIREBASE_DB_URL}/usuarios/${key}.json`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome: nome.trim(), senhaHash, criadoEm: Date.now() })
+  }, 10000);
+  if (!put.ok) throw new Error("Não foi possível criar a conta agora. Tente novamente.");
+  return { nome: nome.trim(), key };
+}
+
+async function loginConta(nome, senha) {
+  const key = chaveUsuario(nome);
+  if (!key) throw new Error("Digite seu nome de usuário.");
+  const res = await fetchComTimeout(`${FIREBASE_DB_URL}/usuarios/${key}.json`, {}, 10000);
+  const dados = await res.json();
+  if (!dados) throw new Error("Conta não encontrada. Verifique o nome ou crie uma conta.");
+  const senhaHash = await hashSenha(senha);
+  if (dados.senhaHash !== senhaHash) throw new Error("Senha incorreta.");
+  return { nome: dados.nome, key };
+}
+
+const accountBtn        = document.getElementById("accountBtn");
+const accountAvatar     = document.getElementById("accountAvatar");
+const accountName       = document.getElementById("accountName");
+const accountSub        = document.getElementById("accountSub");
+const authModalOverlay  = document.getElementById("authModalOverlay");
+const authModalClose    = document.getElementById("authModalClose");
+const authModalTitle    = document.getElementById("authModalTitle");
+const authHint          = document.getElementById("authHint");
+const authTabs          = document.getElementById("authTabs");
+const authTabLogin      = document.getElementById("authTabLogin");
+const authTabCriar      = document.getElementById("authTabCriar");
+const authForm          = document.getElementById("authForm");
+const authNome          = document.getElementById("authNome");
+const authSenha         = document.getElementById("authSenha");
+const authSenha2Wrap    = document.getElementById("authSenha2Wrap");
+const authSenha2        = document.getElementById("authSenha2");
+const authError         = document.getElementById("authError");
+const authSubmitBtn     = document.getElementById("authSubmitBtn");
+const authSubmitLabel   = document.getElementById("authSubmitLabel");
+const authPerfil        = document.getElementById("authPerfil");
+const perfilAvatar      = document.getElementById("perfilAvatar");
+const perfilNome        = document.getElementById("perfilNome");
+const logoutBtn         = document.getElementById("logoutBtn");
+const voiceLink         = document.getElementById("voiceLink");
+
+let _authAba = "login";
+let _pendingAcao = null; // { tipo: "modo", modo: "pro" } | { tipo: "voice" }
+
+function _iniciais(nome) {
+  return (nome || "?").trim().slice(0, 2);
+}
+
+function atualizarContaUI() {
+  const user = getUsuarioLogado();
+  if (user) {
+    accountAvatar.textContent = _iniciais(user.nome);
+    accountName.textContent = user.nome;
+    accountSub.textContent = "Conta conectada";
+    perfilAvatar.textContent = _iniciais(user.nome);
+    perfilNome.textContent = user.nome;
+  } else {
+    accountAvatar.textContent = "?";
+    accountName.textContent = "Convidado";
+    accountSub.textContent = "Toque para entrar";
+  }
+}
+
+function abrirAuthModal(aba = "login") {
+  fecharSidebar();
+  const user = getUsuarioLogado();
+  authError.style.display = "none";
+  authError.textContent = "";
+  if (user) {
+    authModalTitle.textContent = "Sua conta";
+    authHint.style.display = "none";
+    authTabs.style.display = "none";
+    authForm.style.display = "none";
+    authPerfil.style.display = "flex";
+  } else {
+    authHint.style.display = "block";
+    authTabs.style.display = "flex";
+    authForm.style.display = "flex";
+    authPerfil.style.display = "none";
+    trocarAbaAuth(aba);
+  }
+  setTimeout(() => authModalOverlay.classList.add("show"), 30);
+}
+function fecharAuthModal() {
+  authModalOverlay.classList.remove("show");
+  _pendingAcao = null;
+}
+
+function trocarAbaAuth(aba) {
+  _authAba = aba;
+  authTabLogin.classList.toggle("active", aba === "login");
+  authTabCriar.classList.toggle("active", aba === "criar");
+  authModalTitle.textContent = aba === "login" ? "Entrar" : "Criar conta";
+  authSenha2Wrap.style.display = aba === "criar" ? "flex" : "none";
+  authSubmitLabel.textContent = aba === "login" ? "Entrar" : "Criar conta";
+  authSenha.autocomplete = aba === "login" ? "current-password" : "new-password";
+  authError.style.display = "none";
+}
+
+if (accountBtn) accountBtn.onclick = () => abrirAuthModal("login");
+if (authModalClose) authModalClose.onclick = fecharAuthModal;
+if (authModalOverlay) authModalOverlay.addEventListener("click", e => { if (e.target === authModalOverlay) fecharAuthModal(); });
+if (authTabLogin) authTabLogin.onclick = () => trocarAbaAuth("login");
+if (authTabCriar) authTabCriar.onclick = () => trocarAbaAuth("criar");
+if (logoutBtn) logoutBtn.onclick = () => {
+  removerUsuarioLogado();
+  atualizarContaUI();
+  fecharAuthModal();
+};
+
+async function _executarAcaoPendente() {
+  if (!_pendingAcao) return;
+  const acao = _pendingAcao;
+  _pendingAcao = null;
+  if (acao.tipo === "modo") {
+    modo = acao.modo;
+    localStorage.setItem("modoSAR", modo);
+    atualizarUI();
+  } else if (acao.tipo === "voice") {
+    window.location.href = "voice.html";
+  }
+}
+
+if (authForm) authForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nome = authNome.value.trim();
+  const senha = authSenha.value;
+  authError.style.display = "none";
+
+  if (_authAba === "criar" && senha !== authSenha2.value) {
+    authError.textContent = "As senhas não coincidem.";
+    authError.style.display = "block";
+    return;
+  }
+
+  authSubmitBtn.disabled = true;
+  const labelOriginal = authSubmitLabel.textContent;
+  authSubmitLabel.textContent = "Aguarde…";
+
+  try {
+    const user = _authAba === "login"
+      ? await loginConta(nome, senha)
+      : await criarConta(nome, senha);
+    setUsuarioLogado(user);
+    atualizarContaUI();
+    authForm.reset();
+    fecharAuthModal();
+    await _executarAcaoPendente();
+  } catch (err) {
+    authError.textContent = err.message || "Algo deu errado. Tente novamente.";
+    authError.style.display = "block";
+  } finally {
+    authSubmitBtn.disabled = false;
+    authSubmitLabel.textContent = labelOriginal;
+  }
+});
+
+if (voiceLink) voiceLink.addEventListener("click", (e) => {
+  if (!getUsuarioLogado()) {
+    e.preventDefault();
+    _pendingAcao = { tipo: "voice" };
+    abrirAuthModal("login");
+  }
+});
 
 function assuntoBloqueado(texto) {
   const t = texto.toLowerCase();
@@ -736,7 +946,19 @@ function eProgramacao(texto) {
   return padroes.some(p => p.test(t));
 }
 
-// ⚽ Detecta se a pergunta é sobre futebol
+function ePesquisa(texto) {
+  const t = texto.toLowerCase();
+  const padroes = [
+    /pesquis/, /busca[r]?\s/, /procura[r]?\s/, /not[ií]cia/, /aconteceu/,
+    /o que est[aá]\s+rolando/, /hoje\s+em\s+dia/, /atualmente/, /agora\s*em\s*/,
+    /pre[çc]o\s+d[eo]/, /cota[çc][aã]o/, /d[oó]lar/, /quem\s+[ée]\s+o?\s*(atual|novo)/,
+    /[uú]ltim[ao]s?\s+not[ií]cias/, /aconteceu\s+(hoje|ontem|essa semana)/,
+    /site\s+oficial/, /link\s+d[eo]/, /quanto\s+custa/, /lan[çc]amento\s+de/,
+    /versao\s+mais\s+recente/, /vers[aã]o\s+mais\s+recente/, /o que h[aá]\s+de\s+novo/
+  ];
+  return padroes.some(p => p.test(t));
+}
+
 function eFutebol(texto) {
   const t = texto.toLowerCase();
   const padroes = [
@@ -942,8 +1164,6 @@ document.addEventListener("click", e => {
   const codeEl = e.target.closest(".code-block")?.querySelector("code");
   if (!codeEl) return;
 
-  // 🧹 Percorre todos os nós de texto dentro do <code>, ignorando tags
-  // Isso garante que nunca copie HTML, só o texto puro do código
   let textoLimpo = "";
   function extrairTexto(node) {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -1027,10 +1247,7 @@ async function chamarAPI(msgs) {
 
   const msgslimpas = _limparMsgsParaAPI(msgs);
 
-  const modelos = [
-  "llama-3.3-70b-versatile",
-  "openai/gpt-oss-20b"
-];
+  const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
   let ultimoErro = null;
 
   for (let mi = 0; mi < modelos.length; mi++) {
@@ -1070,118 +1287,55 @@ async function chamarAPI(msgs) {
   throw ultimoErro || new Error("❌ Todos os modelos falharam");
 }
 
-let tentativas = 0;
+// 🔎 Chamada usando o modelo groq/compound — possui busca web nativa (agentic tool use),
+// ideal para perguntas que exigem informação atual/real (notícias, preços, links, etc.)
+async function chamarGroqCompound(msgs) {
+  const cfg    = configModo();
+  const ctx    = gerarContextoUsuario();
+  const ultimo = msgs.filter(m => m.role === "user").slice(-1)[0]?.content || "";
+  const system = _buildSystem(cfg, ctx, ultimo) +
+    "\n\nVocê tem acesso a busca na web em tempo real. Use os resultados encontrados para responder com dados atuais e precisos. Cite fontes de forma natural quando fizer sentido, sem inventar links.";
 
-const FOOTBALL_API_KEY = ""; // ← Cole sua chave aqui
-const FOOTBALL_API_HOST = "v3.football.api-sports.io";
-
-async function buscarJogosFutebolHoje() {
-  // 📅 Data de hoje no formato YYYY-MM-DD
-  const hoje = new Date().toISOString().slice(0, 10);
+  const msgslimpas = _limparMsgsParaAPI(msgs);
+  const key = decodificar(chaves[indiceAtual]);
 
   try {
-    const res = await fetchComTimeout(
-      `https://${FOOTBALL_API_HOST}/fixtures?date=${hoje}&timezone=America/Sao_Paulo`,
-      {
-        method: "GET",
-        headers: {
-          "x-rapidapi-key": FOOTBALL_API_KEY,
-          "x-rapidapi-host": FOOTBALL_API_HOST
-        }
-      },
-      12000
-    );
-    if (!res.ok) throw new Error("⚽ Football API HTTP " + res.status);
-    const data = await res.json();
-    return data.response || [];
-  } catch (e) {
-    console.warn("⚽ Football API falhou:", e.message);
-    return null;
-  }
-}
+    const res = await fetchComTimeout("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "groq/compound",
+        temperature: cfg.temperature,
+        messages: [{ role: "system", content: system }, ...msgslimpas]
+      })
+    }, 25000);
 
-async function buscarClassificacaoCampeonato(leagueId, season) {
-  try {
-    const res = await fetchComTimeout(
-      `https://${FOOTBALL_API_HOST}/standings?league=${leagueId}&season=${season}`,
-      {
-        method: "GET",
-        headers: {
-          "x-rapidapi-key": FOOTBALL_API_KEY,
-          "x-rapidapi-host": FOOTBALL_API_HOST
-        }
-      },
-      12000
-    );
-    if (!res.ok) throw new Error("⚽ Football API HTTP " + res.status);
-    const data = await res.json();
-    return data.response || [];
-  } catch (e) {
-    console.warn("⚽ Classificação API falhou:", e.message);
-    return null;
-  }
-}
-
-// 📋 Formata os jogos retornados pela API para texto
-function formatarJogosFutebol(jogos) {
-  if (!jogos || jogos.length === 0) return "⚽ Nenhum jogo encontrado para hoje.";
-
-  // 🏆 Agrupa por liga
-  const porLiga = {};
-  jogos.forEach(jogo => {
-    const liga = jogo.league?.name || "Liga Desconhecida";
-    const pais = jogo.league?.country || "";
-    const chave = `${pais ? pais + " — " : ""}${liga}`;
-    if (!porLiga[chave]) porLiga[chave] = [];
-    porLiga[chave].push(jogo);
-  });
-
-  let texto = `⚽ **Jogos de Hoje** (${new Date().toLocaleDateString("pt-BR")})\n\n`;
-
-  // 🗂️ Prioriza ligas brasileiras e populares primeiro
-  const ordem = Object.keys(porLiga).sort((a, b) => {
-    const prioridade = (s) => {
-      if (s.includes("Brazil")) return 0;
-      if (s.includes("UEFA Champions")) return 1;
-      if (s.includes("Premier League")) return 2;
-      if (s.includes("La Liga")) return 3;
-      return 9;
-    };
-    return prioridade(a) - prioridade(b);
-  });
-
-  ordem.slice(0, 8).forEach(liga => {
-    texto += `🏆 **${liga}**\n`;
-    porLiga[liga].slice(0, 6).forEach(jogo => {
-      const hora = new Date(jogo.fixture.date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-      const status = jogo.fixture.status.short;
-      const placas = jogo.goals;
-      const timeA = jogo.teams.home.name;
-      const timeB = jogo.teams.away.name;
-
-      let statusEmoji = "🕐";
-      let placarTexto = "";
-
-      if (status === "FT") { statusEmoji = "✅"; placarTexto = ` ${placas.home} × ${placas.away}`; }
-      else if (status === "1H" || status === "2H" || status === "ET" || status === "P") {
-        statusEmoji = "🔴 AO VIVO";
-        placarTexto = ` ${placas.home ?? 0} × ${placas.away ?? 0}`;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.error(`🔴 Groq Compound HTTP ${res.status}:`, errBody);
+      if (res.status === 429 || res.status === 401) {
+        indiceAtual = (indiceAtual + 1) % chaves.length;
       }
-      else if (status === "HT") { statusEmoji = "⏸️ INT"; placarTexto = ` ${placas.home} × ${placas.away}`; }
-      else { statusEmoji = `🕐 ${hora}`; }
+      throw new Error("HTTP " + res.status);
+    }
 
-      texto += `  ${statusEmoji} **${timeA}**${placarTexto} **${timeB}**\n`;
-    });
-    texto += "\n";
-  });
+    const data = await res.json();
+    const resposta = data.choices?.[0]?.message?.content;
+    if (!resposta) throw new Error("⚠️ Resposta vazia da API (compound)");
 
-  return texto.trim();
+    // 🧾 Log opcional das ferramentas executadas na busca (debug)
+    const executed = data.choices?.[0]?.message?.executed_tools;
+    if (executed?.length) console.log("🔎 Ferramentas de pesquisa executadas:", executed);
+
+    return resposta;
+  } catch (e) {
+    console.warn("⚠️ groq/compound falhou, caindo para chamarAPI padrão:", e.message);
+    // 🔁 Fallback: se a busca falhar, responde com o modelo normal (sem busca)
+    return chamarAPI(msgs);
+  }
 }
 
-// 🔍 Verifica se a API de futebol está configurada
-function footballApiConfigurada() {
-  return FOOTBALL_API_KEY && FOOTBALL_API_KEY.length > 10;
-}
+let tentativas = 0;
 
 const CODING_FRASES = [
   { emoji: "🔍", texto: "Analisando o código…" },
@@ -1315,7 +1469,6 @@ function _criarLoading(texto) {
   return load;
 }
 
-// ✨ Flag global para saber se última pergunta era código
 let _ultimaPergunhaEhCodigo = false;
 
 async function enviar() {
@@ -1325,89 +1478,36 @@ async function enviar() {
   if (assuntoBloqueado(txt)) { addMsg("🚫 Não posso ajudar com isso.", "bot"); return; }
   if (assuntoPorno(txt))     { addMsg("🔞 Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot"); return; }
 
-  // ⚽ FUTEBOL — sempre usa API quando configurada, para qualquer pergunta sobre futebol
-  if (eFutebol(txt)) {
+  // 🔎 PESQUISA — usa groq/compound (busca web em tempo real) para perguntas que precisam de info atual
+  // ⚽ Perguntas de futebol também caem aqui (API do football foi removida)
+  if (ePesquisa(txt) || eFutebol(txt)) {
     addMsg(txt, "user");
     input.value = "";
     atualizarContexto(txt);
     _persistirSeNovo();
 
-    if (footballApiConfigurada()) {
-      const loadFutebol = _criarLoading("⚽ Buscando dados do futebol…");
-      chat.appendChild(loadFutebol);
-      chat.scrollTop = chat.scrollHeight;
+    let memoria = getMensagens();
+    memoria.push({ role: "user", content: txt });
+    setMensagens(memoria);
 
-      try {
-        // 📅 Busca jogos de hoje para ter dados contextuais reais
-        const jogos = await buscarJogosFutebolHoje();
-        const dadosFutebol = jogos !== null && jogos.length > 0 ? formatarJogosFutebol(jogos) : null;
-        loadFutebol.remove();
+    const loadPesquisa = _criarLoading("🔎 Pesquisando na web…");
+    chat.appendChild(loadPesquisa);
+    chat.scrollTop = chat.scrollHeight;
 
-        // 🤖 Monta prompt com dados reais — responde APENAS o que foi perguntado
-        let memoria = getMensagens();
-        let promptFinal;
-        if (dadosFutebol) {
-          promptFinal = txt + "\n\n[DADOS REAIS DA API - " + new Date().toLocaleDateString("pt-BR") + "]:\n" + dadosFutebol +
-            "\n\nINSTRUCAO: Responda SOMENTE o que o usuario perguntou acima, usando os dados reais fornecidos. " +
-            "Seja direto, objetivo e preciso. Nao adicione informacoes extras que nao foram solicitadas. " +
-            "Foque apenas em futebol profissional. Se o dado solicitado nao estiver nos dados acima, diga que nao tem essa informacao agora.";
-        } else {
-          promptFinal = txt +
-            "\n\nINSTRUCAO: Responda SOMENTE o que foi perguntado sobre futebol profissional. " +
-            "A API de jogos ao vivo nao retornou dados agora. Seja direto e objetivo. " +
-            "Se nao tiver certeza de algum dado atual, diga isso claramente.";
-        }
-
-        memoria.push({ role: "user", content: promptFinal });
-        setMensagens(memoria);
-
-        const loadAI = _criarLoading("⚽ Analisando…");
-        chat.appendChild(loadAI);
-        chat.scrollTop = chat.scrollHeight;
-
-        try {
-          const r = await chamarAPI(getMensagens());
-          loadAI.remove();
-          addMsg(r, "bot");
-          const m = getMensagens();
-          m.push({ role: "assistant", content: r });
-          setMensagens(m);
-        } catch (e) {
-          loadAI.remove();
-          if (dadosFutebol) addMsg(dadosFutebol, "bot");
-          else addMsg("⚽ Nao consegui buscar dados agora. Tente novamente!", "bot");
-        }
-      } catch (err) {
-        loadFutebol.remove();
-        await _responderViaIA(txt);
-      }
-    } else {
-      // ⚽ Sem API — responde com o conhecimento da IA, mas avisa
-      let memoria = getMensagens();
-      const promptSemApi = txt +
-        "\n\nINSTRUCAO: Responda SOMENTE o que foi perguntado sobre futebol profissional. " +
-        "Seja direto, objetivo e preciso. Nao invente resultados ou dados que voce nao tem certeza. " +
-        "Se for sobre algo muito recente que voce nao sabe, diga isso.";
-      memoria.push({ role: "user", content: promptSemApi });
-      setMensagens(memoria);
-      const loadFut = _criarLoading("⚽ Pensando…");
-      chat.appendChild(loadFut);
-      chat.scrollTop = chat.scrollHeight;
-      try {
-        const r = await chamarAPI(getMensagens());
-        loadFut.remove();
-        addMsg(r, "bot");
-        const m = getMensagens();
-        m.push({ role: "assistant", content: r });
-        setMensagens(m);
-      } catch (err) {
-        loadFut.remove();
-        addMsg("⚠️ Estou com dificuldade de conexao agora. Tente de novo! 😊", "bot");
-      }
+    try {
+      const r = await chamarGroqCompound(getMensagens());
+      loadPesquisa.remove();
+      addMsg(r, "bot");
+      const m = getMensagens();
+      m.push({ role: "assistant", content: r });
+      setMensagens(m);
+    } catch (err) {
+      loadPesquisa.remove();
+      addMsg("⚠️ Não consegui pesquisar agora. Tente novamente! 😊", "bot");
     }
     return;
   }
-  
+
   addMsg(txt, "user");
   input.value = "";
   atualizarContexto(txt);
@@ -1566,7 +1666,6 @@ function renderChips() {
     };
   });
 }
-
 function limparAnexo() {
   _arquivosPendentes = [];
   attachPreview.style.display = "none";
@@ -2103,7 +2202,7 @@ async function enviarComFotos(txtUsuario, arquivos) {
     const system = _buildSystem(cfg, ctx, promptParaGroq);
     let respostaFinal = null;
 
-    const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+    const modelos = ["openai/gpt-oss-120b", "llama3-8b-8192"];
     for (let mi = 0; mi < modelos.length; mi++) {
       const modelo = modelos[mi];
       let tentativaChave = 0;
@@ -2188,15 +2287,13 @@ input.addEventListener("keypress", e => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarComAnexo(); }
 });
 
-/* ====================================================
-   🚀 INIT
-   ==================================================== */
 (function init() {
   atualizarUI();
   aplicarConfig();
+  atualizarContaUI();
   novoSlot();
   _mostrarIntro();
   renderHistorico();
   renderHumorPanel();
-  console.log("🤖 S.A.R v2.0 iniciada | ⚽ Football API | 💻 Coding Animation | 😄 Emoji Mode");
+  console.log("🤖 S.A.R v2.0 iniciada | 💻 Coding Animation | 😄 Emoji Mode");
 })();
