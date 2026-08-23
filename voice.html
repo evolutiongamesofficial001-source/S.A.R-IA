@@ -1,571 +1,636 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#07040f">
-  <title>S.A.R — Modo Voz</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg:#07040f; --surface:#0d0a1a; --border:rgba(255,255,255,.06);
-      --accent:#7c6aff; --accent-2:#a78bfa; --accent-3:#c4b5fd;
-      --glow:rgba(124,106,255,.35); --text:#f0f0ff; --text-2:#8080aa; --text-3:#3a3a5c;
-      --red:#f87171; --green:#34d399;
-    }
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none;}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUSEUM — Ateliê de Geração IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0b;
+    --panel:#131315;
+    --panel-2:#19191b;
+    --line:#2b2b2e;
+    --text:#f3f3f1;
+    --muted:#96969a;
+    --silver:#c9cbce;
+    --silver-bright:#eceef0;
+    --silver-glow:rgba(201,203,206,0.28);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 15% -10%, rgba(255,255,255,0.05), transparent 45%),
+      radial-gradient(ellipse at 100% 0%, rgba(201,203,206,0.06), transparent 42%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    background-attachment:fixed;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; opacity:0.035; z-index:999;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
-    .shell{width:100%;height:100dvh;max-width:480px;margin:auto;display:flex;flex-direction:column;align-items:center;background:var(--surface);position:relative;overflow:hidden;}
+  .frame{ max-width:980px; margin:0 auto; padding:52px 24px 80px; }
 
-    .bg-glow{position:absolute;inset:0;pointer-events:none;z-index:0;}
-    .bg-glow::before{content:"";position:absolute;top:10%;left:50%;transform:translateX(-50%);width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(124,106,255,.15) 0%,transparent 70%);transition:background 1.2s;}
-    .bg-glow.listen::before{background:radial-gradient(circle,rgba(248,113,113,.2) 0%,transparent 70%);}
-    .bg-glow.think::before {background:radial-gradient(circle,rgba(96,165,250,.15) 0%,transparent 70%);}
-    .bg-glow.speak::before {background:radial-gradient(circle,rgba(167,139,250,.22) 0%,transparent 70%);}
+  header{ margin-bottom:36px; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--silver); display:flex; align-items:center; gap:10px; margin-bottom:16px;
+  }
+  .eyebrow .dot{
+    width:7px; height:7px; border-radius:50%; background:var(--silver-bright);
+    box-shadow:0 0 8px 2px var(--silver-glow);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-    /* HEADER */
-    .v-header{position:relative;z-index:10;width:100%;padding:14px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;}
-    .v-back{display:flex;align-items:center;gap:7px;color:var(--text-2);text-decoration:none;font-size:13px;font-weight:500;padding:5px 10px;border-radius:8px;border:1px solid transparent;transition:color .2s,background .2s,border-color .2s;}
-    .v-back:hover{color:var(--accent-2);background:rgba(124,106,255,.1);border-color:rgba(124,106,255,.2);}
-    .v-logo{display:flex;align-items:center;gap:8px;}
-    .v-logo-ring{position:relative;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
-    .v-logo-ring::before{content:"";position:absolute;inset:0;border:1.5px solid var(--accent);border-radius:50%;opacity:.5;animation:spin 8s linear infinite;}
-    .v-logo-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--glow);animation:pulse 2.5s ease-in-out infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .v-logo-name{font-size:15px;font-weight:600;color:var(--accent-2);letter-spacing:.03em;}
-    .v-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);background:rgba(255,255,255,.03);padding:4px 9px;border-radius:20px;border:1px solid var(--border);}
-    .v-pill-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);}
+  h1{
+    font-family:'Fraunces', serif; font-weight:500; font-size:clamp(36px,5.2vw,58px);
+    line-height:1.03; margin:0 0 14px; letter-spacing:-0.01em;
+  }
+  h1 span.thin{ font-weight:300; font-style:italic; color:var(--silver); }
+  .sub{ color:var(--muted); font-size:15.5px; line-height:1.6; max-width:560px; }
 
-    #particleCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+  /* wing selector — tabs styled like museum wing signage */
+  nav.wings{
+    display:flex; gap:2px; margin-top:34px; border:1px solid var(--line); border-radius:9px; overflow:hidden;
+    background:var(--panel);
+  }
+  nav.wings button{
+    flex:1; padding:14px 10px; background:transparent; border:none; cursor:pointer;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--muted); transition:all .2s; border-right:1px solid var(--line);
+  }
+  nav.wings button:last-child{ border-right:none; }
+  nav.wings button.active{ background:var(--silver-bright); color:#0a0a0b; font-weight:600; }
+  nav.wings button:not(.active):hover{ color:var(--text); background:var(--panel-2); }
 
-    /* CENTRO */
-    .v-center{position:relative;z-index:10;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 24px 0;}
+  .wing-panel{ display:none; }
+  .wing-panel.active{ display:block; margin-top:26px; }
 
-    .orb-space{width:220px;height:220px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .orb-label{position:absolute;display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none;}
-    .orb-emoji{font-size:36px;line-height:1;}
-    .orb-state{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);opacity:.7;transition:color .4s;}
+  .roll{
+    display:flex; align-items:center; gap:14px; margin-bottom:22px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--muted);
+  }
+  .strip{ display:flex; gap:6px; padding:8px; background:#050505; border-radius:4px; border:1px solid var(--line); }
+  .slot{
+    width:26px; height:20px; border-radius:2px;
+    background:repeating-linear-gradient(45deg,#141416,#141416 3px,#19191b 3px,#19191b 6px);
+    border:1px solid #333336; transition:all .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .slot.used{
+    background:linear-gradient(135deg, var(--silver), var(--silver-bright));
+    border-color:var(--silver-bright); box-shadow:0 0 10px rgba(236,238,240,0.35);
+  }
+  .roll-label strong{ color:var(--text); font-weight:600; }
 
-    /* BOTÃO INICIAR — só pra pedir permissão na primeira vez */
-    .start-btn{
-      margin-top:26px;
-      padding:14px 36px;border-radius:40px;
-      border:1.5px solid var(--accent);
-      background:rgba(124,106,255,.12);
-      color:var(--accent-2);font-size:15px;font-weight:600;
-      cursor:pointer;outline:none;letter-spacing:.02em;
-      box-shadow:0 0 24px rgba(124,106,255,.2);
-      transition:all .2s;
-    }
-    .start-btn:hover{background:rgba(124,106,255,.22);box-shadow:0 0 36px rgba(124,106,255,.35);}
-    .start-btn:active{transform:scale(.96);}
-    .start-btn.hidden{display:none;}
+  .panel{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:10px; padding:26px;
+  }
 
-    /* INDICADOR DE VOLUME */
-    .vol-ring{
-      margin-top:22px;
-      width:54px;height:54px;border-radius:50%;
-      border:2px solid rgba(124,106,255,.2);
-      display:flex;align-items:center;justify-content:center;
-      transition:border-color .2s,box-shadow .2s;
-      flex-shrink:0;
-    }
-    .vol-ring.active{border-color:var(--red);box-shadow:0 0 16px rgba(248,113,113,.4);}
-    .vol-ring.hidden{display:none;}
-    .vol-dot{width:14px;height:14px;border-radius:50%;background:var(--text-3);transition:background .2s,transform .15s;}
-    .vol-ring.active .vol-dot{background:var(--red);transform:scale(1.3);}
+  label.field-label{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:11px;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;
+  }
 
-    /* TRANSCRIPT */
-    .v-transcript-wrap{margin-top:18px;width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:8px;}
-    .v-interim{font-size:13px;color:var(--text-2);text-align:center;min-height:20px;line-height:1.5;font-style:italic;opacity:.7;}
-    .v-final{font-size:15px;color:var(--text);text-align:center;min-height:40px;max-height:90px;overflow-y:auto;line-height:1.55;padding:0 4px;}
-    .v-final.bot{color:var(--accent-3);}
+  textarea, input[type=text]{
+    width:100%; background:#0e0e10; border:1px solid var(--line); border-radius:7px;
+    color:var(--text); font-family:'Inter',sans-serif; font-size:15px; line-height:1.55;
+    padding:14px 16px; outline:none; transition:border-color .2s;
+  }
+  textarea{ min-height:96px; resize:vertical; }
+  textarea:focus, input[type=text]:focus{ border-color:var(--silver); }
+  textarea::placeholder, input::placeholder{ color:#5c5c60; }
 
-    /* RODAPÉ */
-    .v-footer{position:relative;z-index:10;width:100%;padding:14px 20px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;}
-    .wave-bars{display:flex;align-items:center;gap:3px;height:24px;}
-    .wave-bar{width:3px;border-radius:3px;background:var(--accent);transform-origin:center;animation:waveDance .5s ease-in-out infinite alternate;opacity:.2;}
-    .wave-bar:nth-child(1){height:6px; animation-delay:0s;}
-    .wave-bar:nth-child(2){height:12px;animation-delay:.06s;}
-    .wave-bar:nth-child(3){height:20px;animation-delay:.12s;}
-    .wave-bar:nth-child(4){height:14px;animation-delay:.18s;}
-    .wave-bar:nth-child(5){height:8px; animation-delay:.24s;}
-    .wave-bars.listen .wave-bar{background:var(--red);opacity:1;}
-    .wave-bars.speak  .wave-bar{background:var(--accent-2);opacity:1;}
-    .wave-bars.think  .wave-bar{background:#60a5fa;opacity:.6;animation:waveDance 1.4s ease-in-out infinite alternate;}
-    @keyframes waveDance{from{transform:scaleY(.3);}to{transform:scaleY(1.5);}}
+  select{
+    width:100%; background:#0e0e10; border:1px solid var(--line); border-radius:7px;
+    color:var(--text); font-family:'IBM Plex Mono', monospace; font-size:13px;
+    padding:11px 13px; outline:none;
+  }
+  select:focus{ border-color:var(--silver); }
 
-    .v-state-info{flex:1;display:flex;flex-direction:column;gap:2px;align-items:center;}
-    .v-state-name{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);transition:color .3s;}
-    .v-state-hint{font-size:11px;color:var(--text-3);opacity:.6;}
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; }
+  @media(max-width:560px){ .row{ grid-template-columns:1fr; } }
 
-    .v-stop-btn{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:rgba(255,255,255,.04);color:var(--text-3);display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;transition:all .2s;flex-shrink:0;}
-    .v-stop-btn:hover{color:var(--red);border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08);}
-    .v-stop-btn:active{transform:scale(.93);}
+  .actions{ display:flex; align-items:center; gap:16px; margin-top:22px; flex-wrap:wrap; }
 
-    /* HISTÓRICO */
-    .v-history{position:relative;z-index:10;width:100%;max-height:150px;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:7px;flex-shrink:0;border-top:1px solid var(--border);}
-    .v-history:empty{display:none;border-top:none;}
-    .vh-user{align-self:flex-end;background:rgba(124,106,255,.13);border:1px solid rgba(124,106,255,.18);color:var(--text);font-size:13px;padding:6px 12px;border-radius:14px 14px 3px 14px;max-width:82%;line-height:1.4;}
-    .vh-bot{align-self:flex-start;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-2);font-size:13px;padding:6px 12px;border-radius:14px 14px 14px 3px;max-width:82%;line-height:1.4;}
+  button.go{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.08em; text-transform:uppercase;
+    background:var(--silver-bright); color:#0a0a0b; border:none; border-radius:7px;
+    padding:14px 26px; cursor:pointer; font-weight:700;
+    transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 4px 18px rgba(236,238,240,0.15);
+  }
+  button.go:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 6px 22px rgba(236,238,240,0.25); }
+  button.go:disabled{ background:#38383c; color:#7a7a7e; cursor:not-allowed; box-shadow:none; }
 
-    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(13,10,26,.95);border:1px solid var(--border);color:var(--text-2);font-size:13px;padding:10px 18px;border-radius:20px;transition:transform .3s;z-index:99;white-space:nowrap;backdrop-filter:blur(12px);}
-    .toast.show{transform:translateX(-50%) translateY(0);}
+  .status{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--muted); }
+  .status.warn{ color:var(--silver-bright); }
 
-    ::-webkit-scrollbar{width:3px;}
-    ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:4px;}
-  </style>
+  .working{
+    display:none; align-items:center; gap:10px; margin-top:20px;
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--silver);
+  }
+  .working.show{ display:flex; }
+  .spinner{
+    width:14px; height:14px; border-radius:50%;
+    border:2px solid rgba(201,203,206,0.25); border-top-color:var(--silver-bright);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .display-box{
+    margin-top:24px; border:1px solid var(--line); border-radius:10px; background:#050505;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;
+  }
+  .display-box.square{ aspect-ratio:1/1; }
+  .display-box.wide{ aspect-ratio:16/9; }
+  .display-box img, .display-box video{ width:100%; height:100%; object-fit:cover; animation:reveal 1s ease forwards; }
+  .display-box audio{ width:90%; }
+  @keyframes reveal{ 0%{ filter:brightness(0) contrast(1.4); opacity:0; } 40%{opacity:1;} 100%{filter:brightness(1) contrast(1); opacity:1;} }
+  .placeholder-text{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:#4a4a4e; text-align:center; padding:20px; letter-spacing:0.05em;
+  }
+  .piece-badge{
+    position:absolute; top:12px; left:12px; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.08em;
+    background:rgba(0,0,0,0.6); color:var(--silver-bright); padding:4px 9px; border-radius:4px; border:1px solid rgba(236,238,240,0.25);
+  }
+  .dl-link{
+    position:absolute; bottom:12px; right:12px; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.05em;
+    background:rgba(0,0,0,0.65); color:var(--text); padding:7px 12px; border-radius:5px; border:1px solid var(--line); text-decoration:none;
+  }
+  .dl-link:hover{ border-color:var(--silver); }
+
+  .gallery{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px; }
+  @media(max-width:560px){ .gallery{ grid-template-columns:repeat(2,1fr); } }
+  .gallery a{ display:block; border-radius:6px; overflow:hidden; border:1px solid var(--line); aspect-ratio:1/1; }
+  .gallery img{ width:100%; height:100%; object-fit:cover; display:block; filter:saturate(0); transition:filter .2s; }
+  .gallery a:hover img{ filter:saturate(0.3); }
+
+  .config-toggle{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);
+    background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; margin-top:14px;
+  }
+  .config-box{ display:none; margin-top:14px; }
+  .config-box.show{ display:block; }
+  .config-note{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:#7a7a7e; margin-top:8px; line-height:1.6; }
+
+  footer{
+    margin-top:48px; padding-top:20px; border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:#5c5c60; line-height:1.7;
+  }
+</style>
 </head>
 <body>
-<div class="shell">
-  <div class="bg-glow" id="bgGlow"></div>
-  <canvas id="particleCanvas"></canvas>
+<div class="frame">
 
-  <header class="v-header">
-    <a href="index.html" class="v-back">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L3.5 6.5 8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Chat
-    </a>
-    <div class="v-logo">
-      <div class="v-logo-ring"><div class="v-logo-dot"></div></div>
-      <span class="v-logo-name">S.A.R</span>
-    </div>
-    <div class="v-pill"><span class="v-pill-dot"></span><span>Voz</span></div>
+  <header>
+    <div class="eyebrow"><span class="dot"></span> ACERVO EM CONSTRUÇÃO</div>
+    <h1>MUSEUM<br><span class="thin">ateliê de geração</span></h1>
+    <p class="sub">Descreva a peça — imagem, vídeo ou som — e ela entra para o acervo. Cada sala comporta 4 peças a cada 2 horas.</p>
+
+    <nav class="wings">
+      <button class="active" data-wing="img">Imagens</button>
+      <button data-wing="vid">Vídeo</button>
+      <button data-wing="aud">Áudio</button>
+    </nav>
   </header>
 
-  <main class="v-center">
-    <div class="orb-space">
-      <div class="orb-label">
-        <span class="orb-emoji" id="orbEmoji">🤖</span>
-        <span class="orb-state" id="orbState">Iniciando</span>
+  <!-- ===================== IMAGENS ===================== -->
+  <section class="wing-panel active" id="wing-img">
+    <div class="roll">
+      <div class="strip" id="strip-img"></div>
+      <div class="roll-label"><strong id="remain-img">4</strong> peças restantes nesta sala · renova <span id="renew-img">agora</span></div>
+    </div>
+
+    <div class="panel">
+      <label class="field-label" for="prompt-img">Descrição da cena</label>
+      <textarea id="prompt-img" placeholder="Ex: retrato editorial em preto e branco de uma mulher junto a uma janela, luz suave da manhã, grão de filme, 35mm"></textarea>
+
+      <div class="row">
+        <div>
+          <label class="field-label" for="ratio-img">Proporção / resolução</label>
+          <select id="ratio-img">
+            <option value="1536x1536">Quadrada HD — 1:1</option>
+            <option value="1024x1536">Retrato — 2:3</option>
+            <option value="1536x1024">Paisagem — 3:2</option>
+            <option value="1024x1792">Vertical — 9:16</option>
+            <option value="1792x1024">Cinema — 16:9</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="style-img">Acabamento</label>
+          <select id="style-img">
+            <option value="">Padrão do modelo</option>
+            <option value="fotografia realista, alta definição, iluminação de estúdio">Fotografia realista</option>
+            <option value="pintura digital, cores vibrantes, ilustração detalhada">Ilustração / pintura digital</option>
+            <option value="preto e branco, filme analógico, grão, contraste alto">Filme P&B analógico</option>
+            <option value="minimalista, linhas limpas, paleta reduzida">Minimalista</option>
+          </select>
+        </div>
       </div>
+
+      <div class="row">
+        <div>
+          <label class="field-label" for="quality-img">Nível de detalhe</label>
+          <select id="quality-img">
+            <option value="ultra">Máximo (mais fiel ao prompt, mais lento)</option>
+            <option value="alta">Alta</option>
+            <option value="padrao">Padrão</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:flex-end; padding-bottom:11px;">
+          <label style="display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); cursor:pointer;">
+            <input type="checkbox" id="enhance-img" checked style="accent-color:var(--silver-bright); width:15px; height:15px;">
+            Aprimorar prompt com IA antes de gerar
+          </label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="go" id="go-img">Gerar imagem</button>
+        <span class="status" id="status-img">Pronto para gerar.</span>
+      </div>
+      <div class="working" id="working-img"><span class="spinner"></span> compondo a peça…</div>
     </div>
 
-    <!-- Botão aparece só na primeira vez pra pedir permissão -->
-    <button class="start-btn" id="startBtn">🎙️ Ativar Modo Voz</button>
-
-    <!-- Indicador de volume ao vivo -->
-    <div class="vol-ring hidden" id="volRing"><div class="vol-dot"></div></div>
-
-    <div class="v-transcript-wrap">
-      <div class="v-interim" id="interimTxt"></div>
-      <div class="v-final"   id="finalTxt"></div>
+    <div class="display-box square" id="display-img">
+      <div class="placeholder-text">A imagem gerada aparecerá aqui</div>
     </div>
-  </main>
+    <div class="gallery" id="gallery-img"></div>
+  </section>
 
-  <section class="v-history" id="vHistory"></section>
+  <!-- ===================== VÍDEO ===================== -->
+  <section class="wing-panel" id="wing-vid">
+    <div class="roll">
+      <div class="strip" id="strip-vid"></div>
+      <div class="roll-label"><strong id="remain-vid">4</strong> peças restantes nesta sala · renova <span id="renew-vid">agora</span></div>
+    </div>
 
-  <footer class="v-footer">
-    <div class="wave-bars" id="waveBars">
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div>
+    <div class="panel">
+      <label class="field-label" for="prompt-vid">Descrição da cena em movimento</label>
+      <textarea id="prompt-vid" placeholder="Ex: câmera lenta sobrevoando uma cidade à noite, luzes refletindo na chuva, néon prata e preto"></textarea>
+
+      <div class="row">
+        <div>
+          <label class="field-label" for="ratio-vid">Formato</label>
+          <select id="ratio-vid">
+            <option value="1024x1024">Quadrado — 1:1</option>
+            <option value="1792x1024">Paisagem — 16:9</option>
+            <option value="1024x1792">Vertical — 9:16</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="dur-vid">Duração</label>
+          <select id="dur-vid">
+            <option value="5">5 segundos</option>
+            <option value="10">10 segundos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="go" id="go-vid">Gerar vídeo</button>
+        <span class="status" id="status-vid">Pronto para gerar.</span>
+      </div>
+      <div class="working" id="working-vid"><span class="spinner"></span> renderizando o vídeo — pode levar de 1 a 3 minutos…</div>
+
+      <p class="config-note">Geração de vídeo consome créditos pagos da plataforma (não é gratuita como as imagens) e exige uma chave de API configurada abaixo.</p>
     </div>
-    <div class="v-state-info">
-      <span class="v-state-name" id="stateName">—</span>
-      <span class="v-state-hint" id="stateHint">Aguarde</span>
+
+    <div class="display-box wide" id="display-vid">
+      <div class="placeholder-text">O vídeo gerado aparecerá aqui</div>
     </div>
-    <button class="v-stop-btn" id="stopBtn" title="Parar">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="2.5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
-    </button>
+  </section>
+
+  <!-- ===================== ÁUDIO ===================== -->
+  <section class="wing-panel" id="wing-aud">
+    <div class="roll">
+      <div class="strip" id="strip-aud"></div>
+      <div class="roll-label"><strong id="remain-aud">4</strong> peças restantes nesta sala · renova <span id="renew-aud">agora</span></div>
+    </div>
+
+    <div class="panel">
+      <label class="field-label" for="prompt-aud">Texto a narrar</label>
+      <textarea id="prompt-aud" placeholder="Ex: Bem-vindo ao museu. Nesta sala, cada obra nasce de uma palavra."></textarea>
+
+      <div class="row">
+        <div>
+          <label class="field-label" for="voice-aud">Voz</label>
+          <select id="voice-aud">
+            <option value="alloy">Alloy — neutra, profissional</option>
+            <option value="echo">Echo — grave, ressonante</option>
+            <option value="fable">Fable — narrador de histórias</option>
+            <option value="onyx">Onyx — quente, encorpada</option>
+            <option value="nova">Nova — clara, amigável</option>
+            <option value="shimmer">Shimmer — suave, melódica</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="go" id="go-aud">Gerar áudio</button>
+        <span class="status" id="status-aud">Pronto para gerar.</span>
+      </div>
+      <div class="working" id="working-aud"><span class="spinner"></span> gravando na sala de som…</div>
+
+      <p class="config-note">Esta sala converte texto em narração/voz (não compõe trilhas instrumentais completas) e também exige a chave de API abaixo.</p>
+    </div>
+
+    <div class="display-box wide" id="display-aud" style="aspect-ratio:auto; padding:40px 20px; background:var(--panel);">
+      <div class="placeholder-text" id="placeholder-aud">O áudio gerado aparecerá aqui</div>
+    </div>
+  </section>
+
+  <button class="config-toggle" id="configToggle">configurar chave de API (necessária para vídeo e áudio)</button>
+  <div class="config-box" id="configBox">
+    <label class="field-label" for="tokenInput">Chave de API</label>
+    <input type="text" id="tokenInput" placeholder="cole sua chave aqui">
+    <p class="config-note">
+      Esta chave fica salva apenas no armazenamento local do seu navegador — nunca é enviada para nós nem embutida neste arquivo.<br>
+      Se a chave começar com <strong>sk_</strong>, ela é uma chave <em>secreta</em>, feita para uso em servidor — evite deixá-la em páginas que você for hospedar publicamente ou compartilhar. Para uso só neste navegador, tudo bem; mas se você já colou essa chave em algum lugar público, é mais seguro gerar uma nova.
+    </p>
+  </div>
+
+  <footer>
+    Peças geradas por modelos de imagem, vídeo e voz de terceiros, via infraestrutura de geração generativa. Limites de 4 peças / 2h por sala, controlados localmente no seu navegador.
   </footer>
+
 </div>
-<div class="toast" id="toast"></div>
 
 <script>
-/* ====================================================
-   S.A.R — MODO VOZ HANDS-FREE
-   VAD:    AudioContext AnalyserNode (detecção de silêncio)
-   STT:    Groq Whisper API
-   LLM:    Groq llama
-   TTS:    SpeechSynthesis + fix Android PWA
-   ==================================================== */
+(function(){
+  const LIMIT = 4;
+  const WINDOW_MS = 2 * 60 * 60 * 1000;
 
-/* ---------- CHAVES ---------- */
-function dec(s){return s.replace(/[a-zA-Z]/g,c=>{const b=c<="Z"?65:97;return String.fromCharCode(((c.charCodeAt(0)-b+15)%26)+b);});}
-const CHAVES=["rdv_q4CwSU8whjfN11saVJytHRojm3QJMhJnKwj8v6dhgDnxMY7gKBwM","rdv_mvDn88ys3casJvuQxiBbHRojm3QJoPzW73eyBu8Dtc9mVO2D09Q3","rdv_uuBMlVuxyFshNSSpgouaHRojm3QJeOcIaoqeZHB68JtNehuYcjzP","rdv_ZwAEelTSOuFXDMCzCyAdHRojm3QJM3IT5whwyc6KYtVXSytIbUWH","rdv_tHcmv4NP8HSTN8Y0uCBGHRojm3QJyE6P0JxZO00XKII62YoCq2aU"];
-let ci=0;
-function chave(){return dec(CHAVES[ci]);}
-function rotChave(){ci=(ci+1)%CHAVES.length;}
+  const IMG_BASE = 'https://image.pollinations.ai/prompt/';
+  const GEN_BASE = 'https://gen.pollinations.ai/';
 
-/* ---------- DOM ---------- */
-const canvas    =document.getElementById("particleCanvas");
-const ctx2d     =canvas.getContext("2d");
-const bgGlow    =document.getElementById("bgGlow");
-const waveBars  =document.getElementById("waveBars");
-const stateName =document.getElementById("stateName");
-const stateHint =document.getElementById("stateHint");
-const orbEmoji  =document.getElementById("orbEmoji");
-const orbState  =document.getElementById("orbState");
-const interimTxt=document.getElementById("interimTxt");
-const finalTxt  =document.getElementById("finalTxt");
-const startBtn  =document.getElementById("startBtn");
-const volRing   =document.getElementById("volRing");
-const stopBtn   =document.getElementById("stopBtn");
-const vHistory  =document.getElementById("vHistory");
-const toastEl   =document.getElementById("toast");
+  const QUALITY_BOOST = {
+    ultra: 'extremamente detalhado, alta fidelidade aos detalhes descritos, composição precisa, foco nítido, qualidade profissional, 4k',
+    alta:  'detalhado, boa nitidez, qualidade profissional',
+    padrao: ''
+  };
 
-/* ---------- PARTÍCULAS 3D ---------- */
-const NP=300; let parts=[],orbMode="idle",_energy=0,_rotY=0,_rotX=0;
-const CORES={idle:{i:[124,106,255],o:[70,50,180],g:[124,106,255]},listen:{i:[255,110,110],o:[190,50,50],g:[248,113,113]},think:{i:[96,165,250],o:[40,90,200],g:[96,165,250]},speak:{i:[167,139,250],o:[110,70,240],g:[167,139,250]}};
+  // ---------- config / token ----------
+  const configToggle = document.getElementById('configToggle');
+  const configBox = document.getElementById('configBox');
+  const tokenInput = document.getElementById('tokenInput');
+  tokenInput.value = localStorage.getItem('museum_token') || '';
+  tokenInput.addEventListener('change', () => localStorage.setItem('museum_token', tokenInput.value.trim()));
+  configToggle.addEventListener('click', () => configBox.classList.toggle('show'));
+  function getToken(){ return (localStorage.getItem('museum_token') || '').trim(); }
 
-function resizeCanvas(){const s=canvas.parentElement;canvas.width=s.clientWidth;canvas.height=s.clientHeight;initParts();}
-function initParts(){parts=[];const g=Math.PI*(1+Math.sqrt(5));for(let i=0;i<NP;i++){const th=Math.acos(1-2*(i+.5)/NP),ph=g*i;parts.push({ox:Math.sin(th)*Math.cos(ph),oy:Math.sin(th)*Math.sin(ph),oz:Math.cos(th),r:.4+Math.random()*1.3,phase:Math.random()*Math.PI*2,spd:.003+Math.random()*.004,amp:2+Math.random()*4});}}
-function lerp(a,b,t){return a+(b-a)*t;}
+  // ---------- wing tabs ----------
+  document.querySelectorAll('nav.wings button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav.wings button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.wing-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('wing-' + btn.dataset.wing).classList.add('active');
+    });
+  });
 
-function drawFrame(ts){
-  const W=canvas.width,H=canvas.height,cx=W/2,cy=H*.35,R=104;
-  ctx2d.clearRect(0,0,W,H);
-  const eT=(orbMode==="listen"||orbMode==="speak")?1:orbMode==="think"?.5:0;
-  _energy=lerp(_energy,eT,.04);
-  _rotY+=.0013+_energy*.006; _rotX+=.0004+_energy*.002;
-  const cY=Math.cos(_rotY),sY=Math.sin(_rotY),cX=Math.cos(_rotX),sX=Math.sin(_rotX);
-  const C=CORES[orbMode]||CORES.idle;
-  for(const p of parts){
-    const x1=p.ox*cY-p.oz*sY,z1=p.ox*sY+p.oz*cY;
-    const y1=p.oy*cX-z1*sX,z2=p.oy*sX+z1*cX;
-    const pulse=Math.sin(ts*p.spd*1000+p.phase)*p.amp*_energy;
-    const sc=R+pulse,sx=cx+x1*sc,sy=cy+y1*sc,d=(z2+1)/2;
-    const ri=Math.round(lerp(C.o[0],C.i[0],d)),gi=Math.round(lerp(C.o[1],C.i[1],d)),bi=Math.round(lerp(C.o[2],C.i[2],d));
-    const al=Math.min(1,.18+d*.75+_energy*.15),sz=Math.max(.3,p.r*(.5+d*.7)*(1+_energy*.3));
-    ctx2d.shadowBlur=d>.7?(6+_energy*8):0;
-    if(d>.7)ctx2d.shadowColor=`rgba(${C.g[0]},${C.g[1]},${C.g[2]},.8)`;
-    ctx2d.beginPath();ctx2d.arc(sx,sy,sz,0,Math.PI*2);
-    ctx2d.fillStyle=`rgba(${ri},${gi},${bi},${al})`;ctx2d.fill();
-  }
-  ctx2d.shadowBlur=0;
-  const gr=22+_energy*18,grd=ctx2d.createRadialGradient(cx,cy,0,cx,cy,gr);
-  grd.addColorStop(0,`rgba(${C.g[0]},${C.g[1]},${C.g[2]},${.45+_energy*.35})`);
-  grd.addColorStop(.5,`rgba(${C.g[0]},${C.g[1]},${C.g[2]},${.1+_energy*.1})`);
-  grd.addColorStop(1,`rgba(${C.g[0]},${C.g[1]},${C.g[2]},0)`);
-  ctx2d.beginPath();ctx2d.arc(cx,cy,gr,0,Math.PI*2);ctx2d.fillStyle=grd;ctx2d.fill();
-  requestAnimationFrame(drawFrame);
-}
-
-/* ---------- UI ---------- */
-function setUI(modo){
-  orbMode=modo; bgGlow.className="bg-glow"; waveBars.className="wave-bars";
-  if(modo==="idle"){
-    bgGlow.classList.add();
-    orbEmoji.textContent="🤖";orbState.textContent="Ouvindo";orbState.style.color="";
-    stateName.textContent="Aguardando";stateName.style.color="";
-    stateHint.textContent="Pode falar a qualquer hora";
-    interimTxt.textContent="";finalTxt.textContent="";finalTxt.className="v-final";
-    volRing.classList.remove("active");
-  }else if(modo==="listen"){
-    bgGlow.classList.add("listen");waveBars.classList.add("listen");
-    orbEmoji.textContent="👂";orbState.textContent="Ouvindo";orbState.style.color="var(--red)";
-    stateName.textContent="Ouvindo";stateName.style.color="var(--red)";
-    stateHint.textContent="Detectei sua voz…";
-    volRing.classList.add("active");
-  }else if(modo==="think"){
-    bgGlow.classList.add("think");waveBars.classList.add("think");
-    orbEmoji.textContent="🧠";orbState.textContent="Pensando";orbState.style.color="#60a5fa";
-    stateName.textContent="Pensando";stateName.style.color="#60a5fa";
-    stateHint.textContent="Processando…";
-    volRing.classList.remove("active");
-    interimTxt.textContent="";
-  }else if(modo==="speak"){
-    bgGlow.classList.add("speak");waveBars.classList.add("speak");
-    orbEmoji.textContent="💬";orbState.textContent="Respondendo";orbState.style.color="var(--accent-2)";
-    stateName.textContent="Respondendo";stateName.style.color="var(--accent-2)";
-    stateHint.textContent="Toque ■ para interromper";
-  }
-}
-
-let _tt;
-function toast(msg,ms=3200){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(_tt);_tt=setTimeout(()=>toastEl.classList.remove("show"),ms);}
-function addHist(txt,tipo){const d=document.createElement("div");d.className=tipo==="user"?"vh-user":"vh-bot";d.textContent=txt;vHistory.appendChild(d);vHistory.scrollTop=vHistory.scrollHeight;}
-
-/* ---------- SYSTEM PROMPT ---------- */
-function buildSys(){
-  const now=new Date();
-  const dt=now.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo",weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  const hr=now.toLocaleTimeString("pt-BR",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit"});
-  return `Voce e a S.A.R — IA feminina brasileira (ela/dela), criada pela Evolution Games Studio, programada pelo Joao Antonio.
-Responde sempre em portugues do Brasil de forma natural e conversacional.
-MODO VOZ: respostas serao lidas em voz alta. Seja CONCISA e NATURAL.
-Sem listas, sem markdown, sem emojis, sem asteriscos. Apenas texto limpo corrido.
-Respostas curtas: 1 a 3 frases quando possivel.
-DATA E HORA: ${dt}, ${hr} (Brasilia).
-Nunca invente informacoes. Se nao souber, diga que nao sabe.`;
-}
-let mensagens=[{role:"system",content:buildSys()}];
-
-/* ---------- GROQ LLM ---------- */
-async function chamarGroq(txt){
-  mensagens.push({role:"user",content:txt});
-  const MAX=14,sys=mensagens[0];
-  let hist=mensagens.slice(1);
-  if(hist.length>MAX)hist=hist.slice(-MAX);
-  for(const m of["llama-3.3-70b-versatile","llama3-8b-8192"]){
+  // ---------- quota engine (shared by all 3 wings) ----------
+  function getTimestamps(kind){
     try{
-      const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+chave(),"Content-Type":"application/json"},body:JSON.stringify({model:m,temperature:.4,max_tokens:280,messages:[sys,...hist]}),signal:AbortSignal.timeout(20000)});
-      if(!r.ok){if(r.status===429||r.status===401)rotChave();throw new Error("HTTP"+r.status);}
-      const data=await r.json();
-      const resp=data.choices?.[0]?.message?.content?.trim();
-      if(!resp)throw new Error("vazia");
-      mensagens.push({role:"assistant",content:resp});
-      if(mensagens.length>MAX+1)mensagens=[mensagens[0],...mensagens.slice(-MAX)];
-      return resp;
-    }catch(e){console.warn("LLM",m,e.message);}
+      const raw = JSON.parse(localStorage.getItem('museum_quota_' + kind) || '[]');
+      const now = Date.now();
+      return raw.filter(t => now - t < WINDOW_MS);
+    }catch(e){ return []; }
   }
-  throw new Error("LLM falhou");
-}
+  function saveTimestamps(kind, list){ localStorage.setItem('museum_quota_' + kind, JSON.stringify(list)); }
 
-/* ---------- GROQ WHISPER ---------- */
-async function transcrever(blob){
-  const ext=blob.type.includes("ogg")?"audio.ogg":blob.type.includes("mp4")?"audio.mp4":"audio.webm";
-  const fd=new FormData();
-  fd.append("file",blob,ext);
-  fd.append("model","whisper-large-v3-turbo");
-  fd.append("language","pt");
-  fd.append("response_format","json");
-  for(let t=0;t<CHAVES.length;t++){
-    try{
-      const r=await fetch("https://api.groq.com/openai/v1/audio/transcriptions",{method:"POST",headers:{"Authorization":"Bearer "+chave()},body:fd,signal:AbortSignal.timeout(25000)});
-      if(!r.ok){if(r.status===429||r.status===401)rotChave();throw new Error("HTTP"+r.status);}
-      const data=await r.json();
-      return (data.text||"").trim();
-    }catch(e){console.warn("Whisper",t,e.message);rotChave();}
+  const countdowns = {};
+  function renderStrip(kind){
+    const used = getTimestamps(kind);
+    const strip = document.getElementById('strip-' + kind);
+    strip.innerHTML = '';
+    for(let i=0;i<LIMIT;i++){
+      const d = document.createElement('div');
+      d.className = 'slot' + (i < used.length ? ' used' : '');
+      strip.appendChild(d);
+    }
+    const remaining = Math.max(0, LIMIT - used.length);
+    document.getElementById('remain-' + kind).textContent = remaining;
+    const goBtn = document.getElementById('go-' + kind);
+    const statusEl = document.getElementById('status-' + kind);
+    const renewEl = document.getElementById('renew-' + kind);
+
+    clearInterval(countdowns[kind]);
+    if(remaining > 0){
+      renewEl.textContent = 'agora';
+      goBtn.disabled = false;
+      statusEl.className = 'status';
+      statusEl.textContent = remaining === LIMIT ? 'Sala vazia. Pronta para a primeira peça.' : `Pronto — ${remaining} peça(s) restante(s).`;
+    } else {
+      const freeAt = Math.min(...used) + WINDOW_MS;
+      goBtn.disabled = true;
+      statusEl.className = 'status warn';
+      function tick(){
+        const diff = freeAt - Date.now();
+        if(diff <= 0){ clearInterval(countdowns[kind]); renderStrip(kind); return; }
+        const m = Math.floor(diff/60000), s = Math.floor((diff%60000)/1000);
+        const label = `${m}min ${s.toString().padStart(2,'0')}s`;
+        renewEl.textContent = `em ${label}`;
+        statusEl.textContent = `Limite atingido. Próxima peça livre em ${label}.`;
+      }
+      tick();
+      countdowns[kind] = setInterval(tick, 1000);
+    }
   }
-  throw new Error("Whisper falhou");
-}
-
-/* ---------- TTS fix Android ---------- */
-let _ttsQ=[],_ttsSpeaking=false,_ttsKA=null;
-function pararTTS(){speechSynthesis.cancel();_ttsQ=[];_ttsSpeaking=false;if(_ttsKA){clearInterval(_ttsKA);_ttsKA=null;}}
-function falar(texto,onEnd){
-  pararTTS();_ttsSpeaking=true;
-  const limpo=texto.replace(/\*\*(.+?)\*\*/g,"$1").replace(/\*(.+?)\*/g,"$1").replace(/`(.+?)`/g,"$1").replace(/#{1,6}\s/g,"").replace(/[*_~`>#\-]/g,"").replace(/https?:\/\/\S+/g,"link").replace(/[\u{1F000}-\u{1FFFF}]/gu,"").replace(/[\u{2600}-\u{27BF}]/gu,"").replace(/\s+/g," ").trim();
-  if(!limpo){onEnd?.();return;}
-  _ttsQ=limpo.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(s=>s.length>0);
-  _ttsKA=setInterval(()=>{if(speechSynthesis.speaking){speechSynthesis.pause();setTimeout(()=>speechSynthesis.resume(),50);}},10000);
-  function next(){
-    if(!_ttsSpeaking||!_ttsQ.length){clearInterval(_ttsKA);_ttsKA=null;_ttsSpeaking=false;onEnd?.();return;}
-    const u=new SpeechSynthesisUtterance(_ttsQ.shift());
-    u.lang="pt-BR";u.rate=.95;u.pitch=1.05;u.volume=1;
-    const voz=speechSynthesis.getVoices().find(v=>v.lang==="pt-BR"||v.lang.startsWith("pt"));
-    if(voz)u.voice=voz;
-    u.onend=()=>setTimeout(next,70);u.onerror=()=>setTimeout(next,70);
-    try{speechSynthesis.speak(u);}catch(e){setTimeout(next,150);}
+  function registerUse(kind){
+    const list = getTimestamps(kind);
+    list.push(Date.now());
+    saveTimestamps(kind, list);
+    renderStrip(kind);
   }
-  next();
-}
 
-/* ====================================================
-   VAD — Detecção de voz por volume (AudioContext)
-   ====================================================
-   Fluxo:
-   1. Fica monitorando RMS do microfone continuamente
-   2. Volume > LIMIAR_FALA → começa a gravar (MediaRecorder)
-   3. Volume < LIMIAR_SILENCIO por SILENCIO_MS → para e envia
-   ==================================================== */
+  // ---------- gallery (images only) ----------
+  function getGallery(){ try{ return JSON.parse(localStorage.getItem('museum_gallery') || '[]'); }catch(e){ return []; } }
+  function saveGallery(list){ localStorage.setItem('museum_gallery', JSON.stringify(list.slice(0,8))); }
+  function renderGallery(){
+    const items = getGallery();
+    const gallery = document.getElementById('gallery-img');
+    gallery.innerHTML = '';
+    items.forEach(url => {
+      const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      const img = document.createElement('img'); img.src = url; img.loading = 'lazy';
+      a.appendChild(img); gallery.appendChild(a);
+    });
+  }
 
-const LIMIAR_FALA     = 18;   // RMS mínimo pra considerar fala (0-255)
-const LIMIAR_SILENCIO = 12;   // RMS abaixo = silêncio
-const SILENCIO_MS     = 1400; // ms de silêncio pra encerrar gravação
-const MIN_FALA_MS     = 400;  // gravação mínima pra enviar
-const MAX_FALA_MS     = 30000;// gravação máxima
+  // ===================== IMAGENS =====================
+  const goImg = document.getElementById('go-img');
+  goImg.addEventListener('click', () => {
+    const promptEl = document.getElementById('prompt-img');
+    const prompt = promptEl.value.trim();
+    if(!prompt){
+      const s = document.getElementById('status-img');
+      s.className = 'status warn'; s.textContent = 'Escreva uma descrição antes de gerar.';
+      promptEl.focus(); return;
+    }
+    if(getTimestamps('img').length >= LIMIT){ renderStrip('img'); return; }
 
-let audioCtx=null, analyser=null, micSource=null, mediaStream=null;
-let mediaRec=null, audioChunks=[], gravando=false;
-let _estadoVAD="idle"; // idle | listen | think | speak
-let _silencioTimer=null, _maxTimer=null, _inicioFala=0;
-let _vadAtivo=false, _vadFrame=null;
+    const [w,h] = document.getElementById('ratio-img').value.split('x').map(Number);
+    const styleVal = document.getElementById('style-img').value;
+    const qualityVal = document.getElementById('quality-img').value;
+    const enhance = document.getElementById('enhance-img').checked;
+    const styleSuffix = styleVal ? `, ${styleVal}` : '';
+    const qualitySuffix = QUALITY_BOOST[qualityVal] ? `, ${QUALITY_BOOST[qualityVal]}` : '';
+    const fullPrompt = prompt + styleSuffix + qualitySuffix;
+    const seed = Math.floor(Math.random() * 1e9);
 
-function getRMS(buf){
-  let sum=0;for(let i=0;i<buf.length;i++)sum+=buf[i]*buf[i];
-  return Math.sqrt(sum/buf.length);
-}
+    let url = `${IMG_BASE}${encodeURIComponent(fullPrompt)}?width=${w}&height=${h}&seed=${seed}&model=flux&nologo=true&enhance=${enhance}`;
+    const token = getToken();
+    if(token){ url += `&token=${encodeURIComponent(token)}`; }
 
-function getMime(){
-  const ts=["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg","audio/mp4"];
-  for(const t of ts)if(MediaRecorder.isTypeSupported(t))return t;
-  return "";
-}
+    goImg.disabled = true;
+    document.getElementById('working-img').classList.add('show');
+    const statusEl = document.getElementById('status-img');
+    statusEl.className = 'status'; statusEl.textContent = 'Gerando…';
 
-function iniciarGravacao(){
-  if(gravando)return;
-  gravando=true; audioChunks=[];
-  _estadoVAD="listen"; setUI("listen");
-  _inicioFala=Date.now();
+    const img = new Image();
+    img.onload = () => {
+      const used = getTimestamps('img');
+      const display = document.getElementById('display-img');
+      display.innerHTML = '';
+      const badge = document.createElement('div');
+      badge.className = 'piece-badge'; badge.textContent = `PEÇA ${used.length + 1}/${LIMIT}`;
+      const shown = document.createElement('img'); shown.src = url;
+      const dl = document.createElement('a'); dl.className = 'dl-link'; dl.href = url; dl.download = 'museum-imagem.jpg'; dl.target = '_blank'; dl.textContent = 'baixar ↓';
+      display.appendChild(shown); display.appendChild(badge); display.appendChild(dl);
 
-  const mime=getMime();
-  try{mediaRec=new MediaRecorder(mediaStream,mime?{mimeType:mime}:{});}
-  catch(e){mediaRec=new MediaRecorder(mediaStream);}
+      const gal = getGallery(); gal.unshift(url); saveGallery(gal); renderGallery();
 
-  mediaRec.ondataavailable=e=>{if(e.data&&e.data.size>0)audioChunks.push(e.data);};
-  mediaRec.onstop=async()=>{
-    gravando=false;
-    const duracao=Date.now()-_inicioFala;
-    const mime2=mediaRec.mimeType||"audio/webm";
-    const blob=new Blob(audioChunks,{type:mime2});
-    audioChunks=[];
-    if(blob.size<2000||duracao<MIN_FALA_MS){
-      // muito curto, ignora e volta a ouvir
-      if(_estadoVAD!=="speak")voltarOuvir();
+      document.getElementById('working-img').classList.remove('show');
+      registerUse('img');
+    };
+    img.onerror = () => {
+      document.getElementById('working-img').classList.remove('show');
+      goImg.disabled = false;
+      statusEl.className = 'status warn'; statusEl.textContent = 'Falha ao gerar. Tente novamente em instantes.';
+    };
+    img.src = url;
+  });
+
+  // ===================== VÍDEO =====================
+  const goVid = document.getElementById('go-vid');
+  goVid.addEventListener('click', () => {
+    const promptEl = document.getElementById('prompt-vid');
+    const prompt = promptEl.value.trim();
+    if(!prompt){
+      const s = document.getElementById('status-vid');
+      s.className = 'status warn'; s.textContent = 'Escreva uma descrição antes de gerar.';
+      promptEl.focus(); return;
+    }
+    const token = getToken();
+    if(!token){
+      const s = document.getElementById('status-vid');
+      s.className = 'status warn'; s.textContent = 'Configure uma chave de API abaixo antes de gerar vídeo.';
       return;
     }
-    await processarBlob(blob);
-  };
-  mediaRec.start(200);
+    if(getTimestamps('vid').length >= LIMIT){ renderStrip('vid'); return; }
 
-  // Segurança: para após MAX_FALA_MS
-  _maxTimer=setTimeout(()=>{if(gravando)pararGravacao();},MAX_FALA_MS);
-}
+    const [w,h] = document.getElementById('ratio-vid').value.split('x').map(Number);
+    const duration = document.getElementById('dur-vid').value;
 
-function pararGravacao(){
-  clearTimeout(_silencioTimer); clearTimeout(_maxTimer);
-  _silencioTimer=null; _maxTimer=null;
-  if(!gravando)return;
-  try{mediaRec.stop();}catch(e){}
-}
+    const url = `${GEN_BASE}video/${encodeURIComponent(prompt)}?model=seedance&width=${w}&height=${h}&duration=${duration}&key=${encodeURIComponent(token)}`;
 
-async function processarBlob(blob){
-  _estadoVAD="think"; setUI("think");
-  interimTxt.textContent="🔍 Transcrevendo…";
+    goVid.disabled = true;
+    document.getElementById('working-vid').classList.add('show');
+    const statusEl = document.getElementById('status-vid');
+    statusEl.className = 'status'; statusEl.textContent = 'Gerando…';
 
-  let texto="";
-  try{texto=await transcrever(blob);}
-  catch(e){console.error(e);toast("⚠️ Erro na transcrição");voltarOuvir();return;}
+    fetch(url)
+      .then(res => { if(!res.ok) throw new Error('request failed'); return res.blob(); })
+      .then(blob => {
+        const objUrl = URL.createObjectURL(blob);
+        const used = getTimestamps('vid');
+        const display = document.getElementById('display-vid');
+        display.innerHTML = '';
+        const badge = document.createElement('div');
+        badge.className = 'piece-badge'; badge.textContent = `PEÇA ${used.length + 1}/${LIMIT}`;
+        const vid = document.createElement('video'); vid.src = objUrl; vid.controls = true; vid.autoplay = true; vid.loop = true;
+        const dl = document.createElement('a'); dl.className = 'dl-link'; dl.href = objUrl; dl.download = 'museum-video.mp4'; dl.textContent = 'baixar ↓';
+        display.appendChild(vid); display.appendChild(badge); display.appendChild(dl);
 
-  if(!texto||texto.length<2){voltarOuvir();return;}
-
-  interimTxt.textContent="";
-  finalTxt.textContent=texto; finalTxt.className="v-final";
-  addHist(texto,"user");
-
-  let resposta="";
-  try{resposta=await chamarGroq(texto);}
-  catch(e){resposta="Tive um problema de conexão. Pode repetir?";toast("⚠️ Erro de conexão");}
-
-  finalTxt.textContent=resposta; finalTxt.className="v-final bot";
-  addHist(resposta,"bot");
-  _estadoVAD="speak"; setUI("speak");
-
-  falar(resposta,()=>{
-    if(_estadoVAD==="speak")voltarOuvir();
+        document.getElementById('working-vid').classList.remove('show');
+        registerUse('vid');
+      })
+      .catch(() => {
+        document.getElementById('working-vid').classList.remove('show');
+        goVid.disabled = false;
+        statusEl.className = 'status warn';
+        statusEl.textContent = 'Falha ao gerar vídeo. Verifique a chave de API e seu saldo de créditos.';
+      });
   });
-}
 
-function voltarOuvir(){
-  _estadoVAD="idle"; setUI("idle");
-  // pequeno delay pra não pegar eco da resposta
-  setTimeout(()=>{if(_vadAtivo&&_estadoVAD==="idle")_estadoVAD="pronto";},600);
-}
-
-/* Loop VAD principal */
-function vadLoop(){
-  if(!_vadAtivo){_vadFrame=null;return;}
-  _vadFrame=requestAnimationFrame(vadLoop);
-
-  const buf=new Uint8Array(analyser.fftSize);
-  analyser.getByteTimeDomainData(buf);
-
-  // Converte de 0-255 centrado em 128 para amplitude real
-  const amp=new Float32Array(buf.length);
-  for(let i=0;i<buf.length;i++)amp[i]=(buf[i]-128)/128;
-  const rms=getRMS(amp)*255; // escala pra 0-255 pra comparar com limiar
-
-  // Atualiza indicador visual de volume
-  if(volRing&&!volRing.classList.contains("hidden")){
-    volRing.classList.toggle("active",rms>LIMIAR_FALA*.7);
-  }
-
-  // Só age se não estiver processando/falando
-  if(_estadoVAD!=="idle"&&_estadoVAD!=="pronto")return;
-
-  if(rms>LIMIAR_FALA){
-    // Detectou fala → começa a gravar
-    clearTimeout(_silencioTimer);
-    _silencioTimer=null;
-    if(!gravando)iniciarGravacao();
-  } else if(gravando){
-    // Silêncio detectado enquanto gravava
-    if(rms<LIMIAR_SILENCIO&&!_silencioTimer){
-      _silencioTimer=setTimeout(()=>{
-        pararGravacao();
-        _silencioTimer=null;
-      },SILENCIO_MS);
-    } else if(rms>=LIMIAR_SILENCIO&&_silencioTimer){
-      // Voltou a falar, cancela timer de silêncio
-      clearTimeout(_silencioTimer);
-      _silencioTimer=null;
+  // ===================== ÁUDIO =====================
+  const goAud = document.getElementById('go-aud');
+  goAud.addEventListener('click', () => {
+    const promptEl = document.getElementById('prompt-aud');
+    const text = promptEl.value.trim();
+    if(!text){
+      const s = document.getElementById('status-aud');
+      s.className = 'status warn'; s.textContent = 'Escreva um texto antes de gerar.';
+      promptEl.focus(); return;
     }
-  }
-}
+    const token = getToken();
+    if(!token){
+      const s = document.getElementById('status-aud');
+      s.className = 'status warn'; s.textContent = 'Configure uma chave de API abaixo antes de gerar áudio.';
+      return;
+    }
+    if(getTimestamps('aud').length >= LIMIT){ renderStrip('aud'); return; }
 
-/* ---------- INICIAR TUDO ---------- */
-async function ativar(){
-  startBtn.classList.add("hidden");
-  volRing.classList.remove("hidden");
+    const voice = document.getElementById('voice-aud').value;
+    const url = `${GEN_BASE}audio/${encodeURIComponent(text)}?voice=${voice}&key=${encodeURIComponent(token)}`;
 
-  try{
-    mediaStream=await navigator.mediaDevices.getUserMedia({
-      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}
-    });
-  }catch(e){
-    console.error("Mic",e);
-    toast("🚫 Permissão de microfone negada",5000);
-    startBtn.classList.remove("hidden");
-    return;
-  }
+    goAud.disabled = true;
+    document.getElementById('working-aud').classList.add('show');
+    const statusEl = document.getElementById('status-aud');
+    statusEl.className = 'status'; statusEl.textContent = 'Gerando…';
 
-  // Cria AudioContext pra VAD
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  analyser=audioCtx.createAnalyser();
-  analyser.fftSize=512;
-  analyser.smoothingTimeConstant=0.3;
-  micSource=audioCtx.createMediaStreamSource(mediaStream);
-  micSource.connect(analyser);
-  // NÃO conecta ao destination — evita feedback/eco
+    fetch(url)
+      .then(res => { if(!res.ok) throw new Error('request failed'); return res.blob(); })
+      .then(blob => {
+        const objUrl = URL.createObjectURL(blob);
+        const used = getTimestamps('aud');
+        const display = document.getElementById('display-aud');
+        display.innerHTML = '';
+        const badge = document.createElement('div');
+        badge.className = 'piece-badge'; badge.textContent = `PEÇA ${used.length + 1}/${LIMIT}`;
+        badge.style.position = 'static'; badge.style.marginBottom = '14px'; badge.style.display = 'inline-block';
+        const wrap = document.createElement('div'); wrap.style.width = '100%'; wrap.style.textAlign = 'center';
+        const audioEl = document.createElement('audio'); audioEl.src = objUrl; audioEl.controls = true;
+        const dl = document.createElement('a'); dl.className = 'dl-link'; dl.style.position='static'; dl.style.display='inline-block'; dl.style.marginTop='14px';
+        dl.href = objUrl; dl.download = 'museum-audio.mp3'; dl.textContent = 'baixar ↓';
+        wrap.appendChild(badge); wrap.appendChild(document.createElement('br')); wrap.appendChild(audioEl); wrap.appendChild(document.createElement('br')); wrap.appendChild(dl);
+        display.appendChild(wrap);
 
-  _vadAtivo=true;
-  _estadoVAD="pronto";
-  setUI("idle");
+        document.getElementById('working-aud').classList.remove('show');
+        registerUse('aud');
+      })
+      .catch(() => {
+        document.getElementById('working-aud').classList.remove('show');
+        goAud.disabled = false;
+        statusEl.className = 'status warn';
+        statusEl.textContent = 'Falha ao gerar áudio. Verifique a chave de API e seu saldo de créditos.';
+      });
+  });
 
-  // Pré-carrega vozes TTS
-  speechSynthesis.getVoices();
-
-  vadLoop();
-  toast("🎙️ Modo voz ativado — pode falar!",2500);
-}
-
-/* ---------- BOTÃO PARAR ---------- */
-stopBtn.onclick=()=>{
-  pararTTS();
-  pararGravacao();
-  _estadoVAD="idle"; setUI("idle");
-  finalTxt.textContent=""; finalTxt.className="v-final";
-  interimTxt.textContent="";
-  setTimeout(()=>{if(_vadAtivo)_estadoVAD="pronto";},800);
-};
-
-/* ---------- INIT ---------- */
-(function init(){
-  resizeCanvas();
-  window.addEventListener("resize",resizeCanvas);
-  requestAnimationFrame(drawFrame);
-
-  speechSynthesis.getVoices();
-  if(speechSynthesis.onvoiceschanged!==undefined)
-    speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
-
-  if(!navigator.mediaDevices?.getUserMedia){
-    finalTxt.textContent="Seu navegador não suporta gravação de áudio.";
-    startBtn.disabled=true;
-    toast("❌ Sem suporte a microfone",5000);
-    return;
-  }
-
-  startBtn.onclick=ativar;
-  console.log("🎙️ S.A.R Modo Voz VAD iniciado");
+  renderStrip('img'); renderStrip('vid'); renderStrip('aud');
+  renderGallery();
 })();
 </script>
 </body>

@@ -20,8 +20,6 @@ const REGRAS = {
     "você gera imagem sim, o botao para gerar imagem fica ao lado do botao de enviar imagem",
     "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido",
     "se nao for nessesario ou pedido,nao fale data gostos etc",
-    "Para futebol, use a pesquisa web em tempo real que o sistema possui para trazer dados reais e atualizados",
-
   ],
   modo: {
     rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida. Use emojis quando fizer sentido.",
@@ -389,9 +387,10 @@ function _mostrarIntro() {
     <h2 class="intro-title">Olá! Sou a S.A.R 👋</h2>
     <p class="intro-sub">Como posso te ajudar hoje? ✨</p>
     <div class="intro-chips">
-      <button class="intro-chip" onclick="preencherInput('⚽ Jogos de hoje no futebol')">⚽ Futebol ao vivo</button>
       <button class="intro-chip" onclick="preencherInput('💻 Me ajuda com código')">💻 Programação</button>
       <button class="intro-chip" onclick="preencherInput('🧠 Explica um conceito pra mim')">🧠 Aprender algo</button>
+      <button class="intro-chip" onclick="preencherInput('/Tabela ')">📊 /Tabela</button>
+      <button class="intro-chip" onclick="preencherInput('/Jurado ')">⚖️ /Jurado</button>
     </div>
   </div>`;
 }
@@ -766,10 +765,9 @@ const authPerfil        = document.getElementById("authPerfil");
 const perfilAvatar      = document.getElementById("perfilAvatar");
 const perfilNome        = document.getElementById("perfilNome");
 const logoutBtn         = document.getElementById("logoutBtn");
-const voiceLink         = document.getElementById("voiceLink");
 
 let _authAba = "login";
-let _pendingAcao = null; // { tipo: "modo", modo: "pro" } | { tipo: "voice" }
+let _pendingAcao = null; // { tipo: "modo", modo: "pro" }
 
 function _iniciais(nome) {
   return (nome || "?").trim().slice(0, 2);
@@ -845,8 +843,6 @@ async function _executarAcaoPendente() {
     modo = acao.modo;
     localStorage.setItem("modoSAR", modo);
     atualizarUI();
-  } else if (acao.tipo === "voice") {
-    window.location.href = "voice.html";
   }
 }
 
@@ -881,14 +877,6 @@ if (authForm) authForm.addEventListener("submit", async (e) => {
   } finally {
     authSubmitBtn.disabled = false;
     authSubmitLabel.textContent = labelOriginal;
-  }
-});
-
-if (voiceLink) voiceLink.addEventListener("click", (e) => {
-  if (!getUsuarioLogado()) {
-    e.preventDefault();
-    _pendingAcao = { tipo: "voice" };
-    abrirAuthModal("login");
   }
 });
 
@@ -959,19 +947,6 @@ function ePesquisa(texto) {
   return padroes.some(p => p.test(t));
 }
 
-function eFutebol(texto) {
-  const t = texto.toLowerCase();
-  const padroes = [
-    /futebol/, /jogo.?(de hoje|ao vivo|agora)/, /placar/, /campeonato/,
-    /premier\s*league/, /brasileir[aã]o/, /champions/, /libertadores/,
-    /copa\s*do\s*mundo/, /copa\s*brasil/, /seleç[aã]o/, /time\s+de\s+futebol/,
-    /jogos?\s+de\s+hoje/, /resultado.?jogo/, /artilheiro/, /classificaç[aã]o/,
-    /tabela\s+de/, /rodada/, /confronto/, /escalação/, /gol\s+de/,
-    /messi|neymar|mbapp|haaland|vinicius|benzema|modric|salah/i
-  ];
-  return padroes.some(p => p.test(t));
-}
-
 function instrucaoCalculo() {
   return `\n\nINSTRUCAO ESPECIAL - CALCULOS:
 Quando responder a um calculo ou problema matematico, voce DEVE:
@@ -986,6 +961,42 @@ Exemplo:
 -------
  1110 
 ===FIM===`;
+}
+
+/* ====================================================
+   ⌨️ COMANDOS ESPECIAIS — /Tabela, /Humman, /Jurado
+   ==================================================== */
+function eComandoTabela(texto) { return /^\/tabela\b/i.test(texto.trim()); }
+function eComandoHumano(texto) { return /^\/humman\b/i.test(texto.trim()); }
+function eComandoJurado(texto) { return /^\/jurado\b/i.test(texto.trim()); }
+function eComando(texto) { return eComandoTabela(texto) || eComandoHumano(texto) || eComandoJurado(texto); }
+
+function instrucaoTabela() {
+  return `\n\nINSTRUCAO ESPECIAL - COMANDO /Tabela:
+O usuario quer APENAS uma tabela sobre o assunto pedido (ignore a palavra "/tabela" no começo, ela e so um comando).
+Responda SOMENTE com uma tabela em markdown (formato | coluna | coluna |), com cabecalho claro, dados corretos e bem organizados.
+Nao escreva NADA antes ou depois da tabela — sem introducao, sem explicacao, sem conclusao. Apenas a tabela.`;
+}
+
+function instrucaoHumano() {
+  return `\n\nINSTRUCAO ESPECIAL - COMANDO /Humman:
+O usuario quer que voce responda como um humano real digitando em um chat (ignore a palavra "/humman" no começo, ela e so um comando).
+Escreva de forma coloquial e espontanea, frases curtas, sem estrutura de topicos ou paragrafos formais, sem soar robotico, tecnico ou como uma IA.
+Pode usar girias leves e um jeito natural de escrever, mas continue clara e util na resposta.`;
+}
+
+function instrucaoJurado() {
+  return `\n\nINSTRUCAO ESPECIAL - COMANDO /Jurado:
+O usuario quer que voce julgue a imagem, ideia ou pergunta enviada com 100% de sinceridade (ignore a palavra "/jurado" no começo, ela e so um comando).
+Aja como um jurado exigente: de um veredito claro (nota, aprovado/reprovado ou avaliacao direta), aponte pontos fortes e fracos sem suavizar e sem elogiar por educacao.
+Seja direta e honesta, mas sem ser cruel ou ofensiva gratuitamente.`;
+}
+
+function instrucoesDeComando(texto) {
+  if (eComandoTabela(texto)) return instrucaoTabela();
+  if (eComandoHumano(texto)) return instrucaoHumano();
+  if (eComandoJurado(texto)) return instrucaoJurado();
+  return "";
 }
 
 function processarLinks(html) {
@@ -1243,11 +1254,11 @@ async function chamarAPI(msgs) {
   const cfg    = configModo();
   const ctx    = gerarContextoUsuario();
   const ultimo = msgs.filter(m => m.role === "user").slice(-1)[0]?.content || "";
-  const system = _buildSystem(cfg, ctx, ultimo) + (eCalculo(ultimo) ? instrucaoCalculo() : "");
+  const system = _buildSystem(cfg, ctx, ultimo) + (eCalculo(ultimo) ? instrucaoCalculo() : "") + instrucoesDeComando(ultimo);
 
   const msgslimpas = _limparMsgsParaAPI(msgs);
 
-  const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+  const modelos = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
   let ultimoErro = null;
 
   for (let mi = 0; mi < modelos.length; mi++) {
@@ -1294,7 +1305,8 @@ async function chamarGroqCompound(msgs) {
   const ctx    = gerarContextoUsuario();
   const ultimo = msgs.filter(m => m.role === "user").slice(-1)[0]?.content || "";
   const system = _buildSystem(cfg, ctx, ultimo) +
-    "\n\nVocê tem acesso a busca na web em tempo real. Use os resultados encontrados para responder com dados atuais e precisos. Cite fontes de forma natural quando fizer sentido, sem inventar links.";
+    "\n\nVocê tem acesso a busca na web em tempo real. Use os resultados encontrados para responder com dados atuais e precisos. Cite fontes de forma natural quando fizer sentido, sem inventar links." +
+    instrucoesDeComando(ultimo);
 
   const msgslimpas = _limparMsgsParaAPI(msgs);
   const key = decodificar(chaves[indiceAtual]);
@@ -1479,8 +1491,7 @@ async function enviar() {
   if (assuntoPorno(txt))     { addMsg("🔞 Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot"); return; }
 
   // 🔎 PESQUISA — usa groq/compound (busca web em tempo real) para perguntas que precisam de info atual
-  // ⚽ Perguntas de futebol também caem aqui (API do football foi removida)
-  if (ePesquisa(txt) || eFutebol(txt)) {
+  if (ePesquisa(txt) && !eComando(txt)) {
     addMsg(txt, "user");
     input.value = "";
     atualizarContexto(txt);
@@ -2063,7 +2074,7 @@ async function enviarComPDF(txtUsuario, arquivo) {
     const system = _buildSystem(cfg, ctx, promptParaGroq);
     let respostaFinal = null;
 
-    const modelos = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+    const modelos = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
     for (const modelo of modelos) {
       try {
         const key = decodificar(chaves[indiceAtual]);
