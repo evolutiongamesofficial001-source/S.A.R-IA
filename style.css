@@ -390,14 +390,15 @@ main#chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9
   max-width: min(88%, calc(100% - 28px));
 }
 .msg.bot {
-  align-self: flex-start;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  align-self: stretch;
+  background: none;
+  border: none;
   font-size: .875rem; color: var(--text);
-  padding: 12px 14px; border-radius: 4px 18px 18px 18px;
+  padding: 28px 2px 8px; border-radius: 0;
   position: relative;
-  box-shadow: var(--shadow-sm);
-  max-width: min(88%, calc(100% - 28px));
+  box-shadow: none;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* COPY BTN */
@@ -463,13 +464,15 @@ code {
   background: var(--surface-3); padding: 7px 10px;
   text-align: left; color: var(--text-2); font-weight: 600;
   border-bottom: 1px solid var(--border);
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 .chat-table td {
   padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   color: var(--text);
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 .chat-table tr.even td { background: var(--surface-2); }
 
