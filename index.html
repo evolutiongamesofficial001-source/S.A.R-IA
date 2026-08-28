@@ -129,12 +129,7 @@
       </div>
       <h2 class="intro-title">Olá! Sou a S.A.R 👋</h2>
       <p class="intro-sub">Como posso te ajudar hoje? ✨</p>
-      <div class="intro-chips">
-        <button class="intro-chip" onclick="preencherInput('💻 Me ajuda com código')">💻 Programação</button>
-        <button class="intro-chip" onclick="preencherInput('🧠 Explica um conceito pra mim')">🧠 Aprender algo</button>
-        <button class="intro-chip" onclick="preencherInput('/Tabela ')">📊 /Tabela</button>
-        <button class="intro-chip" onclick="preencherInput('/Jurado ')">⚖️ /Jurado</button>
-      </div>
+      <div class="intro-chips" id="introChips"></div>
     </div>
   </main>
 
@@ -149,12 +144,15 @@
       <!-- Inputs ocultos -->
       <input type="file" id="inputPDF"  accept="application/pdf" style="display:none">
       <input type="file" id="inputFoto" accept="image/*" style="display:none" multiple>
-      <input id="input" placeholder="Escreva sua mensagem…" autocomplete="off" spellcheck="false" aria-label="Mensagem">
+      <input id="input" placeholder="Escreva sua mensagem… ( / para comandos )" autocomplete="off" spellcheck="false" aria-label="Mensagem">
       <button class="send-btn" id="btn" aria-label="Enviar">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg>
       </button>
     </div>
   </footer>
+
+  <!-- MENU DE COMANDOS / -->
+  <div id="slashMenu" class="slash-menu" style="display:none"></div>
 
   <!-- MENU DE ANEXO -->
   <div id="attachMenu" class="attach-menu" style="display:none">

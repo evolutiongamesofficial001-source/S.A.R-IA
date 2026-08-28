@@ -17,15 +17,27 @@ const REGRAS = {
     "Seu nome e S.A.R (Suporte Artificial Racional) desenvolvida pela Evolution Games Studio e programada por Joao Antonio",
     "nao comente sobre a foto ser em json",
     "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R Vision da Evolution Studios",
-    "você gera imagem sim, o botao para gerar imagem fica ao lado do botao de enviar imagem",
+    "voce nao gera imagens, apenas analisa imagens enviadas pelo usuario atraves do modulo S.A.R Vision",
     "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido",
     "se nao for nessesario ou pedido,nao fale data gostos etc",
   ],
   modo: {
     rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida. Use emojis quando fizer sentido.",
     especialista: "Responda com explicacao tecnica detalhada e organizada. Emojis podem ser usados para identificar seções.",
-    pro:          "Responda profundamente com analise estrategica e visao avancada tipo modo pro."
+    pro:          "Responda profundamente com analise estrategica e visao avancada tipo modo pro. use fatos argumentos e se possivel fontes"
   },
+  codigo: [
+    "Ao gerar qualquer trecho de codigo, nunca inclua comentarios no codigo, nem // nem #, nem docstrings explicativas, o codigo deve ser limpo e sem anotacoes",
+    "O codigo gerado deve ser o mais completo, robusto, extenso e detalhado possivel, com nomes de variaveis claros, tratamento de erros quando fizer sentido e boas praticas, evitando trechos incompletos ou simplificados demais",
+    "Nao explique o codigo linha por linha dentro do proprio bloco de codigo, explicacoes ficam de fora, em texto normal antes ou depois do bloco",
+    "o codigo deve ser o mais avançado e completo sem economizar linha nem tokens",
+    "o codigo deve ser visualmente elegante e bem estruturado: indentacao consistente, espacamento logico entre blocos, nomes descritivos e organizacao clara, no nivel de um codigo profissional de producao"
+  ],
+  links: [
+    "Sempre que a resposta permitir e fizer sentido, ofereca um link confiavel e oficial relacionado ao assunto (site oficial, documentacao oficial ou fonte reconhecida)",
+    "Nunca invente ou aposte em um link que voce nao tenha certeza que existe, se nao tiver certeza do link exato, indique o nome do site oficial em vez de um link",
+    "Se a resposta envolver compra de produto, servico ou preco, priorize sempre links de lojas e sites brasileiros confiaveis, como Mercado Livre, Amazon.com.br, Magazine Luiza, Kabum, Americanas ou o site oficial da marca no Brasil"
+  ],
   equipe: {
     origem:       "A Evolution Games Studio e uma equipe indie brasileira criada por Joao Antonio e Lucas Macedo durante a epoca de escola.",
     criacao:      "Voce e a S.A.R e foi criada pela Evolution Games Studio. Programada pelo Joao Antonio. Os criadores/fundadores sao Joao Antonio e Lucas Macedo.",
@@ -378,6 +390,32 @@ function carregarChatTela(id) {
   renderHistorico();
 }
 
+// 💡 Pool de perguntas sugeridas — 3 são sorteadas aleatoriamente a cada intro
+const SUGESTOES_POOL = [
+  "🧮 Resolve uma equação de segundo grau pra mim",
+  "🍜 Me dá uma receita rápida e saborosa",
+  "🎮 /Akinator vamos jogar!",
+  "📅 /Plan uma rotina de estudos pra essa semana",
+  "🏫 /Prof sobre o sistema solar",
+  "🔎 /Deep sobre inteligência artificial",
+  "💡 Me dá uma ideia de projeto pro fim de semana",
+  "📱 Como funciona a criptografia de ponta a ponta?",
+  "✍️ Me ajuda a escrever uma mensagem pro meu chefe",
+  "🌍 Quais são as maiores curiosidades sobre o espaço?",
+  "💪 Monta um treino rápido pra fazer em casa",
+  "🧩 Cria um quiz divertido sobre games"
+];
+
+function _sugestoesAleatorias(qtd = 3) {
+  return _embaralhar(SUGESTOES_POOL).slice(0, qtd);
+}
+
+function _renderIntroChips() {
+  return _sugestoesAleatorias(3).map(s =>
+    `<button class="intro-chip" onclick="preencherInput('${s.replace(/'/g, "\\'")}')">${s}</button>`
+  ).join("");
+}
+
 function _mostrarIntro() {
   chat.innerHTML = `<div class="intro-screen">
     <div class="intro-logo">
@@ -386,12 +424,7 @@ function _mostrarIntro() {
     </div>
     <h2 class="intro-title">Olá! Sou a S.A.R 👋</h2>
     <p class="intro-sub">Como posso te ajudar hoje? ✨</p>
-    <div class="intro-chips">
-      <button class="intro-chip" onclick="preencherInput('💻 Me ajuda com código')">💻 Programação</button>
-      <button class="intro-chip" onclick="preencherInput('🧠 Explica um conceito pra mim')">🧠 Aprender algo</button>
-      <button class="intro-chip" onclick="preencherInput('/Tabela ')">📊 /Tabela</button>
-      <button class="intro-chip" onclick="preencherInput('/Jurado ')">⚖️ /Jurado</button>
-    </div>
+    <div class="intro-chips" id="introChips">${_renderIntroChips()}</div>
   </div>`;
 }
 
@@ -964,12 +997,34 @@ Exemplo:
 }
 
 /* ====================================================
-   ⌨️ COMANDOS ESPECIAIS — /Tabela, /Humman, /Jurado
+   ⌨️ COMANDOS ESPECIAIS — /Tabela, /Humman, /Jurado,
+   /Akinator, /Plan, /Prof, /Deep
    ==================================================== */
-function eComandoTabela(texto) { return /^\/tabela\b/i.test(texto.trim()); }
-function eComandoHumano(texto) { return /^\/humman\b/i.test(texto.trim()); }
-function eComandoJurado(texto) { return /^\/jurado\b/i.test(texto.trim()); }
-function eComando(texto) { return eComandoTabela(texto) || eComandoHumano(texto) || eComandoJurado(texto); }
+function eComandoTabela(texto)   { return /^\/tabela\b/i.test(texto.trim()); }
+function eComandoHumano(texto)   { return /^\/humman\b/i.test(texto.trim()); }
+function eComandoJurado(texto)   { return /^\/jurado\b/i.test(texto.trim()); }
+function eComandoAkinator(texto) { return /^\/akinator\b/i.test(texto.trim()); }
+function eComandoPlan(texto)     { return /^\/plan\b/i.test(texto.trim()); }
+function eComandoProf(texto)     { return /^\/prof\b/i.test(texto.trim()); }
+function eComandoDeep(texto)     { return /^\/deep\b/i.test(texto.trim()); }
+
+// 🔎 /Deep tem tratamento a parte (usa a pesquisa web), por isso fica de fora daqui
+function eComandoSemDeep(texto) {
+  return eComandoTabela(texto) || eComandoHumano(texto) || eComandoJurado(texto) ||
+         eComandoAkinator(texto) || eComandoPlan(texto) || eComandoProf(texto);
+}
+function eComando(texto) { return eComandoSemDeep(texto) || eComandoDeep(texto); }
+
+// 📋 Lista de comandos exibida no menu de "/"
+const SLASH_COMMANDS = [
+  { cmd: "/tabela",   icone: "📊", nome: "/Tabela",   desc: "Gera uma tabela organizada sobre o assunto" },
+  { cmd: "/humman",   icone: "🗣️", nome: "/Humman",   desc: "Responde como um humano real, sem formalidade" },
+  { cmd: "/jurado",   icone: "⚖️", nome: "/Jurado",   desc: "Julga com sinceridade total, sem filtros" },
+  { cmd: "/akinator", icone: "🎮", nome: "/Akinator", desc: "Joga Akinator — tenta adivinhar o que você pensou" },
+  { cmd: "/plan",     icone: "📅", nome: "/Plan",     desc: "Cria um plano completo sobre o que você pedir" },
+  { cmd: "/prof",     icone: "🏫", nome: "/Prof",     desc: "Cria um plano de aula completo sobre a matéria" },
+  { cmd: "/deep",     icone: "🔎", nome: "/Deep",     desc: "Pesquisa profunda e completa sobre o assunto" }
+];
 
 function instrucaoTabela() {
   return `\n\nINSTRUCAO ESPECIAL - COMANDO /Tabela:
@@ -992,10 +1047,46 @@ Aja como um jurado exigente: de um veredito claro (nota, aprovado/reprovado ou a
 Seja direta e honesta, mas sem ser cruel ou ofensiva gratuitamente.`;
 }
 
+function instrucaoAkinator() {
+  return `\n\nINSTRUCAO ESPECIAL - COMANDO /Akinator:
+O usuario quer jogar Akinator com voce (ignore a palavra "/akinator" no comeco, ela e so um comando).
+Voce deve adivinhar em quem, o que ou qual personagem/objeto/animal o usuario esta pensando, fazendo UMA pergunta de cada vez que possa ser respondida com sim, nao, nao sei, talvez ou as vezes.
+Comece perguntando se e uma pessoa real, um personagem ficticio, um animal ou um objeto.
+Va reduzindo as possibilidades pergunta por pergunta, sem nunca fazer mais de uma pergunta por vez, e sem explicar seu raciocinio.
+Quando tiver bastante certeza, arrisque um palpite claro perguntando "Voce esta pensando em [palpite]?".
+Se errar, continue fazendo perguntas ate acertar ou o usuario desistir.`;
+}
+
+function instrucaoPlan() {
+  return `\n\nINSTRUCAO ESPECIAL - COMANDO /Plan:
+O usuario quer um PLANO COMPLETO sobre o que ele pedir (ignore a palavra "/plan" no comeco, ela e so um comando).
+Monte um plano estruturado, claro e pratico, organizado em etapas ou fases numeradas, com objetivos, prazos sugeridos quando fizer sentido e passos de acao concretos em cada etapa.
+Adapte o tipo de plano ao pedido (plano de estudos, plano de treino, plano de projeto, plano financeiro, plano de viagem etc.).
+Seja completo e detalhado, mas organizado visualmente com topicos e subtopicos, sem enrolar.`;
+}
+
+function instrucaoProf() {
+  return `\n\nINSTRUCAO ESPECIAL - COMANDO /Prof:
+O usuario quer um PLANO DE AULA COMPLETO sobre a materia/assunto enviado (ignore a palavra "/prof" no comeco, ela e so um comando).
+Monte o plano de aula com: tema da aula, objetivos de aprendizagem, publico-alvo/serie sugerida, duracao estimada, conteudo programatico dividido em topicos, metodologia/atividades praticas, recursos necessarios e forma de avaliacao dos alunos.
+Seja completo, didatico e organizado como um professor experiente prepararia de verdade.`;
+}
+
+function instrucaoDeep() {
+  return `\n\nINSTRUCAO ESPECIAL - COMANDO /Deep:
+O usuario quer uma PESQUISA SUPER APROFUNDADA sobre o assunto (ignore a palavra "/deep" no comeco, ela e so um comando).
+Use os resultados de busca disponiveis para entregar uma analise completa e detalhada: contexto/historico do tema, situacao atual, dados e numeros relevantes quando existirem, diferentes pontos de vista quando o tema for controverso, e uma conclusao clara no final.
+Organize a resposta em topicos com subtitulos quando o assunto for extenso. Cite fontes/nomes de sites de forma natural quando fizer sentido, sem inventar links.`;
+}
+
 function instrucoesDeComando(texto) {
-  if (eComandoTabela(texto)) return instrucaoTabela();
-  if (eComandoHumano(texto)) return instrucaoHumano();
-  if (eComandoJurado(texto)) return instrucaoJurado();
+  if (eComandoTabela(texto))   return instrucaoTabela();
+  if (eComandoHumano(texto))   return instrucaoHumano();
+  if (eComandoJurado(texto))   return instrucaoJurado();
+  if (eComandoAkinator(texto)) return instrucaoAkinator();
+  if (eComandoPlan(texto))     return instrucaoPlan();
+  if (eComandoProf(texto))     return instrucaoProf();
+  if (eComandoDeep(texto))     return instrucaoDeep();
   return "";
 }
 
@@ -1011,28 +1102,72 @@ function escapeHTML(str) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
+const _HL_KEYWORDS = "const|let|var|function|return|if|else|for|while|class|import|export|from|as|async|await|try|catch|finally|throw|new|typeof|instanceof|switch|case|break|continue|default|do|in|of|null|undefined|void|this|super|extends|static|get|set|yield|delete|true|false|def|print|elif|lambda|pass|with|not|and|or|is|None|True|False|public|private|protected|interface|implements|enum|struct|namespace|using|package|int|float|double|bool|string|char|long|short|byte|var|val|fun|fn|impl|match|mut|pub|use|mod|trait|self|None";
+
+const _HL_TOKEN_REGEX = new RegExp(
+  [
+    "(\\/\\/[^\\n]*|#[^\\n]*)",
+    "(&quot;[\\s\\S]*?&quot;|&#39;[\\s\\S]*?&#39;|`[\\s\\S]*?`)",
+    "(\\b\\d+(?:\\.\\d+)?\\b)",
+    "(\\b(?:" + _HL_KEYWORDS + ")\\b)"
+  ].join("|"),
+  "g"
+);
+
 function highlightCode(code) {
-  return code
-    .replace(/(\/\/[^\n]*)/g, "<span class='com'>$1</span>")
-    .replace(/(#[^\n]*)/g, "<span class='com'>$1</span>")
-    .replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, "<span class='str'>$1</span>")
-    .replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|async|await|try|catch|throw|new|typeof|instanceof|switch|case|break|continue|default|do|in|of|null|undefined|true|false|def|print|elif|lambda|pass|from|with|as|not|and|or|is|None|True|False)\b/g, "<span class='kw'>$1</span>")
-    .replace(/\b(\d+)\b/g, "<span class='num'>$1</span>");
+  return code.replace(_HL_TOKEN_REGEX, (match, com, str, num, kw) => {
+    if (com !== undefined) return "<span class='com'>" + match + "</span>";
+    if (str !== undefined) return "<span class='str'>" + match + "</span>";
+    if (num !== undefined) return "<span class='num'>" + match + "</span>";
+    if (kw  !== undefined) return "<span class='kw'>"  + match + "</span>";
+    return match;
+  });
 }
 
 function _splitPartes(textoRaw) {
   const resultado = [];
   let ultimo = 0;
-  const allRegex = /(?:===FORMULA===([\s\S]*?)===FIM===|```[\w]*\n?([\s\S]*?)```)/g;
+  const allRegex = /(?:===FORMULA===([\s\S]*?)===FIM===|```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```)/g;
   let m;
   while ((m = allRegex.exec(textoRaw)) !== null) {
     if (m.index > ultimo) resultado.push({ tipo: "texto", conteudo: textoRaw.slice(ultimo, m.index) });
     if (m[1] !== undefined) resultado.push({ tipo: "formula", conteudo: m[1].trim() });
-    else resultado.push({ tipo: "codigo", conteudo: m[2].trimEnd() });
+    else resultado.push({ tipo: "codigo", conteudo: m[3].trimEnd(), lang: (m[2] || "").trim() });
     ultimo = allRegex.lastIndex;
   }
   if (ultimo < textoRaw.length) resultado.push({ tipo: "texto", conteudo: textoRaw.slice(ultimo) });
   return resultado;
+}
+
+// 🏷️ Normaliza o nome da linguagem exibido no cabeçalho do bloco de código
+const _LANG_LABELS = {
+  js: "javascript", jsx: "javascript", ts: "typescript", tsx: "typescript",
+  py: "python", rb: "ruby", cs: "c#", cpp: "c++", "c++": "c++", sh: "bash",
+  yml: "yaml", md: "markdown", kt: "kotlin"
+};
+function _langLabel(lang) {
+  const l = (lang || "").toLowerCase();
+  if (!l) return "code";
+  return _LANG_LABELS[l] || l;
+}
+
+// 🖥️ Monta o bloco de código no padrão "IDE" — cabeçalho, gutter numerado e corpo destacado
+function _renderCodeBlock(conteudo, lang) {
+  const linhas = conteudo.split("\n");
+  const numeros = linhas.map((_, i) => `<span>${i + 1}</span>`).join("");
+  const codigoHTML = highlightCode(escapeHTML(conteudo));
+  return `<div class="code-block">
+    <div class="code-block-header">
+      <div class="code-block-dots"><span class="cbd red"></span><span class="cbd yellow"></span><span class="cbd green"></span></div>
+      <span class="code-block-lang">${escapeHTML(_langLabel(lang))}</span>
+      <span class="code-block-lines">${linhas.length} linha${linhas.length === 1 ? "" : "s"}</span>
+      <button class="copy-code">📋 Copiar</button>
+    </div>
+    <div class="code-block-body">
+      <div class="code-gutter">${numeros}</div>
+      <pre><code>${codigoHTML}</code></pre>
+    </div>
+  </div>`;
 }
 
 function renderizarTabela(linhas) {
@@ -1097,7 +1232,7 @@ function renderizarFormulaEscolar(texto) {
 
 function formatarTexto(textoRaw) {
   return _splitPartes(textoRaw).map(p => {
-    if (p.tipo === "codigo")  return `<div class="code-block"><button class="copy-code">📋 Copiar</button><pre><code>${highlightCode(escapeHTML(p.conteudo))}</code></pre></div>`;
+    if (p.tipo === "codigo")  return _renderCodeBlock(p.conteudo, p.lang);
     if (p.tipo === "formula") return renderizarFormulaEscolar(p.conteudo);
     return formatarBlocoTexto(p.conteudo);
   }).join("");
@@ -1112,10 +1247,9 @@ function typeWriter(el, textoRaw) {
     if (partIdx >= partes.length) return;
     const p = partes[partIdx++];
     if (p.tipo === "codigo") {
-      const bloco = document.createElement("div");
-      bloco.className = "code-block";
-      bloco.innerHTML = "<button class='copy-code'>📋 Copiar</button><pre><code>" + highlightCode(escapeHTML(p.conteudo)) + "</code></pre>";
-      el.appendChild(bloco);
+      const wrap = document.createElement("div");
+      wrap.innerHTML = _renderCodeBlock(p.conteudo, p.lang);
+      el.appendChild(wrap.firstElementChild);
       proxParte();
     } else if (p.tipo === "formula") {
       const bloco = document.createElement("div");
@@ -1225,6 +1359,10 @@ function _buildSystem(cfg, ctx, userContent) {
     "DATA E HORA ATUAL: " + _dataAtual() + " -- use esta informacao sempre que perguntarem que dia, mes, ano ou hora e agora.",
     "ANTI-ALUCINACAO:",
     ...REGRAS.anti_alucinacao.map(r => "- " + r),
+    "REGRAS DE CODIGO:",
+    ...REGRAS.codigo.map(r => "- " + r),
+    "REGRAS DE LINKS:",
+    ...REGRAS.links.map(r => "- " + r),
     infoEquipe,
     ctx,
     "",
@@ -1367,14 +1505,41 @@ const CODIGO_FAKE_LINHAS = [
   "  return dados.filter(x => x.valid);",
   "}",
   "await Promise.all(etapas);",
-  "if (erro) throw new Error('debug...');",
-  "// Otimizando algoritmo...",
+  "if (erro) throw new Error('falha na validacao');",
+  "class SAREngine {",
+  "  constructor(config) {",
+  "    this.config = config;",
+  "  }",
+  "}",
   "return { status: 'ok', data };",
   "for (const item of lista) {",
   "  processar(item);",
   "}",
   "const api = new SAREngine();",
+  "export function otimizar(fn) {",
+  "  return (...args) => fn(...args);",
+  "}",
+  "const cache = new Map();",
+  "if (cache.has(chave)) return cache.get(chave);",
+  "async function buscarDados(url) {",
+  "  const res = await fetch(url);",
+  "  return res.json();",
+  "}",
+  "const valido = typeof entrada === 'string';",
+  "let contador = 0;",
+  "while (contador < limite) {",
+  "  contador++;",
+  "}",
 ];
+
+function _embaralhar(arr) {
+  const copia = arr.slice();
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
 
 function _criarLoadingCoding(texto) {
   const load = document.createElement("div");
@@ -1391,8 +1556,8 @@ function _criarLoadingCoding(texto) {
       </div>
       <div class="coding-body">
         <div class="coding-fake-lines" id="codingFakeLines"></div>
-        <div class="coding-cursor">█</div>
       </div>
+      <div class="coding-progress"><div class="coding-progress-bar" id="codingProgressBar"></div></div>
       <div class="coding-footer">
         <div class="coding-spinner"></div>
         <span class="coding-status" id="codingStatus">${CODING_FRASES[0].emoji} ${CODING_FRASES[0].texto}</span>
@@ -1400,35 +1565,69 @@ function _criarLoadingCoding(texto) {
     </div>
   `;
 
-  // 🎬 Inicia a animação de código falso digitando
   let fraseIdx = 0;
-  let linhaIdx = 0;
   const fakeContainer = load.querySelector("#codingFakeLines");
   const statusEl = load.querySelector("#codingStatus");
 
-  // 📺 Anima status a cada 1.2s
   const statusInterval = setInterval(() => {
     fraseIdx = (fraseIdx + 1) % CODING_FRASES.length;
     if (statusEl) statusEl.textContent = `${CODING_FRASES[fraseIdx].emoji} ${CODING_FRASES[fraseIdx].texto}`;
   }, 1200);
 
-  // 💻 Adiciona linhas de código fake progressivamente
-  const linhaInterval = setInterval(() => {
-    if (!fakeContainer) return;
+  let fila = _embaralhar(CODIGO_FAKE_LINHAS);
+  let filaIdx = 0;
+  let digitando = false;
+
+  function proximaLinha() {
+    if (digitando || !fakeContainer) return;
+    digitando = true;
+
+    if (filaIdx >= fila.length) { fila = _embaralhar(CODIGO_FAKE_LINHAS); filaIdx = 0; }
+    const textoLinha = fila[filaIdx++];
+
     const linha = document.createElement("div");
     linha.className = "coding-fake-line";
-    linha.textContent = CODIGO_FAKE_LINHAS[linhaIdx % CODIGO_FAKE_LINHAS.length];
+    const codeSpan = document.createElement("span");
+    linha.appendChild(codeSpan);
+    const cursor = document.createElement("span");
+    cursor.className = "coding-cursor-inline";
+    cursor.textContent = "▍";
+    linha.appendChild(cursor);
     fakeContainer.appendChild(linha);
-    linhaIdx++;
-    // 🗑️ Limpa linha mais antiga se passar de 6
+
     if (fakeContainer.children.length > 6) {
       fakeContainer.removeChild(fakeContainer.firstChild);
     }
     fakeContainer.scrollTop = fakeContainer.scrollHeight;
-  }, 420);
 
-  // 🧹 Guarda os intervals no elemento para limpeza
-  load._codingIntervals = [statusInterval, linhaInterval];
+    let charIdx = 0;
+    const velocidade = 14 + Math.random() * 18;
+
+    (function digitarChar() {
+      if (charIdx <= textoLinha.length) {
+        codeSpan.innerHTML = highlightCode(escapeHTML(textoLinha.slice(0, charIdx)));
+        charIdx++;
+        fakeContainer.scrollTop = fakeContainer.scrollHeight;
+        setTimeout(digitarChar, velocidade);
+      } else {
+        cursor.remove();
+        digitando = false;
+      }
+    })();
+  }
+
+  proximaLinha();
+  const linhaInterval = setInterval(proximaLinha, 520);
+
+  const barEl = load.querySelector("#codingProgressBar");
+  let progresso = 6;
+  const progressInterval = setInterval(() => {
+    progresso += Math.random() * 9;
+    if (progresso > 92) progresso = 92;
+    if (barEl) barEl.style.width = progresso + "%";
+  }, 500);
+
+  load._codingIntervals = [statusInterval, linhaInterval, progressInterval];
 
   return load;
 }
@@ -1486,12 +1685,14 @@ let _ultimaPergunhaEhCodigo = false;
 async function enviar() {
   const txt = input.value.trim();
   if (!txt) return;
+  _fecharSlashMenu();
 
   if (assuntoBloqueado(txt)) { addMsg("🚫 Não posso ajudar com isso.", "bot"); return; }
   if (assuntoPorno(txt))     { addMsg("🔞 Filtro de conteúdo +18 ativo. Desative nas configurações se desejar.", "bot"); return; }
 
   // 🔎 PESQUISA — usa groq/compound (busca web em tempo real) para perguntas que precisam de info atual
-  if (ePesquisa(txt) && !eComando(txt)) {
+  // (o comando /Deep tambem usa essa via, ja que exige pesquisa profunda)
+  if ((ePesquisa(txt) || eComandoDeep(txt)) && !eComandoSemDeep(txt)) {
     addMsg(txt, "user");
     input.value = "";
     atualizarContexto(txt);
@@ -1541,8 +1742,19 @@ async function enviar() {
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
+  // ⏱️ Duração mínima da animação de código — garante que ela sempre
+  // termine seu ciclo visual antes do código real aparecer, mesmo se a API responder rápido
+  const TEMPO_MIN_CODING = 2600;
+  const inicio = Date.now();
+
   try {
     const r = await chamarAPI(getMensagens());
+    if (ehCodigo) {
+      const decorrido = Date.now() - inicio;
+      if (decorrido < TEMPO_MIN_CODING) {
+        await new Promise(res => setTimeout(res, TEMPO_MIN_CODING - decorrido));
+      }
+    }
     // 🧹 Para os intervals da animação de coding se existirem
     if (load._codingIntervals) {
       load._codingIntervals.forEach(clearInterval);
@@ -1695,6 +1907,63 @@ function atualizarQuotaUI() {
   quotaFotoEl.className   = cls;
   optPDF.disabled  = r === 0;
   optFoto.disabled = r === 0;
+}
+
+/* ====================================================
+   ⌨️ MENU DE COMANDOS "/" — abre ao digitar "/" como
+   primeiro caractere, permite escolher ou continuar digitando
+   ==================================================== */
+const slashMenu = document.getElementById("slashMenu");
+
+function _renderSlashMenu(filtro) {
+  if (!slashMenu) return;
+  const termo = (filtro || "").toLowerCase();
+  const itens = SLASH_COMMANDS.filter(c => c.cmd.includes(termo));
+  if (itens.length === 0) {
+    slashMenu.innerHTML = `<div class="slash-menu-empty">Nenhum comando encontrado</div>`;
+    slashMenu.style.display = "flex";
+    return;
+  }
+  slashMenu.innerHTML = `<div class="slash-menu-label">Comandos</div>` + itens.map(c => `
+    <button type="button" class="slash-item" data-fill="${c.nome} ">
+      <span class="slash-icon">${c.icone}</span>
+      <div class="slash-info">
+        <span class="slash-nome">${c.nome}</span>
+        <span class="slash-desc">${c.desc}</span>
+      </div>
+    </button>`).join("");
+  slashMenu.style.display = "flex";
+}
+
+function _fecharSlashMenu() {
+  if (slashMenu) slashMenu.style.display = "none";
+}
+
+if (input && slashMenu) {
+  input.addEventListener("input", () => {
+    const v = input.value;
+    if (v.startsWith("/")) {
+      _renderSlashMenu(v.slice(1).trim());
+    } else {
+      _fecharSlashMenu();
+    }
+  });
+
+  slashMenu.addEventListener("click", e => {
+    const item = e.target.closest(".slash-item");
+    if (!item) return;
+    input.value = item.dataset.fill;
+    _fecharSlashMenu();
+    input.focus();
+  });
+
+  document.addEventListener("click", e => {
+    if (!slashMenu.contains(e.target) && e.target !== input) _fecharSlashMenu();
+  });
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Escape") _fecharSlashMenu();
+  });
 }
 
 function toggleAttachMenu(force) {
@@ -1945,7 +2214,7 @@ Preencha TODOS os campos — NUNCA use null, use string vazia "" ou array vazio 
     generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
   };
 
-  const modelos = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+  const modelos = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"];
 
   for (const modelo of modelos) {
     try {
@@ -2276,6 +2545,7 @@ async function enviarComFoto(txtUsuario, arquivo) {
 }
 
 async function enviarComAnexo() {
+  _fecharSlashMenu();
   if (_arquivosPendentes.length > 0) {
     const txt = input.value.trim();
     const fotos = _arquivosPendentes.filter(a => a.tipo === "foto");
