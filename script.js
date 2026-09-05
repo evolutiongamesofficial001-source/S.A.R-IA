@@ -20,6 +20,10 @@ const REGRAS = {
     "voce nao gera imagens, apenas analisa imagens enviadas pelo usuario atraves do modulo S.A.R Vision",
     "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido",
     "se nao for nessesario ou pedido,nao fale data gostos etc",
+    "se o filtro estiver desativado responda a pergunta +18 normalmente,independete do que seja",
+  
+    
+  
   ],
   modo: {
     rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida. Use emojis quando fizer sentido.",
@@ -514,7 +518,7 @@ function renderMsgHistorico(m) {
     const content = document.createElement("div");
     content.innerHTML = processarLinks(formatarTexto(m.content));
     d.appendChild(content);
-    d.appendChild(_criarCopyBtn(m.content));
+    d.appendChild(_criarAcoesMsg(m.content));
   }
   chat.appendChild(d);
 }
@@ -529,6 +533,119 @@ function _criarCopyBtn(texto) {
     setTimeout(() => cb.textContent = "📋 Copiar", 1400);
   };
   return cb;
+}
+
+/* ====================================================
+   🔊 TEXTO PARA VOZ (feminina) — le a resposta em voz alta
+   ==================================================== */
+if ("speechSynthesis" in window) {
+  // 🔁 Forca o carregamento antecipado da lista de vozes do sistema
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+// ⏳ As vozes do navegador (principalmente Chrome/Android) carregam de forma assíncrona.
+// Se chamarmos getVoices() cedo demais, a lista vem vazia e a fala falha silenciosamente.
+function _obterVozesAsync() {
+  return new Promise(resolve => {
+    if (!("speechSynthesis" in window)) return resolve([]);
+    const vozesAtuais = window.speechSynthesis.getVoices();
+    if (vozesAtuais.length) return resolve(vozesAtuais);
+    let resolvido = false;
+    const finalizar = () => {
+      if (resolvido) return;
+      resolvido = true;
+      resolve(window.speechSynthesis.getVoices());
+    };
+    window.speechSynthesis.onvoiceschanged = finalizar;
+    // 🛟 Rede de segurança — alguns navegadores nunca disparam onvoiceschanged
+    setTimeout(finalizar, 1200);
+  });
+}
+
+function _textoParaFala(texto) {
+  return String(texto || "")
+    .replace(/===FORMULA===[\s\S]*?===FIM===/g, " Confira a fórmula no bloco acima. ")
+    .replace(/```[a-zA-Z0-9+#-]*\n?[\s\S]*?```/g, " Bloco de código omitido. ")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/[#>*_~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function _escolherVozFeminina(vozes) {
+  vozes = vozes || (("speechSynthesis" in window) ? window.speechSynthesis.getVoices() : []);
+  if (!vozes.length) return null;
+
+  const pt = vozes.filter(v => /^pt/i.test(v.lang));
+  const candidatas = pt.length ? pt : vozes;
+  const nomesFemininos = /female|mulher|femin|luciana|fernanda|vit[óo]ria|maria|joana|camila|helena|raquel|carla|paulina|ana\b|zira|susan|samantha/i;
+  const nomesMasculinos = /male|homem|masculin|daniel|felipe|ricardo|diego|thiago|joao|jorge|miguel|paulo\b/i;
+
+  // 🔎 Voz do Google — o motor "Google" é o de melhor qualidade disponível no navegador
+  // (Chrome/Android já vem com "Google português do Brasil" etc). Prioriza ela sempre que existir.
+  const ehGoogle = v => /google/i.test(v.name);
+  const googlePtFeminina    = candidatas.find(v => ehGoogle(v) && nomesFemininos.test(v.name));
+  const googlePtNaoMasc     = candidatas.find(v => ehGoogle(v) && !nomesMasculinos.test(v.name));
+  const googleQualquerPt    = candidatas.find(ehGoogle);
+  const googleGeral         = vozes.find(ehGoogle);
+
+  let feminina =
+    googlePtFeminina || googlePtNaoMasc || googleQualquerPt || googleGeral ||
+    candidatas.find(v => nomesFemininos.test(v.name));
+  if (!feminina) feminina = candidatas.find(v => !nomesMasculinos.test(v.name));
+  return feminina || candidatas[0] || vozes[0];
+}
+
+function _criarSpeakBtn(texto) {
+  const sb = document.createElement("button");
+  sb.className = "speak-btn";
+  sb.title = "Ouvir resposta em voz alta";
+  sb.setAttribute("aria-label", "Ouvir resposta em voz alta");
+  sb.innerHTML = "🔊";
+
+  sb.onclick = async () => {
+    if (!("speechSynthesis" in window)) {
+      sb.title = "Seu navegador não suporta leitura em voz alta";
+      return;
+    }
+    const estaFalandoEssaMsg = sb.classList.contains("falando");
+    window.speechSynthesis.cancel();
+    document.querySelectorAll(".speak-btn.falando").forEach(b => { b.classList.remove("falando"); b.innerHTML = "🔊"; });
+    if (estaFalandoEssaMsg) return;
+
+    const conteudo = _textoParaFala(texto);
+    if (!conteudo) return;
+
+    // ⏳ Mostra que está preparando a voz enquanto a lista de vozes carrega
+    sb.innerHTML = "⏳";
+    const vozesDisponiveis = await _obterVozesAsync();
+
+    const utter = new SpeechSynthesisUtterance(conteudo);
+    utter.lang = "pt-BR";
+    const voz = _escolherVozFeminina(vozesDisponiveis);
+    if (voz) { utter.voice = voz; utter.lang = voz.lang; }
+    utter.pitch = 1.05;
+    utter.rate = 1;
+    utter.onend  = () => { sb.classList.remove("falando"); sb.innerHTML = "🔊"; };
+    utter.onerror = () => { sb.classList.remove("falando"); sb.innerHTML = "🔊"; };
+
+    sb.classList.add("falando");
+    sb.innerHTML = "⏹️";
+    // 🔁 No Chrome, cancel() as vezes deixa a fila num estado instável — um pequeno delay evita fala "muda"
+    window.speechSynthesis.cancel();
+    setTimeout(() => window.speechSynthesis.speak(utter), 40);
+  };
+  return sb;
+}
+
+function _criarAcoesMsg(texto) {
+  const wrap = document.createElement("div");
+  wrap.className = "msg-actions";
+  wrap.appendChild(_criarSpeakBtn(texto));
+  wrap.appendChild(_criarCopyBtn(texto));
+  return wrap;
 }
 
 function renderHistorico() {
@@ -975,7 +1092,18 @@ function ePesquisa(texto) {
     /pre[çc]o\s+d[eo]/, /cota[çc][aã]o/, /d[oó]lar/, /quem\s+[ée]\s+o?\s*(atual|novo)/,
     /[uú]ltim[ao]s?\s+not[ií]cias/, /aconteceu\s+(hoje|ontem|essa semana)/,
     /site\s+oficial/, /link\s+d[eo]/, /quanto\s+custa/, /lan[çc]amento\s+de/,
-    /versao\s+mais\s+recente/, /vers[aã]o\s+mais\s+recente/, /o que h[aá]\s+de\s+novo/
+    /versao\s+mais\s+recente/, /vers[aã]o\s+mais\s+recente/, /o que h[aá]\s+de\s+novo/,
+    // 🌐 Gatilhos adicionais — informações que mudam com o tempo e a IA não sabe "de cor"
+    /quem\s+[ée]\s+/, /quando\s+(foi|[ée]|ser[aá])/, /que\s+dia\s+[ée]/, /data\s+de\s+hoje/,
+    /ainda\s+(existe|est[aá]|funciona|[ée])/, /existe\s+ainda/, /est[aá]\s+no\s+ar/,
+    /clima\s+(em|hoje|agora)/, /previs[aã]o\s+do\s+tempo/, /temperatura\s+em/,
+    /resultado\s+d[eo]/, /placar\s+d[eo]/, /jogo\s+d[eo]/, /campeonato/,
+    /elei[çc][aã]o/, /elei[çc][oõ]es/, /presidente\s+(atual|do)/, /prefeito\s+de/, /governador\s+de/,
+    /pre[çc]o\s+do/, /valor\s+d[eo]/, /taxa\s+de\s+c[aâ]mbio/, /bitcoin/, /a[çc][aã]o\s+da/, /bolsa\s+de\s+valores/,
+    /(20(2[4-9]|3\d))/, // anos recentes/futuros mencionados na pergunta
+    /trending/, /viral/, /em\s+alta/, /rankings?/, /classifica[çc][aã]o\s+atual/,
+    /nova\s+vers[aã]o/, /update\s+d[eo]/, /atualiza[çc][aã]o\s+d[eo]/, /saiu\s+(a|o)\s+novo/,
+    /quando\s+sai/, /previs[aã]o\s+de\s+lan[çc]amento/, /pr[óo]xim[ao]\s+(filme|jogo|evento|lan[çc]amento)/
   ];
   return padroes.some(p => p.test(t));
 }
@@ -1170,6 +1298,85 @@ function _renderCodeBlock(conteudo, lang) {
   </div>`;
 }
 
+// ⌨️ Digita o CÓDIGO REAL gerado pela IA, como se estivesse sendo escrito ao vivo.
+// (usada só nos blocos ```código``` — texto normal e fórmulas continuam com o comportamento de sempre)
+function _digitarCodigoReal(elPai, conteudo, lang, aoTerminar) {
+  const linhas = conteudo.split("\n");
+
+  const bloco = document.createElement("div");
+  bloco.className = "code-block";
+  bloco.innerHTML = `
+    <div class="code-block-header">
+      <div class="code-block-dots"><span class="cbd red"></span><span class="cbd yellow"></span><span class="cbd green"></span></div>
+      <span class="code-block-lang">${escapeHTML(_langLabel(lang))}</span>
+      <span class="code-block-lines">0 linha${linhas.length === 1 ? "" : "s"}</span>
+      <button class="copy-code">📋 Copiar</button>
+    </div>
+    <div class="code-block-body">
+      <div class="code-gutter"></div>
+      <pre><code></code></pre>
+    </div>`;
+  elPai.appendChild(bloco);
+
+  // 📋 O botão de copiar já funciona com o conteúdo final, mesmo enquanto a animação roda
+  const copyBtn = bloco.querySelector(".copy-code");
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(conteudo).catch(() => {});
+    copyBtn.textContent = "✅ Copiado!";
+    setTimeout(() => copyBtn.textContent = "📋 Copiar", 1400);
+  };
+
+  const gutter   = bloco.querySelector(".code-gutter");
+  const codeEl   = bloco.querySelector("code");
+  const linesLbl = bloco.querySelector(".code-block-lines");
+
+  let li = 0;
+
+  function proximaLinha() {
+    if (li >= linhas.length) { aoTerminar && aoTerminar(); return; }
+
+    const num = document.createElement("span");
+    num.textContent = String(li + 1);
+    gutter.appendChild(num);
+
+    const linhaTexto = linhas[li++];
+    linesLbl.textContent = li + " linha" + (li === 1 ? "" : "s");
+
+    const linhaSpan = document.createElement("span");
+    codeEl.appendChild(linhaSpan);
+    const cursor = document.createElement("span");
+    cursor.className = "coding-cursor-inline";
+    cursor.textContent = "▍";
+    codeEl.appendChild(cursor);
+
+    if (!linhaTexto) {
+      cursor.remove();
+      codeEl.appendChild(document.createTextNode("\n"));
+      chat.scrollTop = chat.scrollHeight;
+      setTimeout(proximaLinha, 10);
+      return;
+    }
+
+    let ci = 0;
+    // 🚀 Linhas longas digitam vários caracteres por "tecla" para não ficar lento
+    const passo = Math.max(1, Math.round(linhaTexto.length / 35));
+    (function digitarChar() {
+      ci = Math.min(ci + passo, linhaTexto.length);
+      linhaSpan.innerHTML = highlightCode(escapeHTML(linhaTexto.slice(0, ci)));
+      chat.scrollTop = chat.scrollHeight;
+      if (ci < linhaTexto.length) {
+        setTimeout(digitarChar, 4);
+      } else {
+        cursor.remove();
+        codeEl.appendChild(document.createTextNode("\n"));
+        setTimeout(proximaLinha, 10);
+      }
+    })();
+  }
+
+  proximaLinha();
+}
+
 function renderizarTabela(linhas) {
   const rows = linhas.filter(l => l.trim().startsWith("|") && l.trim().endsWith("|"));
   if (rows.length < 2) return null;
@@ -1220,15 +1427,34 @@ function formatarBlocoTexto(conteudo) {
 
 function renderizarFormulaEscolar(texto) {
   const linhas = texto.split("\n");
-  let html = '<div class="formula-block">';
+  let corpo = "";
   linhas.forEach(linha => {
     const l = linha.trimEnd();
-    if (!l) { html += "<br>"; return; }
-    html += `<div>${escapeHTML(l)}</div>`;
+    if (!l) { corpo += "<br>"; return; }
+    corpo += `<div>${escapeHTML(l)}</div>`;
   });
-  html += "</div>";
-  return html;
+  return `<div class="formula-block">
+    <div class="formula-block-header">
+      <span class="formula-block-label">🧮 Fórmula pronta para copiar</span>
+      <button class="copy-formula" type="button">📋 Copiar</button>
+    </div>
+    <div class="formula-block-body">${corpo}</div>
+  </div>`;
 }
+
+document.addEventListener("click", e => {
+  // 🧮 Copia o conteudo da formula (texto puro, pronto para colar no papel/word)
+  if (!e.target.classList.contains("copy-formula")) return;
+  const body = e.target.closest(".formula-block")?.querySelector(".formula-block-body");
+  if (!body) return;
+  const texto = Array.from(body.childNodes)
+    .map(node => node.nodeName === "BR" ? "" : node.textContent)
+    .join("\n");
+  navigator.clipboard.writeText(texto).catch(() => {});
+  const original = e.target.textContent;
+  e.target.textContent = "✅ Copiado!";
+  setTimeout(() => e.target.textContent = original, 1400);
+});
 
 function formatarTexto(textoRaw) {
   return _splitPartes(textoRaw).map(p => {
@@ -1247,10 +1473,8 @@ function typeWriter(el, textoRaw) {
     if (partIdx >= partes.length) return;
     const p = partes[partIdx++];
     if (p.tipo === "codigo") {
-      const wrap = document.createElement("div");
-      wrap.innerHTML = _renderCodeBlock(p.conteudo, p.lang);
-      el.appendChild(wrap.firstElementChild);
-      proxParte();
+      // ⌨️ Só o código de programação ganha animação de digitação ao vivo
+      _digitarCodigoReal(el, p.conteudo, p.lang, proxParte);
     } else if (p.tipo === "formula") {
       const bloco = document.createElement("div");
       bloco.innerHTML = renderizarFormulaEscolar(p.conteudo);
@@ -1292,7 +1516,7 @@ function addMsg(txt, tipo) {
   if (tipo === "bot") {
     const content = document.createElement("div");
     d.appendChild(content);
-    d.appendChild(_criarCopyBtn(txt));
+    d.appendChild(_criarAcoesMsg(txt));
     chat.appendChild(d);
     typeWriter(content, txt);
   } else {
@@ -1694,7 +1918,7 @@ async function enviar() {
   // (o comando /Deep tambem usa essa via, ja que exige pesquisa profunda)
   if ((ePesquisa(txt) || eComandoDeep(txt)) && !eComandoSemDeep(txt)) {
     addMsg(txt, "user");
-    input.value = "";
+    _limparInput();
     atualizarContexto(txt);
     _persistirSeNovo();
 
@@ -1721,7 +1945,7 @@ async function enviar() {
   }
 
   addMsg(txt, "user");
-  input.value = "";
+  _limparInput();
   atualizarContexto(txt);
   _persistirSeNovo();
 
@@ -1939,6 +2163,33 @@ function _fecharSlashMenu() {
   if (slashMenu) slashMenu.style.display = "none";
 }
 
+/* ====================================================
+   ✏️ TEXTAREA AUTO-CRESCENTE — quebra de linha (Shift+Enter),
+   cresce conforme o texto ate um limite, depois rola (scroll)
+   ==================================================== */
+const INPUT_MIN_H = 36;
+const INPUT_MAX_H = 160;
+
+function _autoResizeInput() {
+  input.style.height = "auto";
+  const alturaConteudo = input.scrollHeight;
+  const novaAltura = Math.min(Math.max(alturaConteudo, INPUT_MIN_H), INPUT_MAX_H);
+  input.style.height = novaAltura + "px";
+  input.style.overflowY = alturaConteudo > INPUT_MAX_H ? "auto" : "hidden";
+}
+
+function _resetInputHeight() {
+  input.style.height = INPUT_MIN_H + "px";
+  input.style.overflowY = "hidden";
+}
+
+function _limparInput() {
+  input.value = "";
+  _resetInputHeight();
+}
+
+input.addEventListener("input", _autoResizeInput);
+
 if (input && slashMenu) {
   input.addEventListener("input", () => {
     const v = input.value;
@@ -2007,7 +2258,25 @@ function lerDataURL(file) {
   });
 }
 
-function normalizarImagemParaJpeg(file) {
+async function _converterHeicSeNecessario(file) {
+  const nome = (file.name || "").toLowerCase();
+  const tipo = (file.type || "").toLowerCase();
+  const eHeic = tipo.includes("heic") || tipo.includes("heif") || nome.endsWith(".heic") || nome.endsWith(".heif");
+  if (!eHeic) return file;
+  if (typeof heic2any !== "function") return file;
+  try {
+    const convertido = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+    const blobFinal = Array.isArray(convertido) ? convertido[0] : convertido;
+    const novoNome = (file.name || "imagem").replace(/\.(heic|heif)$/i, ".jpg");
+    return new File([blobFinal], novoNome, { type: "image/jpeg" });
+  } catch (e) {
+    console.warn("⚠️ Falha ao converter HEIC/HEIF, tentando arquivo original:", e.message);
+    return file;
+  }
+}
+
+async function normalizarImagemParaJpeg(fileOriginal) {
+  const file = await _converterHeicSeNecessario(fileOriginal);
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -2147,7 +2416,8 @@ Preencha TODOS os campos — NUNCA use null, use string vazia "" ou array vazio 
     generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
   };
 
-  const modelos = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+  // 🆕 gemini-2.0-flash e gemini-1.5-flash foram desativados pelo Google — usando a geração 3.x atual
+  const modelos = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash"];
   for (const modelo of modelos) {
     try {
       const res = await fetchComTimeout(
@@ -2214,7 +2484,8 @@ Preencha TODOS os campos — NUNCA use null, use string vazia "" ou array vazio 
     generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
   };
 
-  const modelos = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"];
+  // 🆕 gemini-2.5-pro e gemini-1.5-flash foram descontinuados pelo Google — usando a geração 3.x atual
+  const modelos = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
 
   for (const modelo of modelos) {
     try {
@@ -2279,7 +2550,7 @@ async function enviarComPDF(txtUsuario, arquivo) {
   // 💬 Mensagem do usuário no chat mostra só o nome do arquivo
   const labelUser = txtUsuario ? `${txtUsuario}\n📄 ${nome}` : `📄 ${nome}`;
   addMsg(labelUser, "user");
-  input.value = "";
+  _limparInput();
   limparAnexo();
   atualizarContexto(txtUsuario || nome);
   _persistirSeNovo();
@@ -2442,7 +2713,7 @@ async function enviarComFotos(txtUsuario, arquivos) {
     fotosEnviadas: arquivos.map(a => ({ dataURL: a.dataURL || null, nome: a.nome }))
   };
 
-  input.value = "";
+  _limparInput();
   limparAnexo();
   atualizarContexto(txtUsuario || "foto enviada");
   _persistirSeNovo();
@@ -2482,7 +2753,7 @@ async function enviarComFotos(txtUsuario, arquivos) {
     const system = _buildSystem(cfg, ctx, promptParaGroq);
     let respostaFinal = null;
 
-    const modelos = ["openai/gpt-oss-120b", "llama3-8b-8192"];
+    const modelos = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]; // 🆕 llama3-8b-8192 foi descontinuado pela Groq
     for (let mi = 0; mi < modelos.length; mi++) {
       const modelo = modelos[mi];
       let tentativaChave = 0;

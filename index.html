@@ -8,6 +8,7 @@
   <title>S.A.R — Evolution Games Studio</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <style>
     .imagine-inline-btn {
       width: 30px; height: 30px;
@@ -143,8 +144,8 @@
       </button>
       <!-- Inputs ocultos -->
       <input type="file" id="inputPDF"  accept="application/pdf" style="display:none">
-      <input type="file" id="inputFoto" accept="image/*" style="display:none" multiple>
-      <input id="input" placeholder="Escreva sua mensagem… ( / para comandos )" autocomplete="off" spellcheck="false" aria-label="Mensagem">
+      <input type="file" id="inputFoto" accept="image/*,.heic,.heif,.avif,.bmp,.tiff,.webp" style="display:none" multiple>
+      <textarea id="input" placeholder="Escreva sua mensagem… ( / para comandos )" autocomplete="off" spellcheck="false" aria-label="Mensagem" rows="1"></textarea>
       <button class="send-btn" id="btn" aria-label="Enviar">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg>
       </button>
@@ -179,7 +180,7 @@
     </button>
   </div>
   <!-- Input câmera — capture="environment" abre câmera traseira no mobile -->
-  <input type="file" id="inputCamera" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="inputCamera" accept="image/*,.heic,.heif" capture="environment" style="display:none">
 
   <button id="scrollBtn" aria-label="Rolar para baixo">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>

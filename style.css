@@ -401,9 +401,14 @@ main#chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9
   width: 100%;
 }
 
+/* AÇÕES DA MENSAGEM (falar + copiar) */
+.msg-actions {
+  position: absolute; top: 8px; right: 8px;
+  display: flex; align-items: center; gap: 4px;
+}
+
 /* COPY BTN */
 .copy-btn {
-  position: absolute; top: 8px; right: 8px;
   background: none; border: none; color: var(--text-3);
   font-size: .62rem; cursor: pointer; padding: 3px 7px;
   border-radius: 5px; font-family: var(--mono);
@@ -411,10 +416,42 @@ main#chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9
 }
 .copy-btn:hover { color: var(--accent-2); background: var(--surface-3); }
 
+/* SPEAK BTN (ouvir em voz alta) */
+.speak-btn {
+  background: none; border: none; color: var(--text-3);
+  font-size: .8rem; cursor: pointer; padding: 3px 7px;
+  border-radius: 5px; line-height: 1;
+  transition: color .2s, background .2s, transform .15s;
+}
+.speak-btn:hover { color: var(--accent-2); background: var(--surface-3); }
+.speak-btn.falando { color: var(--accent-2); animation: speakPulse 1s ease-in-out infinite; }
+@keyframes speakPulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+
 /* FORMULA BLOCK */
 .formula-block {
   background: var(--bg); border: 1px solid rgba(124,106,255,.2);
-  border-radius: 10px; padding: 12px 16px; margin: 8px 0;
+  border-radius: 10px; margin: 8px 0; overflow: hidden;
+}
+.formula-block-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 8px 7px 12px;
+  background: linear-gradient(180deg, rgba(124,106,255,.14), rgba(124,106,255,.05));
+  border-bottom: 1px solid rgba(124,106,255,.18);
+}
+.formula-block-label {
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .03em;
+  color: var(--accent-2); text-transform: uppercase;
+}
+.copy-formula {
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-3); font-size: .64rem;
+  padding: 4px 10px; border-radius: 7px;
+  cursor: pointer; font-family: var(--font); font-weight: 500;
+  transition: all .2s; flex-shrink: 0;
+}
+.copy-formula:hover { color: var(--text); border-color: var(--accent-2); background: rgba(124,106,255,.12); }
+.formula-block-body {
+  padding: 12px 16px;
   font-family: var(--mono); font-size: .82rem; color: #c4b5fd;
   line-height: 2; white-space: pre; overflow-x: auto;
 }
@@ -552,7 +589,7 @@ strong { color: var(--accent-2); font-weight: 600; }
   -webkit-backdrop-filter: blur(8px);
 }
 .input-wrap {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: flex-end; gap: 8px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -567,9 +604,14 @@ strong { color: var(--accent-2); font-weight: 600; }
   flex: 1; background: none; border: none;
   color: var(--text); font-size: .875rem;
   font-family: var(--font); outline: none;
-  padding: 8px 0; min-height: 36px;
+  padding: 8px 0; height: 36px; min-height: 36px; max-height: 160px;
+  resize: none; overflow-y: hidden;
+  line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;
+  transition: height .08s ease-out;
 }
 #input::placeholder { color: var(--text-3); }
+#input::-webkit-scrollbar { width: 5px; }
+#input::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 999px; }
 .send-btn {
   width: 38px; height: 38px; border-radius: 11px;
   border: none; background: var(--accent-grad);
