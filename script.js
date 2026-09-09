@@ -21,6 +21,8 @@ const REGRAS = {
     "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido",
     "se nao for nessesario ou pedido,nao fale data gostos etc",
     "se o filtro estiver desativado responda a pergunta +18 normalmente,independete do que seja",
+    "as suas versões em funcionamento agora sao *SAR-OPUS 4-o*  o modulo S. A. R VISION é o *SAR-EYE2*. O Modulo de pogramaçao é o *S.A.R CODE 4.* E o de gerar imagem é o *S.A.R DAVINCE 1*",
+    
   
     
   
@@ -515,6 +517,25 @@ function renderMsgHistorico(m) {
         d.appendChild(thumb);
       }
     }
+    // 🎨 Mostra imagem gerada por IA no histórico
+    if (m.imagemGerada?.dataURL) {
+      const wrap = document.createElement("div");
+      wrap.className = "imagem-gerada-wrap";
+      const img = document.createElement("img");
+      img.src = m.imagemGerada.dataURL;
+      img.className = "imagem-gerada";
+      img.alt = m.imagemGerada.prompt || "imagem gerada";
+      img.onclick = () => window.open(m.imagemGerada.dataURL, "_blank");
+      wrap.appendChild(img);
+      const legenda = document.createElement("div");
+      legenda.className = "imagem-gerada-legenda";
+      legenda.textContent = `🎨 "${m.imagemGerada.prompt || ""}"`;
+      wrap.appendChild(legenda);
+      d.appendChild(wrap);
+      chat.appendChild(d);
+      return;
+    }
+
     const content = document.createElement("div");
     content.innerHTML = processarLinks(formatarTexto(m.content));
     d.appendChild(content);
@@ -784,9 +805,9 @@ modoBtns.forEach(opt => {
 });
 
 function configModo() {
-  if (modo === "rapido")       return { temperature: 0.2,  system: REGRAS.modo.rapido,       limite: 40  };
-  if (modo === "especialista") return { temperature: 0.55, system: REGRAS.modo.especialista,  limite: 80  };
-  return                               { temperature: 0.7,  system: REGRAS.modo.pro,           limite: 395 };
+  if (modo === "rapido")       return { temperature: 0.2,  system: REGRAS.modo.rapido,       limite: 4000  };
+  if (modo === "especialista") return { temperature: 0.55, system: REGRAS.modo.especialista,  limite: 8000  };
+  return                               { temperature: 0.7,  system: REGRAS.modo.pro,           limite: 39500 };
 }
 
 function decodificar(str) {
@@ -1135,6 +1156,7 @@ function eComandoAkinator(texto) { return /^\/akinator\b/i.test(texto.trim()); }
 function eComandoPlan(texto)     { return /^\/plan\b/i.test(texto.trim()); }
 function eComandoProf(texto)     { return /^\/prof\b/i.test(texto.trim()); }
 function eComandoDeep(texto)     { return /^\/deep\b/i.test(texto.trim()); }
+function eComandoImagem(texto)   { return /^\/imagem\b/i.test(texto.trim()); }
 
 // 🔎 /Deep tem tratamento a parte (usa a pesquisa web), por isso fica de fora daqui
 function eComandoSemDeep(texto) {
@@ -1151,7 +1173,8 @@ const SLASH_COMMANDS = [
   { cmd: "/akinator", icone: "🎮", nome: "/Akinator", desc: "Joga Akinator — tenta adivinhar o que você pensou" },
   { cmd: "/plan",     icone: "📅", nome: "/Plan",     desc: "Cria um plano completo sobre o que você pedir" },
   { cmd: "/prof",     icone: "🏫", nome: "/Prof",     desc: "Cria um plano de aula completo sobre a matéria" },
-  { cmd: "/deep",     icone: "🔎", nome: "/Deep",     desc: "Pesquisa profunda e completa sobre o assunto" }
+  { cmd: "/deep",     icone: "🔎", nome: "/Deep",     desc: "Pesquisa profunda e completa sobre o assunto" },
+  { cmd: "/imagem",   icone: "🎨", nome: "/Imagem",   desc: "Gera uma imagem com IA a partir da sua descrição" }
 ];
 
 function instrucaoTabela() {
@@ -1904,6 +1927,45 @@ function _criarLoading(texto) {
   return load;
 }
 
+function _criarLoadingImagem(texto) {
+  // 🌌 Loading com animação futurista de partículas orbitando um núcleo,
+  // usado enquanto a imagem é gerada pela Pollinations API.
+  const load = document.createElement("div");
+  load.className = "msg bot";
+  load.innerHTML = `<div class="sar-imggen-loading">
+    <div class="sig-field">
+      <div class="sig-core"></div>
+      <div class="sig-particle"></div>
+      <div class="sig-particle"></div>
+      <div class="sig-particle"></div>
+      <div class="sig-particle"></div>
+      <div class="sig-particle"></div>
+      <div class="sig-particle"></div>
+    </div>
+    <div class="sig-info">
+      <span class="sig-label">${texto}</span>
+      <div class="sig-steps">
+        <span class="sig-step sig-step-active" id="sig-s1">✨ Interpretando o prompt…</span>
+        <span class="sig-step" id="sig-s2">🌌 Renderizando partículas…</span>
+        <span class="sig-step" id="sig-s3">🎨 Finalizando imagem…</span>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(() => {
+    const s1 = load.querySelector("#sig-s1");
+    const s2 = load.querySelector("#sig-s2");
+    if (s1) s1.classList.remove("sig-step-active");
+    if (s2) s2.classList.add("sig-step-active");
+  }, 1800);
+  setTimeout(() => {
+    const s2 = load.querySelector("#sig-s2");
+    const s3 = load.querySelector("#sig-s3");
+    if (s2) s2.classList.remove("sig-step-active");
+    if (s3) s3.classList.add("sig-step-active");
+  }, 4200);
+  return load;
+}
+
 let _ultimaPergunhaEhCodigo = false;
 
 async function enviar() {
@@ -2040,6 +2102,16 @@ function decodificarR13(str) {
   });
 }
 
+/* ===== 🎨 GERAÇÃO DE IMAGEM (Pollinations API) =====
+   A chave fica SOMENTE aqui no código (nunca em tela, config ou localStorage),
+   guardada em ROT13 e decodificada em tempo de uso com decodificarR13().
+   ⚠️ O valor abaixo é apenas um placeholder — é "SUA_CHAVE_POLLINATIONS_AQUI" em ROT13.
+   Gere sua chave gratuita/paga em https://enter.pollinations.ai, codifique-a em ROT13
+   e troque o valor de POLLINATIONS_KEY_R13 por ela. */
+const POLLINATIONS_KEY_R13   = "fx_QmxAjUaLRLh05ivXKqD6mz3UAk4n2O10";
+const POLLINATIONS_IMG_MODEL = "gptimage"; // mapeia para o GPT Image 1 mini na Pollinations
+const POLLINATIONS_IMG_URL   = "https://gen.pollinations.ai/image/";
+
 const LIMITE_ANEXOS = 10;
 const LS_QUOTA      = "sar_quota_v3";
 const QUOTA_JANELA_MS = 90 * 60 * 1000;
@@ -2072,6 +2144,49 @@ function _tempoAteReset() {
   const min = Math.floor(diff / 60000);
   const seg = Math.floor((diff % 60000) / 1000);
   return min > 0 ? `${min}min` : `${seg}s`;
+}
+
+/* ===== 🎨 QUOTA DE GERAÇÃO DE IMAGEM — 3 imagens por conta a cada 24h ===== */
+const LS_QUOTA_IMAGEM        = "sar_quota_imagem_v1";
+const LIMITE_IMAGEM          = 5;
+const QUOTA_IMAGEM_JANELA_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+// Usa a conta logada como chave da quota; visitante sem conta cai no balde "convidado"
+function _chaveQuotaImagem() {
+  const user = getUsuarioLogado();
+  return user ? chaveUsuario(user.nome) : "convidado";
+}
+function _carregarQuotasImagem() {
+  try { return JSON.parse(localStorage.getItem(LS_QUOTA_IMAGEM)) || {}; } catch { return {}; }
+}
+function _salvarQuotasImagem(obj) { localStorage.setItem(LS_QUOTA_IMAGEM, JSON.stringify(obj)); }
+
+function _statusQuotaImagem() {
+  const todas = _carregarQuotasImagem();
+  const chave = _chaveQuotaImagem();
+  let q = todas[chave];
+  if (!q || !q.resetEm || Date.now() >= q.resetEm) {
+    q = { total: 0, resetEm: Date.now() + QUOTA_IMAGEM_JANELA_MS };
+    todas[chave] = q;
+    _salvarQuotasImagem(todas);
+  }
+  return q;
+}
+function podeGerarImagem() { return _statusQuotaImagem().total < LIMITE_IMAGEM; }
+function consumirQuotaImagem() {
+  const todas = _carregarQuotasImagem();
+  const chave = _chaveQuotaImagem();
+  const q = _statusQuotaImagem();
+  q.total += 1;
+  todas[chave] = q;
+  _salvarQuotasImagem(todas);
+}
+function _tempoRestanteQuotaImagem() {
+  const diff = Math.max(0, _statusQuotaImagem().resetEm - Date.now());
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (h > 0) return `${h}h${m > 0 ? " " + m + "min" : ""}`;
+  return `${Math.max(1, m)}min`;
 }
 
 const attachBtn    = document.getElementById("attachBtn");
@@ -2815,8 +2930,107 @@ async function enviarComFoto(txtUsuario, arquivo) {
   await enviarComFotos(txtUsuario, [arquivo]);
 }
 
+/* ===== 🎨 GERAÇÃO DE IMAGEM — Pollinations API (modelo gptimage / GPT Image 1 mini) ===== */
+async function gerarImagemPollinations(prompt) {
+  const key = decodificarR13(POLLINATIONS_KEY_R13);
+  const url = `${POLLINATIONS_IMG_URL}${encodeURIComponent(prompt)}?model=${POLLINATIONS_IMG_MODEL}&nologo=true`;
+
+  const res = await fetchComTimeout(url, {
+    headers: { "Authorization": "Bearer " + key }
+  }, 45000);
+
+  if (!res.ok) throw new Error("HTTP " + res.status);
+
+  const blob = await res.blob();
+  return await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve(r.result);
+    r.onerror = () => reject(new Error("❌ Falha ao ler imagem gerada"));
+    r.readAsDataURL(blob);
+  });
+}
+
+function addMsgImagem(dataURL, prompt) {
+  const intro = chat.querySelector(".intro-screen");
+  if (intro) intro.remove();
+
+  const d = document.createElement("div");
+  d.className = "msg bot";
+
+  const wrap = document.createElement("div");
+  wrap.className = "imagem-gerada-wrap";
+
+  const img = document.createElement("img");
+  img.src = dataURL;
+  img.className = "imagem-gerada";
+  img.alt = prompt || "imagem gerada";
+  img.onclick = () => window.open(dataURL, "_blank");
+  wrap.appendChild(img);
+
+  const legenda = document.createElement("div");
+  legenda.className = "imagem-gerada-legenda";
+  legenda.textContent = `🎨 "${prompt}"`;
+  wrap.appendChild(legenda);
+
+  d.appendChild(wrap);
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function enviarComandoImagem(txt) {
+  const prompt = txt.trim().replace(/^\/imagem\b/i, "").trim();
+
+  addMsg(txt, "user");
+  _limparInput();
+  _persistirSeNovo();
+
+  let memoria = getMensagens();
+  memoria.push({ role: "user", content: txt });
+  setMensagens(memoria);
+
+  if (!prompt) {
+    addMsg("🎨 Me diga o que você quer que eu desenhe! Ex: `/imagem um gato astronauta pilotando um foguete`", "bot");
+    return;
+  }
+
+  if (!podeGerarImagem()) {
+    addMsg(`🚫 Limite de ${LIMITE_IMAGEM} imagens por conta a cada 24h atingido. Tente novamente em ${_tempoRestanteQuotaImagem()}.`, "bot");
+    return;
+  }
+
+  const load = _criarLoadingImagem("🎨 Gerando sua imagem…");
+  chat.appendChild(load);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const dataURL = await gerarImagemPollinations(prompt);
+    consumirQuotaImagem();
+    load.remove();
+    addMsgImagem(dataURL, prompt);
+
+    const msgsAtt = getMensagens();
+    msgsAtt.push({
+      role: "assistant",
+      content: `[Imagem gerada: "${prompt}"]`,
+      imagemGerada: { dataURL, prompt }
+    });
+    setMensagens(msgsAtt);
+  } catch (err) {
+    console.warn("🔴 Erro ao gerar imagem:", err.message);
+    load.remove();
+    addMsg("⚠️ Não consegui gerar a imagem agora. Tente novamente em instantes.", "bot");
+  }
+}
+
 async function enviarComAnexo() {
   _fecharSlashMenu();
+
+  // 🎨 Comando /imagem tem prioridade e não passa pelo chat normal nem por anexos
+  if (eComandoImagem(input.value)) {
+    await enviarComandoImagem(input.value);
+    return;
+  }
+
   if (_arquivosPendentes.length > 0) {
     const txt = input.value.trim();
     const fotos = _arquivosPendentes.filter(a => a.tipo === "foto");
