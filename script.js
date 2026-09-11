@@ -517,21 +517,9 @@ function renderMsgHistorico(m) {
         d.appendChild(thumb);
       }
     }
-    // 🎨 Mostra imagem gerada por IA no histórico
+    // 🎨 Mostra imagem gerada por IA no histórico (com botões Editar/Baixar)
     if (m.imagemGerada?.dataURL) {
-      const wrap = document.createElement("div");
-      wrap.className = "imagem-gerada-wrap";
-      const img = document.createElement("img");
-      img.src = m.imagemGerada.dataURL;
-      img.className = "imagem-gerada";
-      img.alt = m.imagemGerada.prompt || "imagem gerada";
-      img.onclick = () => window.open(m.imagemGerada.dataURL, "_blank");
-      wrap.appendChild(img);
-      const legenda = document.createElement("div");
-      legenda.className = "imagem-gerada-legenda";
-      legenda.textContent = `🎨 "${m.imagemGerada.prompt || ""}"`;
-      wrap.appendChild(legenda);
-      d.appendChild(wrap);
+      d.appendChild(_criarBlocoImagemGerada(m.imagemGerada.dataURL, m.imagemGerada.prompt));
       chat.appendChild(d);
       return;
     }
@@ -1928,41 +1916,41 @@ function _criarLoading(texto) {
 }
 
 function _criarLoadingImagem(texto) {
-  // 🌌 Loading com animação futurista de partículas orbitando um núcleo,
-  // usado enquanto a imagem é gerada pela Pollinations API.
+  // 🖼️ Placeholder do MESMO TAMANHO da imagem final (estilo Gemini/GPT):
+  // glow pulsante, anel orbital girando, shimmer, barra de progresso
+  // indeterminada e textos alternando com crossfade suave.
   const load = document.createElement("div");
   load.className = "msg bot";
-  load.innerHTML = `<div class="sar-imggen-loading">
-    <div class="sig-field">
-      <div class="sig-core"></div>
-      <div class="sig-particle"></div>
-      <div class="sig-particle"></div>
-      <div class="sig-particle"></div>
-      <div class="sig-particle"></div>
-      <div class="sig-particle"></div>
-      <div class="sig-particle"></div>
+  load.innerHTML = `<div class="imagem-loading-box">
+    <div class="ilb-shimmer"></div>
+    <div class="ilb-glow"></div>
+    <div class="ilb-orb">
+      <div class="ilb-orb-ring"></div>
+      <div class="ilb-orb-core"></div>
     </div>
-    <div class="sig-info">
-      <span class="sig-label">${texto}</span>
-      <div class="sig-steps">
-        <span class="sig-step sig-step-active" id="sig-s1">✨ Interpretando o prompt…</span>
-        <span class="sig-step" id="sig-s2">🌌 Renderizando partículas…</span>
-        <span class="sig-step" id="sig-s3">🎨 Finalizando imagem…</span>
-      </div>
-    </div>
+    <span class="ilb-label" id="ilbLabelTxt">${texto}</span>
+    <div class="ilb-progress"><div class="ilb-progress-bar"></div></div>
+    <span class="ilb-model-badge">⚙️ Usando S.A.R DAVINCE 1</span>
   </div>`;
-  setTimeout(() => {
-    const s1 = load.querySelector("#sig-s1");
-    const s2 = load.querySelector("#sig-s2");
-    if (s1) s1.classList.remove("sig-step-active");
-    if (s2) s2.classList.add("sig-step-active");
-  }, 1800);
-  setTimeout(() => {
-    const s2 = load.querySelector("#sig-s2");
-    const s3 = load.querySelector("#sig-s3");
-    if (s2) s2.classList.remove("sig-step-active");
-    if (s3) s3.classList.add("sig-step-active");
-  }, 4200);
+
+  const frases = [
+    "✨ Interpretando o prompt…",
+    "🧬 Estruturando a composição…",
+    "🌌 Pintando luzes e sombras…",
+    "🎨 Finalizando os detalhes…"
+  ];
+  let fi = 0;
+  const label = load.querySelector("#ilbLabelTxt");
+  const intervalo = setInterval(() => {
+    if (!label) return;
+    label.classList.add("ilb-label--fading");
+    setTimeout(() => {
+      fi = (fi + 1) % frases.length;
+      label.textContent = frases[fi];
+      label.classList.remove("ilb-label--fading");
+    }, 320);
+  }, 2100);
+  load._pararAnimacaoLoading = () => clearInterval(intervalo);
   return load;
 }
 
@@ -2148,7 +2136,7 @@ function _tempoAteReset() {
 
 /* ===== 🎨 QUOTA DE GERAÇÃO DE IMAGEM — 3 imagens por conta a cada 24h ===== */
 const LS_QUOTA_IMAGEM        = "sar_quota_imagem_v1";
-const LIMITE_IMAGEM          = 5;
+const LIMITE_IMAGEM          = 51;
 const QUOTA_IMAGEM_JANELA_MS = 24 * 60 * 60 * 1000; // 24 horas
 
 // Usa a conta logada como chave da quota; visitante sem conta cai no balde "convidado"
@@ -2950,13 +2938,62 @@ async function gerarImagemPollinations(prompt) {
   });
 }
 
-function addMsgImagem(dataURL, prompt) {
-  const intro = chat.querySelector(".intro-screen");
-  if (intro) intro.remove();
+/* ✏️ Botão "Editar" — preenche o campo com o comando /imagem + prompt original
+   para o usuário completar com a edição desejada e reenviar (gera de novo,
+   já incorporando o pedido de edição, recriando a imagem). */
+function _iniciarEdicaoImagem(prompt) {
+  const base = prompt ? prompt.trim() : "";
+  const novoValor = base ? `/imagem ${base}, ` : "/imagem ";
+  input.value = novoValor;
+  _autoResizeInput();
+  input.focus();
+  try { input.setSelectionRange(novoValor.length, novoValor.length); } catch (_) {}
+  input.scrollIntoView({ behavior: "smooth", block: "center" });
+}
 
-  const d = document.createElement("div");
-  d.className = "msg bot";
+/* ⬇️ Botão "Baixar imagem" — baixa o arquivo completo.
+   Em PWA (modo standalone), usa a Web Share API quando disponível para
+   entregar o arquivo inteiro (salvar em Fotos/Arquivos); fora do PWA,
+   cai para o download tradicional via <a download>. */
+async function _baixarImagemGerada(dataURL, prompt, btnEl) {
+  if (btnEl) btnEl.classList.add("imagem-action-btn--loading");
+  try {
+    const res = await fetch(dataURL);
+    const blob = await res.blob();
+    const ext = (blob.type && blob.type.split("/")[1]) ? blob.type.split("/")[1].replace("jpeg", "jpg") : "png";
+    const nomeArquivo = `sar-imagem-${Date.now()}.${ext}`;
+    const arquivo = new File([blob], nomeArquivo, { type: blob.type || "image/png" });
 
+    const eStandalone = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+    const podeCompartilharArquivo = navigator.canShare && navigator.canShare({ files: [arquivo] });
+
+    if (eStandalone && podeCompartilharArquivo) {
+      await navigator.share({ files: [arquivo], title: "Imagem gerada · S.A.R", text: prompt || "" });
+      return;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (err) {
+    if (err?.name !== "AbortError") {
+      console.warn("🔴 Erro ao baixar imagem:", err?.message);
+      window.open(dataURL, "_blank");
+    }
+  } finally {
+    if (btnEl) btnEl.classList.remove("imagem-action-btn--loading");
+  }
+}
+
+/* 🧱 Monta o bloco visual completo de uma imagem gerada: imagem + legenda
+   + botões de ação (Editar / Baixar imagem). Usado tanto ao gerar quanto
+   ao renderizar o histórico salvo. */
+function _criarBlocoImagemGerada(dataURL, prompt) {
   const wrap = document.createElement("div");
   wrap.className = "imagem-gerada-wrap";
 
@@ -2969,10 +3006,38 @@ function addMsgImagem(dataURL, prompt) {
 
   const legenda = document.createElement("div");
   legenda.className = "imagem-gerada-legenda";
-  legenda.textContent = `🎨 "${prompt}"`;
+  legenda.textContent = `🎨 "${prompt || ""}"`;
   wrap.appendChild(legenda);
 
-  d.appendChild(wrap);
+  const acoes = document.createElement("div");
+  acoes.className = "imagem-gerada-actions";
+
+  const btnEditar = document.createElement("button");
+  btnEditar.type = "button";
+  btnEditar.className = "imagem-action-btn";
+  btnEditar.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5l2 2-8 8-2.6.6.6-2.6 8-8z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Editar</span>`;
+  btnEditar.onclick = () => _iniciarEdicaoImagem(prompt);
+  acoes.appendChild(btnEditar);
+
+  const btnBaixar = document.createElement("button");
+  btnBaixar.type = "button";
+  btnBaixar.className = "imagem-action-btn";
+  btnBaixar.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12.5h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Baixar imagem</span>`;
+  btnBaixar.onclick = () => _baixarImagemGerada(dataURL, prompt, btnBaixar);
+  acoes.appendChild(btnBaixar);
+
+  wrap.appendChild(acoes);
+  return wrap;
+}
+
+function addMsgImagem(dataURL, prompt) {
+  const intro = chat.querySelector(".intro-screen");
+  if (intro) intro.remove();
+
+  const d = document.createElement("div");
+  d.className = "msg bot";
+  d.appendChild(_criarBlocoImagemGerada(dataURL, prompt));
+
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
 }
@@ -3005,20 +3070,58 @@ async function enviarComandoImagem(txt) {
   try {
     const dataURL = await gerarImagemPollinations(prompt);
     consumirQuotaImagem();
+    load._pararAnimacaoLoading?.();
     load.remove();
     addMsgImagem(dataURL, prompt);
 
+    const idMsg = gerarId();
     const msgsAtt = getMensagens();
     msgsAtt.push({
+      id: idMsg,
       role: "assistant",
-      content: `[Imagem gerada: "${prompt}"]`,
+      content: `[Imagem gerada por S.A.R DAVINCE 1 a partir do pedido: "${prompt}"]`,
       imagemGerada: { dataURL, prompt }
     });
     setMensagens(msgsAtt);
+
+    // 🧠 Em segundo plano, manda a imagem recém-gerada para o Gemini analisar
+    // e guarda a descrição em JSON no contexto — assim a Groq consegue
+    // falar sobre o conteúdo real da imagem se o usuário perguntar depois.
+    _analisarImagemGeradaEAtualizarContexto(dataURL, prompt, idMsg);
   } catch (err) {
     console.warn("🔴 Erro ao gerar imagem:", err.message);
+    load._pararAnimacaoLoading?.();
     load.remove();
     addMsg("⚠️ Não consegui gerar a imagem agora. Tente novamente em instantes.", "bot");
+  }
+}
+
+/* 🧠 Analisa a imagem que a S.A.R DAVINCE 1 acabou de gerar (via Gemini Vision)
+   e atualiza o conteúdo da mensagem em memória com a descrição em JSON.
+   Roda em segundo plano, sem travar a exibição da imagem. A Groq (modelo de
+   texto) não enxerga pixels — por isso ela recebe essa descrição estruturada
+   como contexto, podendo comentar sobre o que está na imagem se perguntado. */
+async function _analisarImagemGeradaEAtualizarContexto(dataURL, prompt, idMsg) {
+  try {
+    const base64 = (dataURL.split(",")[1] || "").trim();
+    const mimeMatch = /^data:(.*?);base64,/.exec(dataURL || "");
+    const mimeType = mimeMatch ? mimeMatch[1] : "image/png";
+    if (!base64) return;
+
+    const analise = await analisarImagemGemini(base64, mimeType);
+
+    const msgs = getMensagens();
+    const alvo = msgs.find(m => m.id === idMsg && m.imagemGerada?.dataURL === dataURL);
+    if (!alvo) return;
+
+    alvo.imagemGerada.analise = analise;
+    alvo.content =
+      `[Imagem gerada pela S.A.R DAVINCE 1 a partir do pedido do usuário: "${prompt}"]\n` +
+      `[DESCRIÇÃO VISUAL DA IMAGEM GERADA — JSON, use para responder se o usuário perguntar sobre a imagem]:\n` +
+      JSON.stringify(analise);
+    setMensagens(msgs);
+  } catch (e) {
+    console.warn("⚠️ Não foi possível analisar a imagem gerada para contexto da Groq:", e?.message);
   }
 }
 
