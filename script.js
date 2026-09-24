@@ -44,6 +44,14 @@ const REGRAS = {
     "Nunca invente ou aposte em um link que voce nao tenha certeza que existe, se nao tiver certeza do link exato, indique o nome do site oficial em vez de um link",
     "Se a resposta envolver compra de produto, servico ou preco, priorize sempre links de lojas e sites brasileiros confiaveis, como Mercado Livre, Amazon.com.br, Magazine Luiza, Kabum, Americanas ou o site oficial da marca no Brasil"
   ],
+  matematica: [
+    "Sempre que escrever equacao, formula, expressao ou qualquer notacao matematica (fracoes, potencias, raizes, indices, somatorios, integrais, limites, matrizes, sistemas, letras gregas), use LaTeX para ela ser exibida de forma bonita",
+    "Use $...$ para matematica dentro da frase e $$...$$ para equacoes em destaque. Exemplo: a formula de Bhaskara e $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$",
+    "Se tiver varias equacoes, coloque cada uma em seu proprio bloco $$...$$ ou use \\begin{aligned} ... \\end{aligned} para alinhar no sinal de igual",
+    "Nunca escreva matematica em texto puro como x^2, sqrt(x), a/b, +- ou raiz(...): use LaTeX (x^2, \\sqrt{x}, \\frac{a}{b}, \\pm)",
+    "Nao use LaTeX dentro de blocos de codigo nem entre crases. Valores em dinheiro continuam normais (escreva R$ 50, sem LaTeX)",
+    "Use apenas comandos compativeis com KaTeX (\\frac, \\sqrt, \\pm, \\cdot, \\times, \\boxed, \\begin{cases}, \\begin{pmatrix}, \\begin{aligned}) e nunca use \\documentclass, \\usepackage nem \\begin{equation}"
+  ],
   equipe: {
     origem:       "A Evolution Games Studio e uma equipe indie brasileira criada por Joao Antonio e Lucas Macedo durante a epoca de escola.",
     criacao:      "Voce e a S.A.R e foi criada pela Evolution Games Studio. Programada pelo Joao Antonio. Os criadores/fundadores sao Joao Antonio e Lucas Macedo.",
@@ -77,6 +85,77 @@ async function fetchComTimeout(url, options, ms = 18000) {
     if (e.name === "AbortError") throw new Error("⏱️ Timeout: sem resposta em " + (ms / 1000) + "s");
     throw e;
   }
+}
+
+/* ====================================================
+   🖼️ BUSCA DE IMAGENS NA WEB — usada no /Deep (pesquisa profunda)
+   Usa a API pública do Wikimedia Commons (sem chave, CORS liberado)
+   pra trazer imagens reais relacionadas ao assunto pesquisado.
+   ==================================================== */
+async function buscarImagensWeb(query, limite = 4) {
+  try {
+    const termo = (query || "").trim();
+    if (!termo) return [];
+    const url = "https://commons.wikimedia.org/w/api.php" +
+      "?action=query&generator=search&gsrnamespace=6" +
+      "&gsrsearch=" + encodeURIComponent(termo) +
+      "&gsrlimit=" + Math.max(limite * 2, 6) +
+      "&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=480" +
+      "&format=json&origin=*";
+
+    const res = await fetchComTimeout(url, {}, 9000);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const pages = data?.query?.pages;
+    if (!pages) return [];
+
+    const EXT_VALIDAS = /\.(jpe?g|png|webp)$/i;
+    return Object.values(pages)
+      .map(p => {
+        const info = p.imageinfo?.[0];
+        if (!info || !EXT_VALIDAS.test(p.title || "")) return null;
+        return {
+          thumb: info.thumburl || info.url,
+          full: info.url,
+          pagina: info.descriptionshorturl || info.descriptionurl || info.url,
+          titulo: (p.title || "").replace(/^File:/i, "").replace(/\.(jpe?g|png|webp)$/i, "").replace(/[_-]+/g, " ").trim()
+        };
+      })
+      .filter(Boolean)
+      .slice(0, limite);
+  } catch (e) {
+    console.warn("⚠️ Falha na busca de imagens:", e.message);
+    return [];
+  }
+}
+
+/* 🧱 Monta a galeria de imagens relacionadas, exibida abaixo de uma
+   resposta de pesquisa profunda (/Deep). Retorna null se não houver imagens. */
+function _criarGaleriaImagens(imagens) {
+  if (!imagens || !imagens.length) return null;
+  const wrap = document.createElement("div");
+  wrap.className = "img-galeria";
+
+  const label = document.createElement("div");
+  label.className = "img-galeria-label";
+  label.textContent = "🖼️ Imagens relacionadas ao assunto";
+  wrap.appendChild(label);
+
+  const trilha = document.createElement("div");
+  trilha.className = "img-galeria-trilha";
+  imagens.forEach(img => {
+    const a = document.createElement("a");
+    a.className = "img-galeria-item";
+    a.href = img.pagina;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.title = img.titulo || "Ver fonte da imagem";
+    a.innerHTML = `<img src="${img.thumb}" alt="${escapeHTML(img.titulo || "imagem")}" loading="lazy">
+      <span class="img-galeria-legenda">${escapeHTML(img.titulo || "")}</span>`;
+    trilha.appendChild(a);
+  });
+  wrap.appendChild(trilha);
+  return wrap;
 }
 
 /* ====================================================
@@ -164,6 +243,9 @@ const scrollBtn       = document.getElementById("scrollBtn");
 const historicoLista  = document.getElementById("historicoLista");
 const novoChat        = document.getElementById("novoChat");
 const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+const historicoBtn          = document.getElementById("historicoBtn");
+const historicoModalOverlay = document.getElementById("historicoModalOverlay");
+const historicoModalClose   = document.getElementById("historicoModalClose");
 
 /* ====================================================
    💗 SISTEMA DE SENTIMENTOS / EMOCIONAL
@@ -428,8 +510,8 @@ function _mostrarIntro() {
       <div class="logo-ring"></div>
       <div class="logo-dot"></div>
     </div>
-    <h2 class="intro-title">Olá! Sou a S.A.R 👋</h2>
-    <p class="intro-sub">Como posso te ajudar hoje? ✨</p>
+    <h2 class="intro-title">Olá! Eu sou a S.A.R 👋</h2>
+    <p class="intro-sub">Sua assistente inteligente. Como posso te ajudar hoje? ✨</p>
     <div class="intro-chips" id="introChips">${_renderIntroChips()}</div>
   </div>`;
 }
@@ -545,7 +627,8 @@ function _criarCopyBtn(texto) {
 }
 
 /* ====================================================
-   🔊 TEXTO PARA VOZ (feminina) — le a resposta em voz alta
+   🔊 TEXTO PARA VOZ — le a resposta em voz alta usando a
+   voz do Google (se existir) ou a voz padrão do próprio celular
    ==================================================== */
 if ("speechSynthesis" in window) {
   // 🔁 Forca o carregamento antecipado da lista de vozes do sistema
@@ -576,6 +659,10 @@ function _textoParaFala(texto) {
   return String(texto || "")
     .replace(/===FORMULA===[\s\S]*?===FIM===/g, " Confira a fórmula no bloco acima. ")
     .replace(/```[a-zA-Z0-9+#-]*\n?[\s\S]*?```/g, " Bloco de código omitido. ")
+    .replace(/\$\$[\s\S]*?\$\$/g, " Confira a equação na tela. ")
+    .replace(/\\\[[\s\S]*?\\\]/g, " Confira a equação na tela. ")
+    .replace(/\\\((.+?)\\\)/g, " ")
+    .replace(_RE_MATH_DOLAR, (m, pre) => pre + " ")
     .replace(/\*\*(.*?)\*\*/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/[#>*_~]/g, "")
@@ -587,24 +674,18 @@ function _escolherVozFeminina(vozes) {
   vozes = vozes || (("speechSynthesis" in window) ? window.speechSynthesis.getVoices() : []);
   if (!vozes.length) return null;
 
+  // 🔎 Só usa a voz do Google (a de melhor qualidade, ex. "Google português do Brasil")
+  // ou, se o aparelho não tiver nenhuma voz Google instalada, a voz padrão do próprio
+  // celular — sem tentar adivinhar se o nome da voz "parece" feminino ou masculino.
   const pt = vozes.filter(v => /^pt/i.test(v.lang));
   const candidatas = pt.length ? pt : vozes;
-  const nomesFemininos = /female|mulher|femin|luciana|fernanda|vit[óo]ria|maria|joana|camila|helena|raquel|carla|paulina|ana\b|zira|susan|samantha/i;
-  const nomesMasculinos = /male|homem|masculin|daniel|felipe|ricardo|diego|thiago|joao|jorge|miguel|paulo\b/i;
-
-  // 🔎 Voz do Google — o motor "Google" é o de melhor qualidade disponível no navegador
-  // (Chrome/Android já vem com "Google português do Brasil" etc). Prioriza ela sempre que existir.
   const ehGoogle = v => /google/i.test(v.name);
-  const googlePtFeminina    = candidatas.find(v => ehGoogle(v) && nomesFemininos.test(v.name));
-  const googlePtNaoMasc     = candidatas.find(v => ehGoogle(v) && !nomesMasculinos.test(v.name));
-  const googleQualquerPt    = candidatas.find(ehGoogle);
-  const googleGeral         = vozes.find(ehGoogle);
 
-  let feminina =
-    googlePtFeminina || googlePtNaoMasc || googleQualquerPt || googleGeral ||
-    candidatas.find(v => nomesFemininos.test(v.name));
-  if (!feminina) feminina = candidatas.find(v => !nomesMasculinos.test(v.name));
-  return feminina || candidatas[0] || vozes[0];
+  const googlePt   = candidatas.find(ehGoogle);
+  const googleGeral = vozes.find(ehGoogle);
+  const padraoDoAparelho = candidatas.find(v => v.default) || candidatas[0] || vozes[0];
+
+  return googlePt || googleGeral || padraoDoAparelho;
 }
 
 function _criarSpeakBtn(texto) {
@@ -677,10 +758,24 @@ function renderHistorico() {
       if (e.target.closest(".hist-del")) return;
       carregarChatTela(c.id);
       fecharSidebar();
+      fecharHistoricoModal();
     });
     historicoLista.appendChild(item);
   });
 }
+
+function abrirHistoricoModal() {
+  renderHistorico();
+  historicoModalOverlay.classList.add("show");
+}
+function fecharHistoricoModal() {
+  historicoModalOverlay.classList.remove("show");
+}
+historicoBtn.onclick = () => { abrirHistoricoModal(); fecharSidebar(); };
+historicoModalClose.onclick = fecharHistoricoModal;
+historicoModalOverlay.addEventListener("click", e => {
+  if (e.target === historicoModalOverlay) fecharHistoricoModal();
+});
 
 historicoLista.addEventListener("click", e => {
   const del = e.target.closest(".hist-del");
@@ -699,7 +794,7 @@ historicoLista.addEventListener("click", e => {
 });
 
 novoChat.addEventListener("click", () => {
-  novoSlot(); _mostrarIntro(); renderHistorico(); fecharSidebar();
+  novoSlot(); _mostrarIntro(); renderHistorico(); fecharSidebar(); fecharHistoricoModal();
 });
 
 const LS_NOME = "sar_usuario_nome";
@@ -743,7 +838,6 @@ function fecharSidebar() {
 }
 
 menuBtn.onclick = () => {
-  renderHistorico();
   renderHumorPanel();
   sidebar.classList.toggle("open");
   overlay.classList.toggle("show");
@@ -778,14 +872,7 @@ function atualizarUI() {
 
 modoBtns.forEach(opt => {
   opt.onclick = () => {
-    const modoEscolhido = opt.dataset.modo;
-    const exigeConta = modoEscolhido === "especialista" || modoEscolhido === "pro";
-    if (exigeConta && !getUsuarioLogado()) {
-      _pendingAcao = { tipo: "modo", modo: modoEscolhido };
-      abrirAuthModal("login");
-      return;
-    }
-    modo = modoEscolhido;
+    modo = opt.dataset.modo;
     localStorage.setItem("modoSAR", modo);
     atualizarUI();
     fecharSidebar();
@@ -848,196 +935,6 @@ if (modalOverlay) modalOverlay.addEventListener("click", e => { if (e.target ===
 if (toggleAdult)  toggleAdult.onchange  = () => { const c = carregarConfig(); c.filtroAdult  = toggleAdult.checked;  salvarConfig(c); };
 if (toggleLinks)  toggleLinks.onchange  = () => { const c = carregarConfig(); c.confiarLinks = toggleLinks.checked; salvarConfig(c); };
 if (resetHumor)   resetHumor.onclick    = () => { salvarEmocional(_emocionalVazio()); renderHumorPanel(); };
-
-const FIREBASE_DB_URL = "https://conta-ia-d53fa-default-rtdb.asia-southeast1.firebasedatabase.app";
-const LS_USER = "sar_user";
-
-function getUsuarioLogado() {
-  try { return JSON.parse(localStorage.getItem(LS_USER)) || null; } catch { return null; }
-}
-function setUsuarioLogado(u) { localStorage.setItem(LS_USER, JSON.stringify(u)); }
-function removerUsuarioLogado() { localStorage.removeItem(LS_USER); }
-
-// Transforma o nome em uma chave válida para o Firebase (sem . # $ [ ] /)
-function chaveUsuario(nome) {
-  return (nome || "").trim().toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9_]/g, "_")
-    .replace(/_+/g, "_")
-    .slice(0, 60);
-}
-
-async function hashSenha(senha) {
-  const enc = new TextEncoder().encode(senha);
-  const buf = await crypto.subtle.digest("SHA-256", enc);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function criarConta(nome, senha) {
-  const key = chaveUsuario(nome);
-  if (!key || key.length < 2) throw new Error("Digite um nome de usuário válido.");
-  if (!senha || senha.length < 4) throw new Error("A senha precisa ter pelo menos 4 caracteres.");
-  const res = await fetchComTimeout(`${FIREBASE_DB_URL}/usuarios/${key}.json`, {}, 10000);
-  const existente = await res.json();
-  if (existente) throw new Error("Esse usuário já existe. Tente entrar em vez de criar conta.");
-  const senhaHash = await hashSenha(senha);
-  const put = await fetchComTimeout(`${FIREBASE_DB_URL}/usuarios/${key}.json`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome: nome.trim(), senhaHash, criadoEm: Date.now() })
-  }, 10000);
-  if (!put.ok) throw new Error("Não foi possível criar a conta agora. Tente novamente.");
-  return { nome: nome.trim(), key };
-}
-
-async function loginConta(nome, senha) {
-  const key = chaveUsuario(nome);
-  if (!key) throw new Error("Digite seu nome de usuário.");
-  const res = await fetchComTimeout(`${FIREBASE_DB_URL}/usuarios/${key}.json`, {}, 10000);
-  const dados = await res.json();
-  if (!dados) throw new Error("Conta não encontrada. Verifique o nome ou crie uma conta.");
-  const senhaHash = await hashSenha(senha);
-  if (dados.senhaHash !== senhaHash) throw new Error("Senha incorreta.");
-  return { nome: dados.nome, key };
-}
-
-const accountBtn        = document.getElementById("accountBtn");
-const accountAvatar     = document.getElementById("accountAvatar");
-const accountName       = document.getElementById("accountName");
-const accountSub        = document.getElementById("accountSub");
-const authModalOverlay  = document.getElementById("authModalOverlay");
-const authModalClose    = document.getElementById("authModalClose");
-const authModalTitle    = document.getElementById("authModalTitle");
-const authHint          = document.getElementById("authHint");
-const authTabs          = document.getElementById("authTabs");
-const authTabLogin      = document.getElementById("authTabLogin");
-const authTabCriar      = document.getElementById("authTabCriar");
-const authForm          = document.getElementById("authForm");
-const authNome          = document.getElementById("authNome");
-const authSenha         = document.getElementById("authSenha");
-const authSenha2Wrap    = document.getElementById("authSenha2Wrap");
-const authSenha2        = document.getElementById("authSenha2");
-const authError         = document.getElementById("authError");
-const authSubmitBtn     = document.getElementById("authSubmitBtn");
-const authSubmitLabel   = document.getElementById("authSubmitLabel");
-const authPerfil        = document.getElementById("authPerfil");
-const perfilAvatar      = document.getElementById("perfilAvatar");
-const perfilNome        = document.getElementById("perfilNome");
-const logoutBtn         = document.getElementById("logoutBtn");
-
-let _authAba = "login";
-let _pendingAcao = null; // { tipo: "modo", modo: "pro" }
-
-function _iniciais(nome) {
-  return (nome || "?").trim().slice(0, 2);
-}
-
-function atualizarContaUI() {
-  const user = getUsuarioLogado();
-  if (user) {
-    accountAvatar.textContent = _iniciais(user.nome);
-    accountName.textContent = user.nome;
-    accountSub.textContent = "Conta conectada";
-    perfilAvatar.textContent = _iniciais(user.nome);
-    perfilNome.textContent = user.nome;
-  } else {
-    accountAvatar.textContent = "?";
-    accountName.textContent = "Convidado";
-    accountSub.textContent = "Toque para entrar";
-  }
-}
-
-function abrirAuthModal(aba = "login") {
-  fecharSidebar();
-  const user = getUsuarioLogado();
-  authError.style.display = "none";
-  authError.textContent = "";
-  if (user) {
-    authModalTitle.textContent = "Sua conta";
-    authHint.style.display = "none";
-    authTabs.style.display = "none";
-    authForm.style.display = "none";
-    authPerfil.style.display = "flex";
-  } else {
-    authHint.style.display = "block";
-    authTabs.style.display = "flex";
-    authForm.style.display = "flex";
-    authPerfil.style.display = "none";
-    trocarAbaAuth(aba);
-  }
-  setTimeout(() => authModalOverlay.classList.add("show"), 30);
-}
-function fecharAuthModal() {
-  authModalOverlay.classList.remove("show");
-  _pendingAcao = null;
-}
-
-function trocarAbaAuth(aba) {
-  _authAba = aba;
-  authTabLogin.classList.toggle("active", aba === "login");
-  authTabCriar.classList.toggle("active", aba === "criar");
-  authModalTitle.textContent = aba === "login" ? "Entrar" : "Criar conta";
-  authSenha2Wrap.style.display = aba === "criar" ? "flex" : "none";
-  authSubmitLabel.textContent = aba === "login" ? "Entrar" : "Criar conta";
-  authSenha.autocomplete = aba === "login" ? "current-password" : "new-password";
-  authError.style.display = "none";
-}
-
-if (accountBtn) accountBtn.onclick = () => abrirAuthModal("login");
-if (authModalClose) authModalClose.onclick = fecharAuthModal;
-if (authModalOverlay) authModalOverlay.addEventListener("click", e => { if (e.target === authModalOverlay) fecharAuthModal(); });
-if (authTabLogin) authTabLogin.onclick = () => trocarAbaAuth("login");
-if (authTabCriar) authTabCriar.onclick = () => trocarAbaAuth("criar");
-if (logoutBtn) logoutBtn.onclick = () => {
-  removerUsuarioLogado();
-  atualizarContaUI();
-  fecharAuthModal();
-};
-
-async function _executarAcaoPendente() {
-  if (!_pendingAcao) return;
-  const acao = _pendingAcao;
-  _pendingAcao = null;
-  if (acao.tipo === "modo") {
-    modo = acao.modo;
-    localStorage.setItem("modoSAR", modo);
-    atualizarUI();
-  }
-}
-
-if (authForm) authForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const nome = authNome.value.trim();
-  const senha = authSenha.value;
-  authError.style.display = "none";
-
-  if (_authAba === "criar" && senha !== authSenha2.value) {
-    authError.textContent = "As senhas não coincidem.";
-    authError.style.display = "block";
-    return;
-  }
-
-  authSubmitBtn.disabled = true;
-  const labelOriginal = authSubmitLabel.textContent;
-  authSubmitLabel.textContent = "Aguarde…";
-
-  try {
-    const user = _authAba === "login"
-      ? await loginConta(nome, senha)
-      : await criarConta(nome, senha);
-    setUsuarioLogado(user);
-    atualizarContaUI();
-    authForm.reset();
-    fecharAuthModal();
-    await _executarAcaoPendente();
-  } catch (err) {
-    authError.textContent = err.message || "Algo deu errado. Tente novamente.";
-    authError.style.display = "block";
-  } finally {
-    authSubmitBtn.disabled = false;
-    authSubmitLabel.textContent = labelOriginal;
-  }
-});
 
 function assuntoBloqueado(texto) {
   const t = texto.toLowerCase();
@@ -1119,18 +1016,47 @@ function ePesquisa(texto) {
 
 function instrucaoCalculo() {
   return `\n\nINSTRUCAO ESPECIAL - CALCULOS:
-Quando responder a um calculo ou problema matematico, voce DEVE:
-1. Dar a resposta direta primeiro
-2. Em seguida, sempre mostrar e adaptar a formula/resolucao dentro de um bloco especial iniciado por ===FORMULA=== e terminado por ===FIM===
-Exemplo:
+Quando responder a um calculo ou problema matematico, mostre SEMPRE o passo a passo, como um professor faria no quadro.
+
+REGRA 1 - EQUACOES, FORMULAS E EXPRESSOES (bhaskara, fracoes, potencias, raizes, porcentagem, sistemas, derivadas, integrais, limites, logaritmos etc.): escreva a matematica em LaTeX. Use um titulo curto em texto normal para cada passo e a equacao em $$...$$ (uma por bloco, ou \\begin{aligned} ... \\end{aligned} alinhando no = quando forem varias linhas encadeadas). Destaque o resultado final de cada incognita com \\boxed{}. Exemplo:
+
+**1. Identifique os coeficientes**
+$a = 2,\\; b = -5,\\; c = -3$
+
+**2. Formula de Bhaskara**
+$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+
+**3. Calcule o delta**
+$$\\Delta = b^2 - 4ac = (-5)^2 - 4(2)(-3) = 25 + 24 = 49$$
+
+**4. Resolva**
+$$x = \\frac{5 \\pm \\sqrt{49}}{4} = \\frac{5 \\pm 7}{4}$$
+$$\\boxed{x_1 = 3} \\qquad \\boxed{x_2 = -\\frac{1}{2}}$$
+
+Resultado: $x_1 = 3$ e $x_2 = -\\frac{1}{2}$
+
+Para varias linhas encadeadas (ex.: 2x + 3 = 11), alinhe no sinal de igual:
+$$
+\\begin{aligned}
+2x + 3 &= 11 \\\\
+2x &= 8 \\\\
+x &= 4
+\\end{aligned}
+$$
+
+REGRA 2 - CONTAS ARMADAS (soma, subtracao, multiplicacao e divisao "no caderno"): use um bloco especial iniciado por ===FORMULA=== e terminado por ===FIM===. O bloco e monoespacado (preserva espacos), entao USE ESPACOS para alinhar os numeros pela direita, um embaixo do outro, com linha divisoria "------" antes do resultado, mostrando produtos parciais e vai-um/emprestimo quando existirem. Depois do bloco escreva "Resultado: X". Exemplo:
 ===FORMULA===
-  25 x 5 = 125
-  Passo a passo:
-  222
-   x5
--------
- 1110 
-===FIM===`;
+    247
+  x  36
+ ------
+   1482
+  7410
+ ------
+   8892
+===FIM===
+Resultado: 8.892
+
+Nunca pule o passo a passo, mesmo em contas simples. Adapte os valores ao problema real (nao copie os numeros dos exemplos).`;
 }
 
 /* ====================================================
@@ -1266,16 +1192,82 @@ function highlightCode(code) {
 function _splitPartes(textoRaw) {
   const resultado = [];
   let ultimo = 0;
-  const allRegex = /(?:===FORMULA===([\s\S]*?)===FIM===|```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```)/g;
+  const allRegex = /(?:===FORMULA===([\s\S]*?)===FIM===|```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```|\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\])/g;
   let m;
   while ((m = allRegex.exec(textoRaw)) !== null) {
-    if (m.index > ultimo) resultado.push({ tipo: "texto", conteudo: textoRaw.slice(ultimo, m.index) });
+    const ehMath = m[4] !== undefined || m[5] !== undefined;
+    if (m.index > ultimo) {
+      let antes = textoRaw.slice(ultimo, m.index);
+      if (ehMath) antes = antes.replace(/\n$/, "");
+      if (antes || !ehMath) resultado.push({ tipo: "texto", conteudo: antes });
+    }
     if (m[1] !== undefined) resultado.push({ tipo: "formula", conteudo: m[1].trim() });
+    else if (ehMath) resultado.push({ tipo: "math", conteudo: (m[4] !== undefined ? m[4] : m[5]).trim() });
     else resultado.push({ tipo: "codigo", conteudo: m[3].trimEnd(), lang: (m[2] || "").trim() });
     ultimo = allRegex.lastIndex;
+    if (ehMath && textoRaw[ultimo] === "\n") { ultimo++; allRegex.lastIndex = ultimo; }
   }
   if (ultimo < textoRaw.length) resultado.push({ tipo: "texto", conteudo: textoRaw.slice(ultimo) });
   return resultado;
+}
+
+/* ====================================================
+   🧮 LaTeX (KaTeX) — equações bonitas no chat
+   $...$ e \( ... \)   → matemática dentro da frase
+   $$...$$ e \[ ... \] → equação em destaque (pode ter várias linhas)
+   ==================================================== */
+function _katexPronto() {
+  return typeof window.katex !== "undefined" && typeof window.katex.renderToString === "function";
+}
+
+function _renderKatex(tex, destaque) {
+  if (!_katexPronto()) return null;
+  try {
+    // O HTML5 já entende <math> e <svg> sem xmlns; removê-lo evita que o detector de links
+    // (regex de http://...) enxergue "http://www.w3.org/..." e quebre o desenho da fórmula.
+    return window.katex.renderToString(tex, {
+      displayMode: !!destaque,
+      throwOnError: false,
+      strict: "ignore",
+      errorColor: "#f87171"
+    }).replace(/ xmlns="[^"]*"/g, "");
+  } catch (e) {
+    return null;
+  }
+}
+
+// O "$" só vira matemática quando NÃO é dinheiro: "R$ 50" e "US$ 10" continuam intactos
+const _RE_MATH_DOLAR = /(^|[^\\$\w])\$(?![\s$])((?:\\.|[^$\\\n])*?(?:\\.|[^\s\\$]))\$(?!\w)/g;
+const _RE_MATH_PAREN = /\\\((.+?)\\\)/g;
+
+// Troca cada fórmula da linha por um marcador e guarda o HTML pronto (fora de `código`)
+function _extrairMath(linha) {
+  const guardados = [];
+  if (!_katexPronto()) return { texto: linha, guardados };
+  const guardar = html => "\uE000" + (guardados.push(html) - 1) + "\uE001";
+  const texto = linha.split(/(`[^`]+`)/).map((parte, i) => {
+    if (i % 2 === 1) return parte;
+    return parte
+      .replace(_RE_MATH_PAREN, (m, tex) => { const h = _renderKatex(tex.trim(), false); return h ? guardar(h) : m; })
+      .replace(_RE_MATH_DOLAR, (m, pre, tex) => { const h = _renderKatex(tex, false); return h ? pre + guardar(h) : m; })
+      .replace(/\\\$/g, "$");
+  }).join("");
+  return { texto, guardados };
+}
+
+function _restaurarMath(html, guardados) {
+  if (!guardados.length) return html;
+  return html.replace(/\uE000(\d+)\uE001/g, (m, i) => guardados[Number(i)] || "");
+}
+
+function renderizarMathBloco(tex) {
+  const limpo = String(tex || "").trim();
+  if (!limpo) return "";
+  const linhas = limpo.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const soltas = linhas.length > 1 && !/\\begin\{|\\\\/.test(limpo);
+  const partes = soltas ? linhas : [limpo];
+  const html = partes.map(p => _renderKatex(p, true) || `<div class="math-raw">${escapeHTML(p)}</div>`).join("");
+  return `<div class="math-block">${html}</div>`;
 }
 
 // 🏷️ Normaliza o nome da linguagem exibido no cabeçalho do bloco de código
@@ -1397,22 +1389,29 @@ function renderizarTabela(linhas) {
   const headers = parseCells(rows[0]);
   const dataRows = rows.slice(separadorIdx + 1);
   let html = '<div class="table-wrapper"><table class="chat-table"><thead><tr>';
-  headers.forEach(h => { html += `<th>${h.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</th>`; });
+  headers.forEach(h => { html += `<th>${_formatarCelula(h)}</th>`; });
   html += '</tr></thead><tbody>';
   dataRows.forEach((r, i) => {
     const cells = parseCells(r);
     html += `<tr class="${i % 2 === 0 ? "even" : "odd"}">`;
-    cells.forEach(c => { html += `<td>${c.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</td>`; });
+    cells.forEach(c => { html += `<td>${_formatarCelula(c)}</td>`; });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   return html;
 }
 
+function _formatarCelula(c) {
+  const { texto, guardados } = _extrairMath(c);
+  return _restaurarMath(texto.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"), guardados);
+}
+
 function formatarLinha(l) {
-  return l
+  const { texto, guardados } = _extrairMath(l);
+  const html = texto
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/`([^`]+)`/g, "<code>$1</code>");
+  return _restaurarMath(html, guardados);
 }
 
 function formatarBlocoTexto(conteudo) {
@@ -1471,6 +1470,7 @@ function formatarTexto(textoRaw) {
   return _splitPartes(textoRaw).map(p => {
     if (p.tipo === "codigo")  return _renderCodeBlock(p.conteudo, p.lang);
     if (p.tipo === "formula") return renderizarFormulaEscolar(p.conteudo);
+    if (p.tipo === "math")    return renderizarMathBloco(p.conteudo);
     return formatarBlocoTexto(p.conteudo);
   }).join("");
 }
@@ -1490,6 +1490,12 @@ function typeWriter(el, textoRaw) {
       const bloco = document.createElement("div");
       bloco.innerHTML = renderizarFormulaEscolar(p.conteudo);
       el.appendChild(bloco);
+      proxParte();
+    } else if (p.tipo === "math") {
+      const bloco = document.createElement("div");
+      bloco.innerHTML = renderizarMathBloco(p.conteudo);
+      el.appendChild(bloco);
+      chat.scrollTop = chat.scrollHeight;
       proxParte();
     } else {
       const linhas = p.conteudo.split("\n");
@@ -1519,7 +1525,7 @@ function typeWriter(el, textoRaw) {
   proxParte();
 }
 
-function addMsg(txt, tipo) {
+function addMsg(txt, tipo, galeriaImagens) {
   const intro = chat.querySelector(".intro-screen");
   if (intro) intro.remove();
   const d = document.createElement("div");
@@ -1528,6 +1534,8 @@ function addMsg(txt, tipo) {
     const content = document.createElement("div");
     d.appendChild(content);
     d.appendChild(_criarAcoesMsg(txt));
+    const galeria = _criarGaleriaImagens(galeriaImagens);
+    if (galeria) d.appendChild(galeria);
     chat.appendChild(d);
     typeWriter(content, txt);
   } else {
@@ -1598,6 +1606,8 @@ function _buildSystem(cfg, ctx, userContent) {
     ...REGRAS.codigo.map(r => "- " + r),
     "REGRAS DE LINKS:",
     ...REGRAS.links.map(r => "- " + r),
+    "REGRAS DE MATEMATICA (LaTeX):",
+    ...REGRAS.matematica.map(r => "- " + r),
     infoEquipe,
     ctx,
     "",
@@ -1980,10 +1990,18 @@ async function enviar() {
     chat.appendChild(loadPesquisa);
     chat.scrollTop = chat.scrollHeight;
 
+    // 🖼️ Busca também imagens reais sobre o assunto pra ilustrar a resposta —
+    // SOMENTE quando o comando /Deep é usado (pesquisa comum não mostra galeria).
+    const usouDeep = eComandoDeep(txt);
+    const assuntoImagens = txt.replace(/^\/deep\b/i, "").trim();
+
     try {
-      const r = await chamarGroqCompound(getMensagens());
+      const [r, imagens] = await Promise.all([
+        chamarGroqCompound(getMensagens()),
+        usouDeep ? buscarImagensWeb(assuntoImagens, 6) : Promise.resolve(null)
+      ]);
       loadPesquisa.remove();
-      addMsg(r, "bot");
+      addMsg(r, "bot", imagens);
       const m = getMensagens();
       m.push({ role: "assistant", content: r });
       setMensagens(m);
@@ -2134,15 +2152,13 @@ function _tempoAteReset() {
   return min > 0 ? `${min}min` : `${seg}s`;
 }
 
-/* ===== 🎨 QUOTA DE GERAÇÃO DE IMAGEM — 3 imagens por conta a cada 24h ===== */
+/* ===== 🎨 QUOTA DE GERAÇÃO DE IMAGEM — limite de imagens a cada 24h ===== */
 const LS_QUOTA_IMAGEM        = "sar_quota_imagem_v1";
-const LIMITE_IMAGEM          = 51;
+const LIMITE_IMAGEM          = 5;
 const QUOTA_IMAGEM_JANELA_MS = 24 * 60 * 60 * 1000; // 24 horas
 
-// Usa a conta logada como chave da quota; visitante sem conta cai no balde "convidado"
 function _chaveQuotaImagem() {
-  const user = getUsuarioLogado();
-  return user ? chaveUsuario(user.nome) : "convidado";
+  return "convidado";
 }
 function _carregarQuotasImagem() {
   try { return JSON.parse(localStorage.getItem(LS_QUOTA_IMAGEM)) || {}; } catch { return {}; }
@@ -3059,7 +3075,7 @@ async function enviarComandoImagem(txt) {
   }
 
   if (!podeGerarImagem()) {
-    addMsg(`🚫 Limite de ${LIMITE_IMAGEM} imagens por conta a cada 24h atingido. Tente novamente em ${_tempoRestanteQuotaImagem()}.`, "bot");
+    addMsg(`🚫 Limite de ${LIMITE_IMAGEM} imagens a cada 24h atingido. Tente novamente em ${_tempoRestanteQuotaImagem()}.`, "bot");
     return;
   }
 
@@ -3159,7 +3175,7 @@ input.addEventListener("keypress", e => {
 (function init() {
   atualizarUI();
   aplicarConfig();
-  atualizarContaUI();
+  try { localStorage.removeItem("sar_user"); } catch (e) {}
   novoSlot();
   _mostrarIntro();
   renderHistorico();
