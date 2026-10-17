@@ -68,12 +68,6 @@
         </div>
       </section>
 
-      <!-- HUMOR TRACKER -->
-      <section class="sidebar-section" id="humorSection">
-        <div class="section-label">Estado emocional detectado</div>
-        <div id="humorPanel" class="humor-panel"></div>
-      </section>
-
     </div>
 
     <div class="sidebar-footer">
@@ -115,8 +109,8 @@
         <div class="logo-ring"></div>
         <div class="logo-dot"></div>
       </div>
-      <h2 class="intro-title">Olá! Eu sou a S.A.R 👋</h2>
-      <p class="intro-sub">Sua assistente inteligente. Como posso te ajudar hoje? ✨</p>
+      <h2 class="intro-title">Olá! Eu sou a S.A.R</h2>
+      <p class="intro-sub">Como posso te ajudar hoje?</p>
       <div class="intro-chips" id="introChips"></div>
     </div>
   </main>
@@ -126,12 +120,13 @@
     <!-- Preview de arquivo anexado -->
     <div id="attachPreview" class="attach-preview" style="display:none"></div>
     <div class="input-wrap">
-      <button class="attach-btn" id="attachBtn" aria-label="Anexar arquivo" title="Anexar PDF ou foto">
+      <button class="attach-btn" id="attachBtn" aria-label="Anexar arquivo" title="Anexar PDF, planilha, documento ou foto">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.5 7.5l-6 6a3.5 3.5 0 01-4.95-4.95l6.5-6.5a2 2 0 012.83 2.83L5.88 11.4a.5.5 0 01-.71-.71l5.5-5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <!-- Inputs ocultos -->
       <input type="file" id="inputPDF"  accept="application/pdf" style="display:none">
       <input type="file" id="inputFoto" accept="image/*,.heic,.heif,.avif,.bmp,.tiff,.webp" style="display:none" multiple>
+      <input type="file" id="inputDoc" accept=".xlsx,.xls,.xlsm,.ods,.csv,.tsv,.docx,.txt,.md,.json,.xml,.html" style="display:none" multiple>
       <textarea id="input" placeholder="Escreva sua mensagem… (use / para ver os comandos)" autocomplete="off" spellcheck="false" aria-label="Mensagem" rows="1"></textarea>
       <button class="send-btn" id="btn" aria-label="Enviar">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg>
@@ -149,6 +144,13 @@
       <div class="attach-opt-info">
         <span class="attach-opt-name">PDF</span>
         <span class="attach-opt-quota" id="quotaPDF">10 por sessão</span>
+      </div>
+    </button>
+    <button class="attach-option" id="optDoc">
+      <span class="attach-opt-icon">📊</span>
+      <div class="attach-opt-info">
+        <span class="attach-opt-name">Planilha / Documento</span>
+        <span class="attach-opt-quota" id="quotaDoc">Excel, Word, CSV, TXT</span>
       </div>
     </button>
     <button class="attach-option" id="optFoto">
@@ -207,13 +209,6 @@
         </label>
       </div>
 
-      <!-- PAINEL DE SENTIMENTOS NO MODAL -->
-      <div class="config-divider"></div>
-      <div class="config-label" style="margin-bottom:10px">Perfil emocional da sessão</div>
-      <div id="modalHumorDetalhado" class="humor-detalhado"></div>
-
-      <div class="config-divider"></div>
-      <button id="resetHumor" class="btn-outline-sm">Limpar dados emocionais</button>
     </div>
 
     <div class="modal-footer">
@@ -250,6 +245,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+<script src="coding-loader.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
