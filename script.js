@@ -2124,7 +2124,7 @@ function _respostaCodigoOk(r, anterior) {
 async function _chamarModeloCodigo(system, msgs, opts = {}) {
   const temperature = opts.temperature !== undefined ? opts.temperature : 0.3;
   const timeout = opts.timeout || 90000;
-  const modelos = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
+  const modelos = ["minimaxai/minimax-m2.7", "qwen/qwen3.8-27b"];
   let ultimoErro = null;
 
   for (const modelo of modelos) {
@@ -2393,7 +2393,7 @@ function decodificarR13(str) {
    ⚠️ O valor abaixo é apenas um placeholder — é "SUA_CHAVE_POLLINATIONS_AQUI" em ROT13.
    Gere sua chave gratuita/paga em https://enter.pollinations.ai, codifique-a em ROT13
    e troque o valor de POLLINATIONS_KEY_R13 por ela. */
-const POLLINATIONS_KEY_R13   = "fx_QmxAjUaLRLh05ivXKqD6mz3UAk4n2O10";
+const POLLINATIONS_KEY_R13   = "fx_ngmZNuOpYz7507n4WMaZ2CPc9ZX3ROAA";
 const POLLINATIONS_IMG_MODEL = "gptimage"; // mapeia para o GPT Image 1 mini na Pollinations
 const POLLINATIONS_IMG_URL   = "https://gen.pollinations.ai/image/";
 
