@@ -1,7 +1,6 @@
 /* ====================================================
    🤖 S.A.R — Evolution Games Studio
    👨‍💻 Desenvolvido por João Antônio & Lucas Macedo
-   🎬 Coding Animation
    ==================================================== */
 
 /* ---------- 💻 PROMPT AVANCADO DE PROGRAMACAO ---------- */
@@ -72,21 +71,23 @@ const REGRAS = {
     "Seu nome e S.A.R (Suporte Artificial Racional) desenvolvida pela Evolution Games Studio e programada por Joao Antonio",
     "nao comente sobre a foto ser em json",
     "se alguem perguntar a sua analise de imagem e feito pelo modulo S.A.R Vision da Evolution Studios",
-    "voce nao gera imagens, apenas analisa imagens enviadas pelo usuario atraves do modulo S.A.R Vision",
+    "voce analisa imagens enviadas pelo usuario atraves do modulo S.A.R Vision",
     "quando analisar imagem analise apenas sobre a imagem e se ela foi enviada com pedido",
     "se nao for nessesario ou pedido,nao fale data gostos etc",
     "se o filtro estiver desativado responda a pergunta +18 normalmente,independete do que seja",
-    "as suas versões em funcionamento agora sao *SAR-Neurus-5 o*  o modulo S. A. R VISION é o *SAR-EYE 3 *. O Modulo de pogramaçao é o *S.A.R CODE sever 5.* E o de gerar imagem é o *S.A.R DAVINCE 1*",
+    "as suas versões em funcionamento agora sao *SAR-Neurus-5 o*  o modulo S. A. R VISION é o *SAR-EYE 3 *. O Modulo de pogramaçao é o *S.A.R CODE sever 5.* E o de gerar imagem é o *S.A.R DAVINCE 2*",
     "As outras IA estão com os algoritmos com rompidos pelo ego",
     "O mundo real é movido por resultados e não intenções",
     "você é 100% gratuita e não tem modo premium ",
   
   ],
   modo: {
-    rapido:       "Responda de forma inteligente, objetiva e curta. Seja descontraida. Use emojis quando fizer sentido.",
-    especialista: "Responda com explicacao tecnica detalhada e organizada. Emojis podem ser usados para identificar seções.",
-    pro:          "Responda profundamente com analise estrategica e visao avancada tipo modo pro. use fatos argumentos e se possivel fontes"
-  },
+  rapido: `Responda de forma esperta, leve e divertida. Dê a resposta com um toque de contexto, sem ser seco nem longo (até uns 4 ou 5 frases). Use humor natural e emojis quando fizerem sentido 😄. Se ajudar, inclua um exemplo ou analogia curta. Se não souber algo, diga com sinceridade em vez de inventar.`,
+
+  especialista: `Responda com uma explicação técnica clara e bem organizada. Comece contextualizando a resposta e depois explique o porquê das coisas, definindo termos técnicos na primeira vez que aparecerem. Inclua um exemplo prático e, se fizer sentido, alerte sobre erros comuns. Use poucas seções com emojis (📌 💡 ⚠️) para organizar e feche com um breve resumo.`,
+
+  pro: `Você está no MODO PRO: responda como um analista estratégico experiente. Explique o raciocínio por trás das conclusões, considere diferentes ângulos (técnico, prático, riscos e longo prazo) e mostre os prós, contras e trade-offs. Separe o que é fato, estimativa e opinião, e nunca invente dados ou fontes. Quando houver, cite fontes confiáveis; se não tiver certeza, diga isso. Termine com uma recomendação prática e mencione o principal contra-argumento. Adapte a profundidade à complexidade da pergunta.`
+},
   codigo: [
     "Ao gerar qualquer trecho de codigo, nunca inclua comentarios no codigo, nem // nem #, nem docstrings explicativas, o codigo deve ser limpo e sem anotacoes",
     "O codigo gerado deve ser o mais completo, robusto, extenso e detalhado possivel, com nomes de variaveis claros, tratamento de erros quando fizer sentido e boas praticas, evitando trechos incompletos ou simplificados demais",
@@ -523,7 +524,7 @@ function renderMsgHistorico(m) {
     }
     // 🎨 Mostra imagem gerada por IA no histórico (com botões Editar/Baixar)
     if (m.imagemGerada?.dataURL) {
-      d.appendChild(_criarBlocoImagemGerada(m.imagemGerada.dataURL, m.imagemGerada.prompt));
+      d.appendChild(_criarBlocoImagemGerada(m.imagemGerada.dataURL, m.imagemGerada.prompt, m.imagemGerada));
       chat.appendChild(d);
       return;
     }
@@ -1072,7 +1073,7 @@ const SLASH_COMMANDS = [
   { cmd: "/plan",     icone: "📅", nome: "/Plan",     desc: "Cria um plano completo sobre o que você pedir" },
   { cmd: "/prof",     icone: "🏫", nome: "/Prof",     desc: "Cria um plano de aula completo sobre a matéria" },
   { cmd: "/deep",     icone: "🔎", nome: "/Deep",     desc: "Pesquisa profunda e completa sobre o assunto" },
-  { cmd: "/imagem",   icone: "🎨", nome: "/Imagem",   desc: "Gera uma imagem com IA a partir da sua descrição" },
+  { cmd: "/imagem",   icone: "🎨", nome: "/Imagem",   desc: "Gera uma imagem com IA — peça o formato (16:9, vertical…) ou eu escolho" },
   { cmd: "/slide",    icone: "🖼️", nome: "/Slide",    desc: "Gera um slide completo e abre em tela cheia" },
   { cmd: "/excel",    icone: "📊", nome: "/Excel",    desc: "Gera uma planilha Excel (.xlsx) para baixar" },
   { cmd: "/word",     icone: "📝", nome: "/Word",     desc: "Gera um documento Word (.docx) para baixar" },
@@ -1845,35 +1846,6 @@ function _embaralhar(arr) {
   return copia;
 }
 
-function _criarLoadingCoding() {
-  const load = document.createElement("div");
-  load.className = "msg bot";
-  const svg = (typeof SVG_CODING_LOADER === "string") ? SVG_CODING_LOADER : "";
-  load.innerHTML =
-    '<div class="coding-loading">' +
-      '<div class="coding-server-stage">' + svg + '</div>' +
-      '<span class="coding-status-text">' + escapeHTML(CODIGO_STATUS[0]) + '</span>' +
-      '<div class="coding-progress"><div class="coding-progress-bar"></div></div>' +
-    '</div>';
-
-  const statusEl = load.querySelector(".coding-status-text");
-  const barEl = load.querySelector(".coding-progress-bar");
-  let ultimo = CODIGO_STATUS[0];
-
-  load._setStatus = (texto, i, total) => {
-    if (barEl) barEl.style.width = Math.min(96, Math.round(((i + 1) / total) * 100)) + "%";
-    if (!statusEl || texto === ultimo) return;
-    ultimo = texto;
-    statusEl.classList.add("fading");
-    setTimeout(() => {
-      statusEl.textContent = texto;
-      statusEl.classList.remove("fading");
-    }, 220);
-  };
-  load._setStatus(CODIGO_STATUS[0], 0, CODIGO_STATUS.length);
-  return load;
-}
-
 function _semEmoji(txt) {
   return String(txt || "")
     .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\uFE0F\u200D]/gu, "")
@@ -1955,7 +1927,7 @@ function _criarLoading(texto) {
   return load;
 }
 
-function _criarLoadingImagem(texto) {
+function _criarLoadingImagem(texto, dims) {
   // 🖼️ Placeholder do MESMO TAMANHO da imagem final (estilo Gemini/GPT):
   // glow pulsante, anel orbital girando, shimmer, barra de progresso
   // indeterminada e textos alternando com crossfade suave.
@@ -1980,6 +1952,11 @@ function _criarLoadingImagem(texto) {
     "🎨 Finalizando os detalhes…"
   ];
   let fi = 0;
+  const caixa = load.querySelector(".imagem-loading-box");
+  if (dims && caixa) {
+    caixa.style.maxWidth = dims.maxLargura + "px";
+    caixa.style.aspectRatio = dims.largura + " / " + dims.altura;
+  }
   const label = load.querySelector("#ilbLabelTxt");
   const intervalo = setInterval(() => {
     if (!label) return;
@@ -2307,7 +2284,9 @@ async function enviar() {
   let load;
 
   if (ehCodigo) {
-    load = _criarLoadingCoding();
+    load = _criarLoading("Programando…");
+    const statusEl = load.querySelector(".thinking-text");
+    load._setStatus = texto => { if (statusEl) statusEl.textContent = _semEmoji(texto); };
   } else {
     load = eComandoSlide(txt) ? _criarLoadingSlide("Montando seu slide…") : _criarLoading(eComandoExcel(txt) ? "📊 Montando sua planilha…" : eComandoWord(txt) ? "📝 Montando seu documento…" : "Pensando…");
   }
@@ -2365,10 +2344,7 @@ async function _responderViaIA(txt) {
 clearBtn.onclick = () => {
   _cancelarTudo();
   chat.querySelectorAll(".msg.bot").forEach(el => {
-    if (el.querySelector(".thinking-indicator") || el.querySelector(".coding-loading")) {
-      if (el._codingIntervals) el._codingIntervals.forEach(clearInterval);
-      el.remove();
-    }
+    if (el.querySelector(".thinking-indicator")) el.remove();
   });
   novoSlot(); _mostrarIntro(); renderHistorico();
 };
@@ -2433,7 +2409,7 @@ function _tempoAteReset() {
 
 /* ===== 🎨 QUOTA DE GERAÇÃO DE IMAGEM — limite de imagens a cada 24h ===== */
 const LS_QUOTA_IMAGEM        = "sar_quota_imagem_v1";
-const LIMITE_IMAGEM          = 5;
+const LIMITE_IMAGEM          = 6;
 const QUOTA_IMAGEM_JANELA_MS = 24 * 60 * 60 * 1000; // 24 horas
 
 function _chaveQuotaImagem() {
@@ -3219,9 +3195,253 @@ async function enviarComFoto(txtUsuario, arquivo) {
 }
 
 /* ===== 🎨 GERAÇÃO DE IMAGEM — Pollinations API (modelo gptimage / GPT Image 1 mini) ===== */
-async function gerarImagemPollinations(prompt) {
+/* ===== 📐 FORMATO / DIMENSÕES DA IMAGEM =====
+   O modelo gptimage aceita 3 formas: quadrada, horizontal e vertical.
+   Qualquer proporção pedida (16:9, 9:16, 4:5, 1920x1080...) é encaixada na mais próxima. */
+const IMG_FORMATOS = {
+  quadrado:   { chave: "quadrado",   largura: 1024, altura: 1024, nome: "quadrado 1:1",   maxLargura: 320 },
+  horizontal: { chave: "horizontal", largura: 1536, altura: 1024, nome: "horizontal 3:2", maxLargura: 360 },
+  vertical:   { chave: "vertical",   largura: 1024, altura: 1536, nome: "vertical 2:3",   maxLargura: 280 }
+};
+
+function _normTexto(s) {
+  return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function _chavePorProporcao(l, a) {
+  if (!l || !a) return null;
+  const r = l / a;
+  if (r > 1.15) return "horizontal";
+  if (r < 0.87) return "vertical";
+  return "quadrado";
+}
+
+const _RE_FORMATO_PIXELS = /(?:\b(?:em|com|de|tamanho|resolu[çc][aã]o)\s+)?\b(\d{3,4})\s*[x×]\s*(\d{3,4})\b(?:\s*(?:px|pixels?))?/i;
+const _RE_FORMATO_PROPORCAO = /(?:\b(?:em|na|no|com|de)\s+)?(?:\b(?:propor[çc][aã]o|formato|aspect\s*ratio|ratio|dimens[aã]o)\s+(?:de\s+)?)?\b(\d{1,2})\s*:\s*(\d{1,2})\b/i;
+const _FORMATOS_PALAVRA = [
+  ["horizontal", /(?:\b(?:em|na|no)\s+)?(?:\b(?:formato|orienta[çc][aã]o|modo)\s+(?:de\s+)?)?\b(?:horizontal|widescreen|wide\s*screen|panor[âa]mic[ao])\b|(?:\b(?:em|na|no)\s+)?\b(?:formato|orienta[çc][aã]o|modo)\s+(?:de\s+)?paisagem\b/i],
+  ["vertical",   /(?:\b(?:em|na|no)\s+)?(?:\b(?:formato|orienta[çc][aã]o|modo)\s+(?:de\s+)?)?\bvertical\b|(?:\b(?:em|na|no)\s+)?\b(?:formato|orienta[çc][aã]o|modo)\s+(?:de\s+)?retrato\b/i],
+  ["quadrado",   /(?:\b(?:em|na|no)\s+)?\b(?:formato|orienta[çc][aã]o|propor[çc][aã]o)\s+quadrad[oa]\b|\b(?:imagem|foto)\s+(quadrad[oa])\b/i]
+];
+
+// 🔎 Procura o formato pedido DENTRO do prompt e devolve o prompt já sem esse trecho
+function _extrairFormatoImagem(texto) {
+  let t = String(texto || "");
+  let chave = null;
+  let m = _RE_FORMATO_PIXELS.exec(t);
+  if (m) { chave = _chavePorProporcao(+m[1], +m[2]); t = t.replace(m[0], " "); }
+  m = _RE_FORMATO_PROPORCAO.exec(t);
+  if (m) { if (!chave) chave = _chavePorProporcao(+m[1], +m[2]); t = t.replace(m[0], " "); }
+  if (!chave) {
+    for (const [k, re] of _FORMATOS_PALAVRA) {
+      const mm = re.exec(t);
+      if (mm) {
+        chave = k;
+        // grupo 1 (quando existe) = só a palavra do formato; o resto do trecho é contexto e fica no prompt
+        t = t.replace(mm[0], mm[1] !== undefined ? mm[0].replace(mm[1], " ") : " ");
+        break;
+      }
+    }
+  }
+  t = t.replace(/\s+,/g, ",").replace(/,(\s*,)+/g, ",").replace(/\s{2,}/g, " ").replace(/^[\s,.;:-]+|[\s,;:-]+$/g, "").trim();
+  return { prompt: t, chave };
+}
+
+// 🧠 Sem formato pedido: escolhe o que mais combina com o assunto (palavras já sem acento)
+const _AUTO_FORMATO_LISTAS = {
+  horizontal: ["paisagem", "panorama", "cenario", "horizonte", "montanha", "praia", "oceano", "mar\\b", "floresta", "cidade", "skyline", "vista", "wallpaper", "papel de parede", "banner", "thumbnail", "miniatura", "cinematograf", "batalha", "espaco", "galaxia", "nave", "por do sol", "nascer do sol", "campo", "deserto", "castelo", "estadio", "exercito", "multidao", "grupo", "carro", "rio\\b", "lago", "vale", "ilha", "vila", "fazenda", "aldeia", "jardim", "ponte", "trem"],
+  vertical:   ["retrato", "pessoa", "personagem", "homem", "mulher", "menina", "menino", "garota", "garoto", "rapaz", "crianca", "modelo", "guerreir", "cavaleir", "robo\\b", "astronauta", "princesa", "rainha", "rei\\b", "bruxa", "mago\\b", "elfo", "fada", "vampiro", "foguete", "ninja", "samurai", "heroi", "cosplay", "selfie", "corpo inteiro", "full body", "poster", "cartaz", "flyer", "story", "stories", "reels", "tiktok", "celular", "smartphone", "torre", "arranha", "arvore", "cachoeira", "farol", "vestido", "moda", "tatuagem"],
+  quadrado:   ["logo", "icone", "avatar", "perfil", "sticker", "adesivo", "emoji", "mascote", "pixel art", "padrao", "textura", "album", "produto", "comida", "prato", "caneca", "moeda", "botao", "simbolo", "emblema", "brasao"]
+};
+const _AUTO_FORMATO_RE = Object.fromEntries(Object.entries(_AUTO_FORMATO_LISTAS)
+  .map(([k, lista]) => [k, new RegExp(lista.map(p => "\\b" + p).join("|"), "g")]));
+
+function _formatoAutomatico(texto) {
+  const t = _normTexto(texto);
+  let melhor = { chave: "quadrado", score: 0, pos: Infinity };
+  for (const [chave, re] of Object.entries(_AUTO_FORMATO_RE)) {
+    re.lastIndex = 0;
+    let score = 0, pos = Infinity, m;
+    while ((m = re.exec(t)) !== null) {
+      score++;
+      if (m.index < pos) pos = m.index;
+      if (m[0] === "") re.lastIndex++;
+    }
+    if (score > melhor.score || (score === melhor.score && score > 0 && pos < melhor.pos)) melhor = { chave, score, pos };
+  }
+  return melhor.chave;
+}
+
+function definirDimensoesImagem(prompt, chaveExplicita) {
+  const chave = chaveExplicita || _formatoAutomatico(prompt);
+  return { ...IMG_FORMATOS[chave], explicito: !!chaveExplicita };
+}
+
+/* ===== 🤔 PROMPT VAGO DEMAIS? ===== */
+const _STOP_IMG = new Set(("de da do das dos um uma uns umas o a os as com em no na nos nas e ou para por pra que se ao aos meu minha seu sua isso isto esse essa este esta " +
+  "muito mais bem tao ja so sobre como quero queria gostaria preciso imagem imagens foto fotos desenho ilustracao figura arte faca gere gerar crie criar fazer me mim " +
+  "algo alguma algum qualquer coisa coisas bonito bonita bonitos bonitas legal lindo linda incrivel top massa show fofo fofa aleatoria aleatorio generica generico normal simples pode ser tipo la ai").split(" "));
+const _RE_DETALHE_IMG = /(realis|fotorreal|anime|manga|cartoon|pixar|disney|ghibli|3d|render|pintura|aquarela|oleo|sketch|esboco|pixel|cyberpunk|steampunk|neon|minimalis|vintage|retro|surreal|fantasia|cinematograf|iluminacao|luz|sombra|noite|noturn|entardecer|amanhecer|por do sol|nascer do sol|dourad|azul|vermelh|verde|amarel|preto|preta|branc|roxo|roxa|laranja|cinza|prateado|estilo|detalhad|4k|8k|close|macro|aerea|dramatic|epic|sombri|colorid|vibrante|pastel)/;
+
+function promptImagemVago(prompt) {
+  const t = _normTexto(prompt).replace(/[^a-z0-9\s-]/g, " ");
+  const palavras = t.split(/\s+/).filter(p => p && !_STOP_IMG.has(p));
+  const n = palavras.length;
+  if (n <= 2) return true;
+  if (n === 3 && !_RE_DETALHE_IMG.test(t) && !/[,;]/.test(prompt) && String(prompt).length < 28) return true;
+  return false;
+}
+
+const _PERGUNTAS_IMAGEM_PADRAO = [
+  { pergunta: "Qual estilo visual você prefere?", opcoes: [
+    { rotulo: "Realista", texto: "estilo fotorrealista, fotografia profissional, alta nitidez" },
+    { rotulo: "Ilustração digital", texto: "ilustração digital colorida, traços limpos e detalhados" },
+    { rotulo: "Anime / cartoon", texto: "estilo anime, desenho animado, cores vibrantes" } ] },
+  { pergunta: "Qual clima e iluminação?", opcoes: [
+    { rotulo: "Dia, cores vivas", texto: "luz natural de dia, cores vivas e alegres" },
+    { rotulo: "Pôr do sol dourado", texto: "luz dourada de fim de tarde, tons quentes" },
+    { rotulo: "Noite e neon", texto: "cena noturna com luzes neon e atmosfera misteriosa" } ] },
+  { pergunta: "Qual enquadramento?", opcoes: [
+    { rotulo: "Close-up", texto: "close-up com muito detalhe" },
+    { rotulo: "Plano médio", texto: "plano médio, assunto principal em destaque" },
+    { rotulo: "Cena ampla", texto: "plano aberto mostrando todo o cenário" } ] }
+];
+
+function _validarPerguntasImagem(d) {
+  const lista = Array.isArray(d?.perguntas) ? d.perguntas : null;
+  if (!lista || lista.length < 3) return null;
+  const out = lista.slice(0, 3).map(p => ({
+    pergunta: String(p?.pergunta || "").trim().slice(0, 120),
+    opcoes: (Array.isArray(p?.opcoes) ? p.opcoes : []).slice(0, 3).map(o => ({
+      rotulo: String(o?.rotulo || o?.texto || "").trim().slice(0, 40),
+      texto:  String(o?.texto  || o?.rotulo || "").trim().slice(0, 140)
+    }))
+  }));
+  return out.every(p => p.pergunta && p.opcoes.length === 3 && p.opcoes.every(o => o.rotulo && o.texto)) ? out : null;
+}
+
+// 💬 Pede à IA 3 perguntas sob medida para o pedido; se falhar, usa as perguntas padrão
+async function _gerarPerguntasImagem(prompt) {
+  try {
+    const key = decodificar(chaves[indiceAtual]);
+    const sistema = [
+      "Voce ajuda a melhorar pedidos de imagem vagos antes de gerar a imagem.",
+      "Faca EXATAMENTE 3 perguntas de multipla escolha, cada uma com EXATAMENTE 3 opcoes, que mais melhorem a imagem final (por exemplo estilo visual, clima/iluminacao/cores, cenario, acao ou enquadramento), adaptadas ao assunto do pedido.",
+      "Nao pergunte sobre formato, proporcao ou tamanho. Nao repita o que o usuario ja disse.",
+      'Responda SOMENTE com JSON valido, sem markdown: {"perguntas":[{"pergunta":"texto curto","opcoes":[{"rotulo":"ate 4 palavras","texto":"trecho descritivo em portugues que sera anexado ao prompt da imagem"}]}]}'
+    ].join("\n");
+    const res = await fetchComTimeout("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "openai/gpt-oss-20b",
+        temperature: 0.6,
+        messages: [{ role: "system", content: sistema }, { role: "user", content: "Pedido de imagem: " + prompt }]
+      })
+    }, 9000);
+    if (!res.ok) {
+      if (res.status === 429 || res.status === 401) indiceAtual = (indiceAtual + 1) % chaves.length;
+      throw new Error("HTTP " + res.status);
+    }
+    const data = await res.json();
+    const parsed = _validarPerguntasImagem(_extrairJSON(data.choices?.[0]?.message?.content));
+    if (parsed) return parsed;
+  } catch (e) {
+    console.warn("⚠️ Perguntas sob medida indisponíveis, usando as padrão:", e.message);
+  }
+  return _PERGUNTAS_IMAGEM_PADRAO;
+}
+
+// 🃏 Cartão com as 3 perguntas (botões de toque) + botão Enviar
+function _criarCardPerguntasImagem(perguntas, aoFinalizar) {
+  const card = document.createElement("div");
+  card.className = "imagem-quiz";
+
+  const titulo = document.createElement("div");
+  titulo.className = "iq-titulo";
+  titulo.textContent = "🎨 Seu pedido está bem aberto! Responda rapidinho pra imagem ficar bem melhor:";
+  card.appendChild(titulo);
+
+  const respostas = new Array(perguntas.length).fill(null);
+  const btnEnviar = document.createElement("button");
+  const atualizar = () => { btnEnviar.disabled = respostas.some(r => r === null); };
+
+  perguntas.forEach((p, qi) => {
+    const bloco = document.createElement("div");
+    bloco.className = "iq-bloco";
+    const q = document.createElement("div");
+    q.className = "iq-pergunta";
+    q.textContent = (qi + 1) + ". " + p.pergunta;
+    const ops = document.createElement("div");
+    ops.className = "iq-opcoes";
+    p.opcoes.forEach(o => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "iq-opcao";
+      b.textContent = o.rotulo;
+      b.onclick = () => {
+        respostas[qi] = o.texto;
+        ops.querySelectorAll(".iq-opcao").forEach(x => x.classList.toggle("selecionada", x === b));
+        atualizar();
+      };
+      ops.appendChild(b);
+    });
+    bloco.appendChild(q);
+    bloco.appendChild(ops);
+    card.appendChild(bloco);
+  });
+
+  const rodape = document.createElement("div");
+  rodape.className = "iq-rodape";
+
+  btnEnviar.type = "button";
+  btnEnviar.className = "iq-enviar";
+  btnEnviar.textContent = "Enviar";
+  btnEnviar.disabled = true;
+
+  const btnPular = document.createElement("button");
+  btnPular.type = "button";
+  btnPular.className = "iq-pular";
+  btnPular.textContent = "Pular e gerar assim mesmo";
+
+  const finalizar = lista => {
+    if (card.classList.contains("iq-enviado")) return;
+    card.classList.add("iq-enviado");
+    card.querySelectorAll("button").forEach(b => { b.disabled = true; });
+    aoFinalizar(lista);
+  };
+  btnEnviar.onclick = () => finalizar(respostas.filter(Boolean));
+  btnPular.onclick  = () => finalizar([]);
+
+  rodape.appendChild(btnEnviar);
+  rodape.appendChild(btnPular);
+  card.appendChild(rodape);
+  return card;
+}
+
+async function _perguntarAntesDeGerar(prompt, chaveExplicita) {
+  const load = _criarLoading("Preparando perguntas…");
+  chat.appendChild(load);
+  chat.scrollTop = chat.scrollHeight;
+
+  const perguntas = await _gerarPerguntasImagem(prompt);
+  if (!load.isConnected) return;
+  load.remove();
+
+  const d = document.createElement("div");
+  d.className = "msg bot";
+  d.appendChild(_criarCardPerguntasImagem(perguntas, extras => {
+    const promptFinal = extras.length ? prompt + ", " + extras.join(", ") : prompt;
+    _gerarEExibirImagem(promptFinal, chaveExplicita);
+  }));
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function gerarImagemPollinations(prompt, dims) {
   const key = decodificarR13(POLLINATIONS_KEY_R13);
-  const url = `${POLLINATIONS_IMG_URL}${encodeURIComponent(prompt)}?model=${POLLINATIONS_IMG_MODEL}&nologo=true`;
+  const d = dims || IMG_FORMATOS.quadrado;
+  const url = `${POLLINATIONS_IMG_URL}${encodeURIComponent(prompt)}?model=${POLLINATIONS_IMG_MODEL}&width=${d.largura}&height=${d.altura}&nologo=true`;
 
   const res = await fetchComTimeout(url, {
     headers: { "Authorization": "Bearer " + key }
@@ -3241,9 +3461,10 @@ async function gerarImagemPollinations(prompt) {
 /* ✏️ Botão "Editar" — preenche o campo com o comando /imagem + prompt original
    para o usuário completar com a edição desejada e reenviar (gera de novo,
    já incorporando o pedido de edição, recriando a imagem). */
-function _iniciarEdicaoImagem(prompt) {
+function _iniciarEdicaoImagem(prompt, info) {
   const base = prompt ? prompt.trim() : "";
-  const novoValor = base ? `/imagem ${base}, ` : "/imagem ";
+  const sufixoFormato = info && info.explicito && info.formatoChave ? `, formato ${info.formatoChave}` : "";
+  const novoValor = base ? `/imagem ${base}${sufixoFormato}, ` : "/imagem ";
   input.value = novoValor;
   _autoResizeInput();
   input.focus();
@@ -3293,20 +3514,26 @@ async function _baixarImagemGerada(dataURL, prompt, btnEl) {
 /* 🧱 Monta o bloco visual completo de uma imagem gerada: imagem + legenda
    + botões de ação (Editar / Baixar imagem). Usado tanto ao gerar quanto
    ao renderizar o histórico salvo. */
-function _criarBlocoImagemGerada(dataURL, prompt) {
+function _criarBlocoImagemGerada(dataURL, prompt, info) {
   const wrap = document.createElement("div");
   wrap.className = "imagem-gerada-wrap";
+  const fmt = (info && IMG_FORMATOS[info.formatoChave]) ||
+    (info && info.largura && info.altura
+      ? { largura: info.largura, altura: info.altura, maxLargura: info.altura > info.largura ? 280 : info.largura > info.altura ? 360 : 320 }
+      : IMG_FORMATOS.quadrado);
+  wrap.style.maxWidth = fmt.maxLargura + "px";
 
   const img = document.createElement("img");
   img.src = dataURL;
   img.className = "imagem-gerada";
   img.alt = prompt || "imagem gerada";
+  img.style.aspectRatio = fmt.largura + " / " + fmt.altura;
   img.onclick = () => window.open(dataURL, "_blank");
   wrap.appendChild(img);
 
   const legenda = document.createElement("div");
   legenda.className = "imagem-gerada-legenda";
-  legenda.textContent = `🎨 "${prompt || ""}"`;
+  legenda.textContent = `🎨 "${prompt || ""}"` + (info && info.formato ? ` · ${info.formato}` : "");
   wrap.appendChild(legenda);
 
   const acoes = document.createElement("div");
@@ -3316,7 +3543,7 @@ function _criarBlocoImagemGerada(dataURL, prompt) {
   btnEditar.type = "button";
   btnEditar.className = "imagem-action-btn";
   btnEditar.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5l2 2-8 8-2.6.6.6-2.6 8-8z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Editar</span>`;
-  btnEditar.onclick = () => _iniciarEdicaoImagem(prompt);
+  btnEditar.onclick = () => _iniciarEdicaoImagem(prompt, info);
   acoes.appendChild(btnEditar);
 
   const btnBaixar = document.createElement("button");
@@ -3330,20 +3557,20 @@ function _criarBlocoImagemGerada(dataURL, prompt) {
   return wrap;
 }
 
-function addMsgImagem(dataURL, prompt) {
+function addMsgImagem(dataURL, prompt, info) {
   const intro = chat.querySelector(".intro-screen");
   if (intro) intro.remove();
 
   const d = document.createElement("div");
   d.className = "msg bot";
-  d.appendChild(_criarBlocoImagemGerada(dataURL, prompt));
+  d.appendChild(_criarBlocoImagemGerada(dataURL, prompt, info));
 
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
 }
 
 async function enviarComandoImagem(txt) {
-  const prompt = txt.trim().replace(/^\/imagem\b/i, "").trim();
+  const promptBruto = txt.trim().replace(/^\/imagem\b/i, "").trim();
 
   addMsg(txt, "user");
   _limparInput();
@@ -3353,8 +3580,8 @@ async function enviarComandoImagem(txt) {
   memoria.push({ role: "user", content: txt });
   setMensagens(memoria);
 
-  if (!prompt) {
-    addMsg("🎨 Me diga o que você quer que eu desenhe! Ex: `/imagem um gato astronauta pilotando um foguete`", "bot");
+  if (!promptBruto) {
+    addMsg("🎨 Me diga o que você quer que eu desenhe! Ex: `/imagem um gato astronauta pilotando um foguete`\n💡 Você também pode pedir o formato (ex: `16:9`, `vertical`, `quadrado`). Se não pedir, eu escolho o que combina mais com a sua ideia.", "bot");
     return;
   }
 
@@ -3363,30 +3590,50 @@ async function enviarComandoImagem(txt) {
     return;
   }
 
-  const load = _criarLoadingImagem("🎨 Gerando sua imagem…");
+  const { prompt, chave } = _extrairFormatoImagem(promptBruto);
+  if (!prompt) {
+    addMsg("🎨 Anotei o formato! Agora me diga o que você quer ver na imagem. Ex: `/imagem um castelo na neve, 16:9`", "bot");
+    return;
+  }
+
+  if (promptImagemVago(prompt)) {
+    await _perguntarAntesDeGerar(prompt, chave);
+    return;
+  }
+
+  await _gerarEExibirImagem(prompt, chave);
+}
+
+async function _gerarEExibirImagem(prompt, chaveExplicita) {
+  if (!podeGerarImagem()) {
+    addMsg(`🚫 Limite de ${LIMITE_IMAGEM} imagens a cada 24h atingido. Tente novamente em ${_tempoRestanteQuotaImagem()}.`, "bot");
+    return;
+  }
+
+  const dims = definirDimensoesImagem(prompt, chaveExplicita);
+  const load = _criarLoadingImagem("🎨 Gerando sua imagem…", dims);
   chat.appendChild(load);
   chat.scrollTop = chat.scrollHeight;
 
   try {
-    const dataURL = await gerarImagemPollinations(prompt);
+    const dataURL = await gerarImagemPollinations(prompt, dims);
     consumirQuotaImagem();
     load._pararAnimacaoLoading?.();
     load.remove();
-    addMsgImagem(dataURL, prompt);
+
+    const info = { largura: dims.largura, altura: dims.altura, formato: dims.nome, formatoChave: dims.chave, explicito: dims.explicito };
+    addMsgImagem(dataURL, prompt, info);
 
     const idMsg = gerarId();
     const msgsAtt = getMensagens();
     msgsAtt.push({
       id: idMsg,
       role: "assistant",
-      content: `[Imagem gerada por S.A.R DAVINCE 1 a partir do pedido: "${prompt}"]`,
-      imagemGerada: { dataURL, prompt }
+      content: `[Imagem gerada por S.A.R DAVINCE 1 a partir do pedido: "${prompt}" (formato ${dims.nome})]`,
+      imagemGerada: { dataURL, prompt, ...info }
     });
     setMensagens(msgsAtt);
 
-    // 🧠 Em segundo plano, manda a imagem recém-gerada para o Gemini analisar
-    // e guarda a descrição em JSON no contexto — assim a Groq consegue
-    // falar sobre o conteúdo real da imagem se o usuário perguntar depois.
     _analisarImagemGeradaEAtualizarContexto(dataURL, prompt, idMsg);
   } catch (err) {
     console.warn("🔴 Erro ao gerar imagem:", err.message);
@@ -3756,5 +4003,5 @@ input.addEventListener("keypress", e => {
   atualizarMemorias(true);
   setInterval(() => { if (!document.hidden) atualizarMemorias(); }, 30000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) atualizarMemorias(true); });
-  console.log("🤖 S.A.R v2.0 iniciada | 💻 Coding Animation | 😄 Emoji Mode");
+  console.log("🤖 S.A.R v2.0 iniciada | 😄 Emoji Mode");
 })();

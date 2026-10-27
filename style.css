@@ -1026,9 +1026,9 @@ strong { color: var(--accent-2); font-weight: 600; }
 }
 
 /* ===== IMAGEM GERADA POR IA ===== */
-.imagem-gerada-wrap { margin-bottom: 6px; }
+.imagem-gerada-wrap { margin-bottom: 6px; width: 100%; max-width: 320px; }
 .imagem-gerada {
-  max-width: 320px;
+  max-width: 100%;
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
@@ -1051,7 +1051,6 @@ strong { color: var(--accent-2); font-weight: 600; }
   display: flex;
   gap: 8px;
   margin-top: 10px;
-  max-width: 320px;
 }
 .imagem-action-btn {
   display: flex;
@@ -1257,80 +1256,6 @@ strong { color: var(--accent-2); font-weight: 600; }
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(124,106,255,.2);
 }
-/* ===== LOADER DE PROGRAMAÇÃO — servidor flutuante + status ===== */
-.coding-loading {
-  width: 100%;
-  display: flex; flex-direction: column; align-items: center;
-  gap: 12px; padding: 16px 12px 16px;
-  border: 1px solid rgba(124,106,255,.22);
-  border-radius: 16px;
-  background:
-    radial-gradient(120% 90% at 50% 0%, rgba(124,106,255,.14), transparent 70%),
-    var(--bg);
-  overflow: hidden;
-}
-.coding-server-stage {
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; padding-top: 8px;
-}
-.coding-status-text {
-  font-size: .88rem; font-weight: 600; letter-spacing: .01em;
-  color: var(--accent-2); text-align: center; min-height: 1.2em;
-  transition: opacity .22s ease, transform .22s ease;
-}
-.coding-status-text.fading { opacity: 0; transform: translateY(4px); }
-.coding-progress {
-  width: 100%; max-width: 220px; height: 3px;
-  border-radius: 3px; background: rgba(124,106,255,.15);
-  overflow: hidden;
-}
-.coding-progress-bar {
-  height: 100%; width: 6%;
-  background: linear-gradient(90deg, var(--accent-2), #7dd3fc);
-  border-radius: 3px;
-  box-shadow: 0 0 8px rgba(124,106,255,.6);
-  transition: width .6s ease;
-}
-
-/* SVG do servidor — From Uiverse.io by Juanes200122
-   (o "zoom: 0.3" original virou largura/altura fixas, equivalentes e mais compatíveis) */
-.coding-server-stage #svg_svg {
-  width: 143px; height: 173px; flex-shrink: 0;
-}
-.estrobo_animation {
-  animation:
-    floatAndBounce 4s infinite ease-in-out,
-    strobe 0.8s infinite;
-}
-.estrobo_animationV2 {
-  animation:
-    floatAndBounce 4s infinite ease-in-out,
-    strobev2 0.8s infinite;
-}
-#float_server {
-  animation: floatAndBounce 4s infinite ease-in-out;
-}
-@keyframes floatAndBounce {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-20px); }
-}
-@keyframes strobe {
-  0%, 50%, 100% { fill: #17e300; }
-  25%, 75%      { fill: #17e300b4; }
-}
-@keyframes strobev2 {
-  0%, 50%, 100% { fill: rgb(255, 95, 74); }
-  25%, 75%      { fill: rgb(16, 53, 115); }
-}
-@keyframes animateGradient {
-  0%   { stop-color: #313f8773; }
-  50%  { stop-color: #040d3a; }
-  100% { stop-color: #313f8773; }
-}
-#paint13_linear_163_1030 stop {
-  animation: animateGradient 4s infinite alternate;
-}
-
 /* ====================================================
    ⚽ FOOTBALL CARD — placar e resultados
    ==================================================== */
@@ -1542,3 +1467,51 @@ strong { color: var(--accent-2); font-weight: 600; }
 .arquivo-card-nome{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .arquivo-card-desc{font-size:12px;color:var(--text-2);margin-top:2px}
 .arquivo-card-btn:disabled{opacity:.6}
+
+/* ===== PERGUNTAS ANTES DE GERAR A IMAGEM ===== */
+.imagem-quiz {
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(124,106,255,.25);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(124,106,255,.12), transparent 70%),
+    var(--bg);
+}
+.iq-titulo { font-size: .8rem; font-weight: 600; color: var(--accent-2); line-height: 1.45; }
+.iq-bloco { display: flex; flex-direction: column; gap: 8px; }
+.iq-pergunta { font-size: .82rem; font-weight: 600; color: var(--text); }
+.iq-opcoes { display: flex; flex-direction: column; gap: 6px; }
+.iq-opcao {
+  width: 100%; text-align: left;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  color: var(--text-2); font-family: var(--font); font-size: .8rem;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s, transform .12s;
+}
+.iq-opcao:hover { border-color: rgba(124,106,255,.5); color: var(--text); }
+.iq-opcao:active { transform: scale(.98); }
+.iq-opcao.selecionada {
+  background: linear-gradient(90deg, rgba(124,106,255,.22), rgba(124,106,255,.08));
+  border-color: var(--accent); color: var(--text);
+}
+.iq-rodape { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+.iq-enviar {
+  padding: 11px 14px; border-radius: 11px; border: none;
+  background: var(--accent-grad); color: #fff;
+  font-family: var(--font); font-size: .85rem; font-weight: 600;
+  cursor: pointer; box-shadow: 0 4px 14px var(--accent-glow);
+  transition: opacity .2s, filter .2s, transform .12s;
+}
+.iq-enviar:hover:not(:disabled) { filter: brightness(1.1); }
+.iq-enviar:active:not(:disabled) { transform: scale(.98); }
+.iq-enviar:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+.iq-pular {
+  background: none; border: none; color: var(--text-3);
+  font-family: var(--font); font-size: .72rem; cursor: pointer; padding: 4px;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.iq-pular:hover { color: var(--text-2); }
+.imagem-quiz.iq-enviado { opacity: .55; pointer-events: none; }
