@@ -179,36 +179,54 @@
 
 <!-- MODAL CONFIGURAÇÕES -->
 <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Configurações">
-  <div class="modal-box">
+  <div class="modal-box settings-box">
     <div class="modal-header">
-      <span class="modal-title">Configurações</span>
-      <button class="icon-btn" id="modalClose" aria-label="Fechar">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </button>
+      <div class="settings-head"><span class="modal-title">Configurações</span><span class="settings-sub">Deixe a S.A.R do seu jeito</span></div>
+      <button class="icon-btn" id="modalClose" aria-label="Fechar"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
 
     <div class="modal-body">
-      <div class="config-row">
-        <div class="config-info">
-          <span class="config-label">Filtro +18</span>
-          <span class="config-desc">Oculta automaticamente conteúdo adulto nas respostas</span>
+      <div class="cfg-group-title">Aparência</div>
+      <div class="cfg-card">
+        <div class="config-row">
+          <div class="cfg-lead"><span class="cfg-icon ico-glass">✨</span>
+            <div class="config-info"><span class="config-label">Glass Mode</span><span class="config-desc">Vidro líquido estilo iOS no cabeçalho, barra de mensagem, menus, janelas e gráficos</span></div></div>
+          <label class="toggle-switch"><input type="checkbox" id="toggleGlass"><span class="toggle-slider"></span></label>
         </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="toggleAdult" checked>
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="config-row">
-        <div class="config-info">
-          <span class="config-label">Links clicáveis</span>
-          <span class="config-desc">Converte URLs em links clicáveis automaticamente</span>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="toggleLinks" checked>
-          <span class="toggle-slider"></span>
-        </label>
       </div>
 
+      <div class="cfg-group-title">Conteúdo</div>
+      <div class="cfg-card">
+        <div class="config-row">
+          <div class="cfg-lead"><span class="cfg-icon ico-red">🔞</span>
+            <div class="config-info"><span class="config-label">Filtro +18</span><span class="config-desc">Oculta automaticamente conteúdo adulto nas respostas</span></div></div>
+          <label class="toggle-switch"><input type="checkbox" id="toggleAdult" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="config-row">
+          <div class="cfg-lead"><span class="cfg-icon ico-blue">🔗</span>
+            <div class="config-info"><span class="config-label">Links clicáveis</span><span class="config-desc">Converte URLs em links clicáveis automaticamente</span></div></div>
+          <label class="toggle-switch"><input type="checkbox" id="toggleLinks" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <div class="cfg-group-title">Memória e dados</div>
+      <div class="cfg-card">
+        <div class="config-row">
+          <div class="cfg-lead"><span class="cfg-icon ico-green">📤</span>
+            <div class="config-info"><span class="config-label">Exportar minhas informações</span><span class="config-desc">Copie ou baixe só o que está salvo sobre você: perfil, gostos e jeito de falar</span></div></div>
+          <button class="config-btn " id="btnExportar" type="button">Exportar</button>
+        </div>
+        <div class="config-row">
+          <div class="cfg-lead"><span class="cfg-icon ico-amber">📥</span>
+            <div class="config-info"><span class="config-label">Importar minhas informações</span><span class="config-desc">Cole texto ou JSON com informações suas para trazer para cá</span></div></div>
+          <button class="config-btn " id="btnImportar" type="button">Importar</button>
+        </div>
+        <div class="config-row">
+          <div class="cfg-lead"><span class="cfg-icon ico-red">🗑️</span>
+            <div class="config-info"><span class="config-label">Apagar memória do perfil</span><span class="config-desc">Remove o que foi aprendido sobre você neste aparelho</span></div></div>
+          <button class="config-btn danger" id="btnLimparPerfil" type="button">Apagar</button>
+        </div>
+      </div>
     </div>
 
     <div class="modal-footer">
@@ -244,10 +262,47 @@
   </div>
 </div>
 
+<!-- MODAL EXPORTAR -->
+<div class="modal-overlay" id="exportModalOverlay" role="dialog" aria-modal="true" aria-label="Exportar minhas informações">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Exportar minhas informações</span>
+      <button class="icon-btn" id="exportModalClose" aria-label="Fechar"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="mem-info" style="margin:0 0 10px">Só o que está guardado sobre você. Nada de conversas, da IA ou do código.</div>
+      <textarea id="exportTexto" class="mem-textarea" readonly spellcheck="false"></textarea>
+      <div class="mem-actions">
+        <button class="config-btn primary" id="exportCopiar" type="button">Copiar texto</button>
+        <button class="config-btn" id="exportBaixar" type="button">Baixar .md</button>
+        <button class="config-btn" id="exportBaixarJson" type="button">Baixar .json</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR -->
+<div class="modal-overlay" id="importModalOverlay" role="dialog" aria-modal="true" aria-label="Importar minhas informações">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Importar minhas informações</span>
+      <button class="icon-btn" id="importModalClose" aria-label="Fechar"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="mem-opts"><label><input type="checkbox" id="impSubstituir"> Substituir o que já está salvo (em vez de somar)</label></div>
+      <textarea id="importTexto" class="mem-textarea" spellcheck="false" placeholder="Cole aqui o texto em Markdown ou JSON com as suas informações…"></textarea>
+      <div class="mem-actions">
+        <button class="config-btn primary" id="importConfirmar" type="button">Importar</button>
+        <label class="config-btn" style="cursor:pointer">Escolher arquivo<input type="file" id="importArquivo" style="display:none"></label>
+      </div>
+      <div class="mem-info" id="importInfo"></div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

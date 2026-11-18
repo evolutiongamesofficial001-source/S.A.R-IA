@@ -551,9 +551,10 @@ code {
 }
 .chat-table {
   border-collapse: collapse;
-  width: max-content;
-  min-width: 100%;
-  font-size: .72rem;
+  width: 100%;
+  max-width: 100%;
+  table-layout: auto;
+  font-size: .74rem;
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
@@ -1446,28 +1447,6 @@ strong { color: var(--accent-2); font-weight: 600; }
 }
 .chat-table .katex { font-size: 1em; }
 
-/* ===== SLIDE (cartão + tela cheia) ===== */
-.slide-card{width:100%;max-width:100%;border:1px solid var(--border-2);border-radius:var(--radius);background:var(--surface-2);overflow:hidden;margin-top:4px}
-.slide-card-thumb{position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer}
-.slide-card-thumb iframe{position:absolute;top:0;left:0;width:1080px;height:720px;border:0;transform-origin:top left;pointer-events:none}
-.slide-card-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;flex-wrap:wrap}
-.slide-card-title{font-size:12px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
-.slide-card-actions{display:flex;gap:6px}
-.slide-card-actions button,.arquivo-card-btn{background:var(--accent-grad);color:#fff;border:0;border-radius:var(--radius-sm);padding:7px 11px;font:600 12px var(--font);cursor:pointer}
-.slide-card-actions button[data-a="dl"]{background:var(--surface-3);color:var(--text-2)}
-.slide-fs{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center}
-.slide-fs-stage{position:relative;overflow:hidden;flex-shrink:0}
-.slide-fs-stage iframe{position:absolute;top:0;left:0;width:1080px;height:720px;border:0;transform-origin:top left;background:#fff}
-.slide-fs-close{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:2;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.55);color:#fff;font-size:16px;cursor:pointer}
-
-/* ===== ARQUIVO GERADO (Excel/Word) ===== */
-.arquivo-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-2);border-radius:var(--radius);background:var(--surface-2);margin-top:4px}
-.arquivo-card-icone{font-size:28px;flex-shrink:0}
-.arquivo-card-info{flex:1;min-width:0}
-.arquivo-card-nome{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.arquivo-card-desc{font-size:12px;color:var(--text-2);margin-top:2px}
-.arquivo-card-btn:disabled{opacity:.6}
-
 /* ===== PERGUNTAS ANTES DE GERAR A IMAGEM ===== */
 .imagem-quiz {
   width: 100%; max-width: 420px;
@@ -1515,3 +1494,162 @@ strong { color: var(--accent-2); font-weight: 600; }
 }
 .iq-pular:hover { color: var(--text-2); }
 .imagem-quiz.iq-enviado { opacity: .55; pointer-events: none; }
+
+/* ===== TABELAS: quebra de linha dentro da tela ===== */
+.table-wrapper{overflow-x:auto;max-width:100%;width:100%}
+.chat-table{width:100%!important;min-width:0!important}
+/* nunca parte palavra no meio: se não couber, a tabela rola de lado */
+.chat-table th,.chat-table td{white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important;vertical-align:top;line-height:1.4}
+.chat-table th.c-s,.chat-table td.c-s{white-space:nowrap!important;width:1%}
+.chat-table th.c-l,.chat-table td.c-l{min-width:150px}
+.chat-table.tbl-sm{font-size:.64rem}
+.chat-table.tbl-sm th,.chat-table.tbl-sm td{padding:5px 6px}
+.chat-table.tbl-sm th.c-l,.chat-table.tbl-sm td.c-l{min-width:120px}
+.chat-table.tbl-xs{font-size:.56rem}
+.chat-table.tbl-xs th,.chat-table.tbl-xs td{padding:4px 5px}
+.chat-table.tbl-xs th.c-l,.chat-table.tbl-xs td.c-l{min-width:100px}
+.chat-table.tbl-xs th.c-s,.chat-table.tbl-xs td.c-s{white-space:normal!important;width:auto}
+
+/* ===== CONFIG: memória, exportar e importar ===== */
+.config-section-label{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);padding:16px 0 4px}
+.config-btn{flex-shrink:0;padding:7px 13px;border-radius:9px;border:1px solid var(--border-2);background:var(--surface-3);color:var(--text);font:600 .76rem var(--font);cursor:pointer;transition:.2s}
+.config-btn:hover{border-color:var(--accent);color:var(--accent-2);background:rgba(124,106,255,.1)}
+.config-btn.danger:hover{border-color:#ff6b6b;color:#ff8a8a;background:rgba(255,107,107,.1)}
+.config-btn.primary{background:var(--accent-grad);color:#fff;border-color:transparent}
+.mem-textarea{width:100%;min-height:240px;max-height:50vh;resize:vertical;box-sizing:border-box;background:var(--bg);border:1px solid var(--border-2);border-radius:10px;color:var(--text);padding:10px;font:400 .72rem/1.5 "JetBrains Mono",monospace;outline:none}
+.mem-textarea:focus{border-color:var(--accent)}
+.mem-opts{display:flex;gap:14px;flex-wrap:wrap;font-size:.74rem;color:var(--text-2);margin-bottom:10px}
+.mem-opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.mem-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mem-info{font-size:.72rem;color:var(--text-2);margin-top:8px;line-height:1.5}
+.sar-toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--surface-3);color:var(--text);border:1px solid var(--border-2);padding:9px 16px;border-radius:999px;font-size:.78rem;opacity:0;pointer-events:none;transition:.25s;z-index:10000}
+.sar-toast.show{opacity:1;transform:translate(-50%,0)}
+.mem-input{width:100%;box-sizing:border-box;margin-top:10px;background:var(--bg);border:1px solid var(--border-2);border-radius:10px;color:var(--text);padding:10px;font:400 .72rem "JetBrains Mono",monospace;outline:none}
+.mem-input:focus{border-color:var(--accent)}
+
+
+/* =====================================================
+   ⚙️ TELA DE CONFIGURAÇÕES (agrupada, estilo iOS)
+   ===================================================== */
+.settings-head { display: flex; flex-direction: column; gap: 2px; }
+.settings-sub { font-size: .7rem; color: var(--text-3); }
+.settings-box .modal-body { padding: 4px 16px 16px; }
+.cfg-group-title { font-size: .64rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); padding: 16px 6px 8px; }
+.cfg-card { background: var(--surface-3); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.cfg-card .config-row { padding: 12px 14px; gap: 12px; border-bottom: 1px solid var(--border); }
+.cfg-card .config-row:last-child { border-bottom: none; }
+.cfg-lead { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cfg-icon { width: 34px; height: 34px; flex-shrink: 0; display: grid; place-items: center; border-radius: 10px; font-size: 1rem; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+.ico-glass { background: linear-gradient(135deg, #8b7bff, #4cc9f0); }
+.ico-red   { background: linear-gradient(135deg, #ff7a90, #e0475f); }
+.ico-blue  { background: linear-gradient(135deg, #4cc9f0, #3b82f6); }
+.ico-green { background: linear-gradient(135deg, #34d3a5, #10a37f); }
+.ico-amber { background: linear-gradient(135deg, #ffc857, #f59e0b); }
+
+/* =====================================================
+   📈 GRÁFICOS NA CONVERSA
+   ===================================================== */
+.grafico-card { width: 100%; max-width: 440px; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 18px; padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 9px; box-shadow: var(--shadow-sm); }
+.gf-titulo { font-weight: 700; font-size: .93rem; color: var(--text); line-height: 1.3; }
+.gf-sub { font-size: .72rem; color: var(--text-2); margin-top: 2px; }
+.gf-svg { width: 100%; height: auto; display: block; overflow: visible; touch-action: manipulation; }
+.gf-grid { stroke: rgba(255,255,255,.08); stroke-width: 1; }
+.gf-ring { fill: none; stroke: rgba(255,255,255,.1); stroke-width: 1; }
+.gf-axis { fill: var(--text-3); font-size: 9.5px; font-family: var(--font); }
+.gf-val  { fill: var(--text); font-size: 9px; font-weight: 600; font-family: var(--font); }
+.gf-pct  { fill: #fff; font-size: 11px; font-weight: 700; font-family: var(--font); pointer-events: none; paint-order: stroke; stroke: rgba(0,0,0,.25); stroke-width: 2px; }
+.gf-hit  { fill: transparent; cursor: pointer; }
+.gf-el   { transition: opacity .2s; }
+.gf-slice { stroke: var(--surface-2); stroke-width: 2; cursor: pointer; animation: gfFade .55s ease backwards; }
+.gf-bar  { transform-box: fill-box; transform-origin: 50% 100%; animation: gfGrow .65s cubic-bezier(.16,1,.3,1) backwards; }
+.gf-line { stroke-dasharray: 1; animation: gfDraw 1s ease backwards; }
+.gf-pt   { stroke: var(--surface-2); stroke-width: 1.5; }
+.gf-off  { opacity: .3; }
+@keyframes gfGrow { from { transform: scaleY(0); } }
+@keyframes gfDraw { from { stroke-dashoffset: 1; } }
+@keyframes gfFade { from { opacity: 0; } }
+.gf-readout { min-height: 1.2em; font-size: .74rem; font-weight: 600; color: var(--accent-2); }
+.gf-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.gf-leg-item { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; color: var(--text-2); }
+.gf-leg-item b { color: var(--text); font-weight: 600; }
+.gf-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.gf-dados summary { cursor: pointer; font-size: .72rem; color: var(--text-2); padding: 4px 0; list-style: none; }
+.gf-dados summary::-webkit-details-marker { display: none; }
+.gf-dados summary::before { content: "▸ "; }
+.gf-dados[open] summary::before { content: "▾ "; }
+.gf-tabela { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 4px; }
+.gf-tabela table { width: 100%; border-collapse: collapse; font-size: .72rem; }
+.gf-tabela th, .gf-tabela td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.gf-tabela th { color: var(--text-2); font-weight: 600; background: rgba(255,255,255,.03); }
+.gf-tabela tr:last-child td { border-bottom: none; }
+.gf-resumo { font-size: .78rem; color: var(--text-2); line-height: 1.5; }
+.gf-nota { font-size: .66rem; color: var(--text-3); font-style: italic; }
+.grafico-quiz .iq-opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.grafico-quiz .iq-opcao { flex: 1 1 calc(33% - 8px); min-width: 92px; }
+
+/* =====================================================
+   ✨ GLASS MODE — Liquid Glass (só em partes específicas)
+   Cabeçalho, barra de mensagem, menu lateral, janelas, menus,
+   cartões de pergunta/gráfico, aviso e botões de destaque.
+   ===================================================== */
+body.glass-mode .app { position: relative; z-index: 1; }
+body.glass-mode::before {
+  content: ""; position: fixed; inset: -12%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(38% 30% at 16% 10%, rgba(124,106,255,.45), transparent 70%),
+    radial-gradient(34% 28% at 90% 38%, rgba(52,211,165,.24), transparent 70%),
+    radial-gradient(42% 32% at 28% 94%, rgba(96,165,250,.32), transparent 70%);
+  filter: blur(28px);
+  animation: glassFloat 20s ease-in-out infinite alternate;
+}
+@keyframes glassFloat { to { transform: translate3d(3%, -4%, 0) scale(1.08); } }
+
+body.glass-mode header,
+body.glass-mode .sidebar,
+body.glass-mode .modal-box,
+body.glass-mode .slash-menu,
+body.glass-mode .attach-menu,
+body.glass-mode .imagem-quiz,
+body.glass-mode .grafico-card,
+body.glass-mode .input-wrap,
+body.glass-mode .sar-toast {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 42%, rgba(255,255,255,.09) 100%),
+    rgba(26,26,48,.34);
+  -webkit-backdrop-filter: blur(24px) saturate(185%) brightness(1.1);
+  backdrop-filter: blur(24px) saturate(185%) brightness(1.1);
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.5),
+    inset 1px 0 0 rgba(255,255,255,.12),
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    0 12px 34px rgba(0,0,0,.4);
+}
+body.glass-mode header { border-width: 0 0 1px 0; border-radius: 0 0 22px 22px; }
+body.glass-mode header::after { display: none; }
+body.glass-mode .sidebar { background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03) 50%, rgba(255,255,255,.08)), rgba(16,16,32,.5); border-radius: 0 24px 24px 0; }
+body.glass-mode .modal-box { background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.05) 45%, rgba(255,255,255,.1)), rgba(20,20,40,.5); border-radius: 26px; }
+body.glass-mode .input-bar { background: transparent; border-top: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.glass-mode .input-wrap { border-radius: 24px; }
+body.glass-mode .input-wrap:focus-within { border-color: rgba(255,255,255,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 0 0 3px var(--accent-glow), 0 12px 34px rgba(0,0,0,.4); }
+body.glass-mode .slash-menu, body.glass-mode .attach-menu { border-radius: 20px; }
+body.glass-mode .imagem-quiz, body.glass-mode .grafico-card { border-radius: 22px; }
+body.glass-mode .sar-toast { border-radius: 999px; color: #fff; }
+body.glass-mode .cfg-card, body.glass-mode .gf-tabela { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.16); }
+body.glass-mode .modal-header, body.glass-mode .modal-footer { border-color: rgba(255,255,255,.14); }
+body.glass-mode .config-btn, body.glass-mode .iq-opcao, body.glass-mode .modo-btn, body.glass-mode .icon-btn {
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+body.glass-mode .config-btn.primary, body.glass-mode .iq-opcao.selecionada, body.glass-mode .modo-btn.active {
+  background: linear-gradient(135deg, rgba(139,123,255,.85), rgba(91,79,214,.8)); border-color: rgba(255,255,255,.35);
+}
+body.glass-mode .send-btn { box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 6px rgba(0,0,0,.2), 0 6px 18px var(--accent-glow); }
+body.glass-mode .gf-slice, body.glass-mode .gf-pt { stroke: rgba(255,255,255,.35); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body.glass-mode header, body.glass-mode .sidebar, body.glass-mode .modal-box, body.glass-mode .slash-menu,
+  body.glass-mode .attach-menu, body.glass-mode .imagem-quiz, body.glass-mode .grafico-card,
+  body.glass-mode .input-wrap, body.glass-mode .sar-toast { background: rgba(28,28,50,.92); }
+}
+@media (prefers-reduced-motion: reduce) { body.glass-mode::before { animation: none; } .gf-bar, .gf-line, .gf-slice { animation: none; } }
