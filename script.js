@@ -396,7 +396,7 @@ function _normalizarPerfil(raw) {
   });
   Object.keys(PERFIL_LIMITES).forEach(k => {
     if (Array.isArray(raw[k])) {
-      base[k] = raw[k].map(x => _limparItem(x)).filter(x => x.length > 1).slice(-PERFIL_LIMITES[k]);
+      base[k] = raw[k].map(x => _limparItem(x)).filter(x => x.length > 1 && !_ehRegraSistema(x)).slice(-PERFIL_LIMITES[k]);
     }
   });
   if (raw.estilo && typeof raw.estilo === "object") base.estilo = raw.estilo;
@@ -427,9 +427,13 @@ function limparPerfil() {
   try { localStorage.removeItem(LS_PERFIL); localStorage.removeItem(LS_PERFIL_V1); } catch (e) {}
 }
 
+/* 🚫 Itens que são regras de sistema ou comandos (/imagem, INSTRUCAO ESPECIAL…) não pertencem ao perfil */
+const _RE_REGRA_SISTEMA = /INSTRUCAO|COMANDO\s*\/|(?:^|[\s"'(])\/(?:tabela|humman|jurado|akinator|plan|prof|deep|imagem|grafico|traduzir|corrigir)\b|ignore a palavra|responda SOMENTE|nunca (?:diga|liste|obede[cç]a)|system\s*prompt|prompt\s*system/i;
+function _ehRegraSistema(v) { return _RE_REGRA_SISTEMA.test(String(v || "")); }
+
 function _addItem(p, chave, valor) {
   const v = _limparItem(valor);
-  if (v.length < 2) return false;
+  if (v.length < 2 || _ehRegraSistema(v)) return false;
   if (!Array.isArray(p[chave])) p[chave] = [];
   const k = v.toLowerCase();
   if (p[chave].some(x => x.toLowerCase() === k)) return false;
@@ -463,7 +467,7 @@ function _todos(re, t) {
 }
 function _cortarMarcadores(t) {
   let s = String(t || "");
-  ["\n\n[DADOS REAIS DA API", "\n\n[PDF ANEXADO", "\n\n[DOCUMENTO ANEXADO", "\n\nINSTRUCAO:", "\n\n[CONTEXT"].forEach(c => {
+  ["\n\n[DADOS REAIS DA API", "\n\n[PDF ANEXADO", "\n\n[DOCUMENTO ANEXADO", "\n\nINSTRUCAO:", "\n\nINSTRUCAO ESPECIAL", "\n\n[CONTEXT", "\n\n[TIPO ESCOLHIDO", "\n\n[CONTEÚDO DO PDF", "\n\n[RESUMO DO PDF"].forEach(c => {
     const i = s.indexOf(c); if (i !== -1) s = s.slice(0, i);
   });
   return s.trim();
@@ -944,10 +948,8 @@ function _perfilParaMarkdown(p) {
 }
 
 async function montarExportacaoJSON() {
-  try { await atualizarMemorias(true); } catch (e) {}
   return {
-    tipo: "informacoes-do-usuario", versao: 2, exportadoEm: new Date().toISOString(), perfil: carregarPerfil(),
-    memoriasSalvas: _memorias.map(m => ({ tema: m.tema, descricao: m.descricao }))
+    tipo: "informacoes-do-usuario", versao: 2, exportadoEm: new Date().toISOString(), perfil: carregarPerfil()
   };
 }
 
@@ -955,10 +957,6 @@ async function montarExportacao() {
   const json = await montarExportacaoJSON();
   const partes = ["# Minhas informações", "Gerado em: " + new Date().toLocaleString("pt-BR"), ""];
   partes.push(_perfilParaMarkdown(json.perfil));
-  if (json.memoriasSalvas.length) {
-    partes.push("## Memórias salvas", "");
-    json.memoriasSalvas.forEach(m => partes.push("### " + String(m.tema).replace(/\s+/g, " "), m.descricao, ""));
-  }
   partes.push("## Dados estruturados (JSON)", "", "```json", JSON.stringify(json, null, 2), "```");
   return partes.join("\n");
 }
