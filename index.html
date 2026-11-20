@@ -51,23 +51,24 @@
         <div class="section-label">Modo de resposta</div>
         <div class="modo-grid">
           <button class="modo-btn" data-modo="rapido">
-            <span class="modo-icon">⚡</span>
+            <span class="modo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>
             <span class="modo-name">Normal</span>
             <span class="modo-desc">Respostas diretas e claras</span>
           </button>
           <button class="modo-btn" data-modo="especialista">
-            <span class="modo-icon">🔬</span>
+            <span class="modo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 001.3 2.2h12.4a1.5 1.5 0 001.3-2.2L14 9V3"/><path d="M7.5 15h9"/></svg></span>
             <span class="modo-name">Especialista</span>
             <span class="modo-desc">Explicações técnicas e aprofundadas</span>
           </button>
           <button class="modo-btn" data-modo="pro">
-            <span class="modo-icon">🧠</span>
+            <span class="modo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4a3 3 0 00-3 3 3 3 0 00-2 5 3 3 0 002 5 3 3 0 003 3V4zM15 4a3 3 0 013 3 3 3 0 012 5 3 3 0 01-2 5 3 3 0 01-3 3V4z"/></svg></span>
             <span class="modo-name">Pro</span>
             <span class="modo-desc">Análise profunda e raciocínio avançado</span>
           </button>
         </div>
       </section>
 
+      <section class="sidebar-section pc-only"><div class="section-label">Conversas recentes</div><div id="sidebarHist"></div></section>
     </div>
 
     <div class="sidebar-footer">
@@ -132,6 +133,7 @@
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg>
       </button>
     </div>
+    <div class="pc-hint pc-only">Enter envia · Shift+Enter nova linha · / abre os comandos</div>
   </footer>
 
   <!-- MENU DE COMANDOS / -->
@@ -140,28 +142,28 @@
   <!-- MENU DE ANEXO -->
   <div id="attachMenu" class="attach-menu" style="display:none">
     <button class="attach-option" id="optPDF">
-      <span class="attach-opt-icon">📄</span>
+      <span class="attach-opt-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"/><path d="M14 3v5h5"/></svg></span>
       <div class="attach-opt-info">
         <span class="attach-opt-name">PDF</span>
         <span class="attach-opt-quota" id="quotaPDF">10 por sessão</span>
       </div>
     </button>
     <button class="attach-option" id="optDoc">
-      <span class="attach-opt-icon">📊</span>
+      <span class="attach-opt-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></span>
       <div class="attach-opt-info">
         <span class="attach-opt-name">Planilha / Documento</span>
         <span class="attach-opt-quota" id="quotaDoc">Excel, Word, CSV, TXT</span>
       </div>
     </button>
     <button class="attach-option" id="optFoto">
-      <span class="attach-opt-icon">🖼️</span>
+      <span class="attach-opt-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg></span>
       <div class="attach-opt-info">
         <span class="attach-opt-name">Galeria</span>
         <span class="attach-opt-quota" id="quotaFoto">10 por sessão</span>
       </div>
     </button>
     <button class="attach-option" id="optCamera">
-      <span class="attach-opt-icon">📸</span>
+      <span class="attach-opt-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4V8z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
       <div class="attach-opt-info">
         <span class="attach-opt-name">Câmera</span>
         <span class="attach-opt-quota" id="quotaCamera">Tirar foto</span>
@@ -189,40 +191,42 @@
       <div class="cfg-group-title">Aparência</div>
       <div class="cfg-card">
         <div class="config-row">
-          <div class="cfg-lead"><span class="cfg-icon ico-glass">✨</span>
+          <div class="cfg-lead"><span class="cfg-icon ico-glass"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z"/></svg></span>
             <div class="config-info"><span class="config-label">Glass Mode</span><span class="config-desc">Vidro líquido estilo iOS no cabeçalho, barra de mensagem, menus, janelas e gráficos</span></div></div>
           <label class="toggle-switch"><input type="checkbox" id="toggleGlass"><span class="toggle-slider"></span></label>
         </div>
       </div>
 
+      <div class="cfg-group-title">Texto e movimento</div><div class="cfg-card"><div class="config-row"><div class="cfg-lead"><span class="cfg-icon ico-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></span><div class="config-info"><span class="config-label">Tamanho do texto</span><span class="config-desc">Ajusta as mensagens do chat</span></div></div><div class="seg" id="segFonte" data-key="fonte"><button type="button" data-v="p">P</button><button type="button" data-v="m">M</button><button type="button" data-v="g">G</button></div></div><div class="config-row"><div class="cfg-lead"><span class="cfg-icon ico-amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12c3-6 6 6 9 0s6 6 9 0"/></svg></span><div class="config-info"><span class="config-label">Reduzir animações</span><span class="config-desc">Menos movimento na interface</span></div></div><label class="toggle-switch"><input type="checkbox" id="toggleMov" ><span class="toggle-slider"></span></label></div></div>
       <div class="cfg-group-title">Conteúdo</div>
       <div class="cfg-card">
         <div class="config-row">
-          <div class="cfg-lead"><span class="cfg-icon ico-red">🔞</span>
+          <div class="cfg-lead"><span class="cfg-icon ico-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg></span>
             <div class="config-info"><span class="config-label">Filtro +18</span><span class="config-desc">Oculta automaticamente conteúdo adulto nas respostas</span></div></div>
           <label class="toggle-switch"><input type="checkbox" id="toggleAdult" checked><span class="toggle-slider"></span></label>
         </div>
         <div class="config-row">
-          <div class="cfg-lead"><span class="cfg-icon ico-blue">🔗</span>
+          <div class="cfg-lead"><span class="cfg-icon ico-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg></span>
             <div class="config-info"><span class="config-label">Links clicáveis</span><span class="config-desc">Converte URLs em links clicáveis automaticamente</span></div></div>
           <label class="toggle-switch"><input type="checkbox" id="toggleLinks" checked><span class="toggle-slider"></span></label>
         </div>
       </div>
 
+      <div class="cfg-group-title">Inteligência</div><div class="cfg-card"><div class="config-row"><div class="cfg-lead"><span class="cfg-icon ico-green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><div class="config-info"><span class="config-label">Pesquisa na internet</span><span class="config-desc">Auto busca dados atuais quando precisa; Sempre pesquisa em toda pergunta</span></div></div><div class="seg" id="segWeb" data-key="webMode"><button type="button" data-v="auto">Auto</button><button type="button" data-v="always">Sempre</button><button type="button" data-v="off">Off</button></div></div><div class="config-row"><div class="cfg-lead"><span class="cfg-icon ico-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z"/></svg></span><div class="config-info"><span class="config-label">Aprender com minhas avaliações</span><span class="config-desc">Usa curtir e não curtir para adaptar o estilo das respostas</span></div></div><label class="toggle-switch"><input type="checkbox" id="toggleAprender" checked><span class="toggle-slider"></span></label></div><div class="config-row"><div class="cfg-lead"><span class="cfg-icon ico-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span><div class="config-info"><span class="config-label">Apagar avaliações</span><span class="config-desc">Remove o que a S.A.R aprendeu com seus curtir e não curtir</span></div></div><button class="config-btn danger" id="btnLimparFb" type="button">Apagar</button></div></div><div class="cfg-group-title">Offline</div><div class="cfg-card"><div class="config-row"><div class="cfg-lead"><span class="cfg-icon ico-amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0120 0M5 12.5a10 10 0 0114 0M8.5 16a5 5 0 017 0M3 3l18 18"/><circle cx="12" cy="19.5" r=".8"/></svg></span><div class="config-info"><span class="config-label">Abrir sem internet</span><span class="config-desc"><span id="offStatus">Verificando…</span></span></div></div><button class="config-btn" id="btnLimparCache" type="button">Limpar cache</button></div></div><div class="cfg-group-title pc-only">Atalhos</div><div class="cfg-card pc-only"><div class="config-row"><div class="cfg-lead"><span class="cfg-icon ico-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></span><div class="config-info"><span class="config-label">Teclado</span><span class="config-desc">Ctrl+K foca a mensagem · Ctrl+Shift+O novo chat · Esc fecha janelas</span></div></div></div></div>
       <div class="cfg-group-title">Memória e dados</div>
       <div class="cfg-card">
         <div class="config-row">
-          <div class="cfg-lead"><span class="cfg-icon ico-green">📤</span>
+          <div class="cfg-lead"><span class="cfg-icon ico-green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></span>
             <div class="config-info"><span class="config-label">Exportar minhas informações</span><span class="config-desc">Copie ou baixe só o que está salvo sobre você: perfil, gostos e jeito de falar</span></div></div>
           <button class="config-btn " id="btnExportar" type="button">Exportar</button>
         </div>
         <div class="config-row">
-          <div class="cfg-lead"><span class="cfg-icon ico-amber">📥</span>
+          <div class="cfg-lead"><span class="cfg-icon ico-amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg></span>
             <div class="config-info"><span class="config-label">Importar minhas informações</span><span class="config-desc">Cole texto ou JSON com informações suas para trazer para cá</span></div></div>
           <button class="config-btn " id="btnImportar" type="button">Importar</button>
         </div>
         <div class="config-row">
-          <div class="cfg-lead"><span class="cfg-icon ico-red">🗑️</span>
+          <div class="cfg-lead"><span class="cfg-icon ico-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span>
             <div class="config-info"><span class="config-label">Apagar memória do perfil</span><span class="config-desc">Remove o que foi aprendido sobre você neste aparelho</span></div></div>
           <button class="config-btn danger" id="btnLimparPerfil" type="button">Apagar</button>
         </div>

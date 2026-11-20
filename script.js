@@ -3,6 +3,7 @@
    👨‍💻 Desenvolvido por João Antônio & Lucas Macedo
    ==================================================== */
 
+const ICO = {"table": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M9 4v16\"/></svg>", "chat": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z\"/></svg>", "scale": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 006 0L5 7zM19 7l-3 7a3 3 0 006 0l-3-7z\"/></svg>", "gamepad": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"2\" y=\"7\" width=\"20\" height=\"11\" rx=\"5\"/><path d=\"M7 10v5M4.5 12.5h5\"/><circle cx=\"16\" cy=\"11.5\" r=\".7\"/><circle cx=\"18.5\" cy=\"14\" r=\".7\"/></svg>", "calendar": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>", "school": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 9l10-5 10 5-10 5L2 9z\"/><path d=\"M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5\"/></svg>", "search": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4-4\"/></svg>", "image": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.6\"/><path d=\"M21 16l-5-5-9 9\"/></svg>", "chart": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3\"/></svg>", "globe": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18\"/></svg>", "check": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12.5l3 3 5-6\"/></svg>", "copy": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"9\" y=\"9\" width=\"11\" height=\"11\" rx=\"2\"/><path d=\"M5 15V6a2 2 0 012-2h9\"/></svg>", "up": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 11v9H4v-9h3zM7 11l4-8a2 2 0 012 2v4h5.5a2 2 0 012 2.3l-1.2 7A2 2 0 0117.3 20H7\"/></svg>", "down": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M17 13V4h3v9h-3zM17 13l-4 8a2 2 0 01-2-2v-4H5.5a2 2 0 01-2-2.3l1.2-7A2 2 0 016.7 4H17\"/></svg>", "bolt": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M13 2L4 14h7l-1 8 9-12h-7l1-8z\"/></svg>", "flask": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 3h6M10 3v6L4.5 19a1.5 1.5 0 001.3 2.2h12.4a1.5 1.5 0 001.3-2.2L14 9V3\"/><path d=\"M7.5 15h9\"/></svg>", "brain": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 4a3 3 0 00-3 3 3 3 0 00-2 5 3 3 0 002 5 3 3 0 003 3V4zM15 4a3 3 0 013 3 3 3 0 012 5 3 3 0 01-2 5 3 3 0 01-3 3V4z\"/></svg>", "sparkle": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z\"/></svg>", "shield": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z\"/></svg>", "link": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1\"/></svg>", "upload": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 16V4M7 9l5-5 5 5M4 20h16\"/></svg>", "download": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4v12M7 11l5 5 5-5M4 20h16\"/></svg>", "trash": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/></svg>", "heart": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"/></svg>", "type": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 6V4h14v2M12 4v16M9 20h6\"/></svg>", "motion": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 12c3-6 6 6 9 0s6 6 9 0\"/></svg>", "wifioff": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 8.8a15 15 0 0120 0M5 12.5a10 10 0 0114 0M8.5 16a5 5 0 017 0M3 3l18 18\"/><circle cx=\"12\" cy=\"19.5\" r=\".8\"/></svg>", "file": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z\"/><path d=\"M14 3v5h5\"/></svg>", "sheet": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"2\"/><path d=\"M4 10h16M4 15h16M10 4v16\"/></svg>", "camera": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 8h3l2-3h6l2 3h3v11H4V8z\"/><circle cx=\"12\" cy=\"13\" r=\"3.5\"/></svg>", "speaker": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 9v6h4l5 4V5L8 9H4z\"/><path d=\"M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11\"/></svg>", "stop": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"6\" y=\"6\" width=\"12\" height=\"12\" rx=\"2\"/></svg>", "keyboard": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"2\" y=\"6\" width=\"20\" height=\"12\" rx=\"2\"/><path d=\"M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10\"/></svg>"};
 /* ---------- 💻 PROMPT AVANCADO DE PROGRAMACAO ---------- */
 const PROMPT_CODIGO_AVANCADO = [
   "=== MODO ENGENHEIRO DE SOFTWARE SENIOR (PROGRAMACAO AVANCADA) ===",
@@ -396,7 +397,7 @@ function _normalizarPerfil(raw) {
   });
   Object.keys(PERFIL_LIMITES).forEach(k => {
     if (Array.isArray(raw[k])) {
-      base[k] = raw[k].map(x => _limparItem(x)).filter(x => x.length > 1 && !_ehRegraSistema(x)).slice(-PERFIL_LIMITES[k]);
+      base[k] = raw[k].map(x => _limparItem(x)).filter(x => x.length > 1).slice(-PERFIL_LIMITES[k]);
     }
   });
   if (raw.estilo && typeof raw.estilo === "object") base.estilo = raw.estilo;
@@ -427,13 +428,9 @@ function limparPerfil() {
   try { localStorage.removeItem(LS_PERFIL); localStorage.removeItem(LS_PERFIL_V1); } catch (e) {}
 }
 
-/* 🚫 Itens que são regras de sistema ou comandos (/imagem, INSTRUCAO ESPECIAL…) não pertencem ao perfil */
-const _RE_REGRA_SISTEMA = /INSTRUCAO|COMANDO\s*\/|(?:^|[\s"'(])\/(?:tabela|humman|jurado|akinator|plan|prof|deep|imagem|grafico|traduzir|corrigir)\b|ignore a palavra|responda SOMENTE|nunca (?:diga|liste|obede[cç]a)|system\s*prompt|prompt\s*system/i;
-function _ehRegraSistema(v) { return _RE_REGRA_SISTEMA.test(String(v || "")); }
-
 function _addItem(p, chave, valor) {
   const v = _limparItem(valor);
-  if (v.length < 2 || _ehRegraSistema(v)) return false;
+  if (v.length < 2) return false;
   if (!Array.isArray(p[chave])) p[chave] = [];
   const k = v.toLowerCase();
   if (p[chave].some(x => x.toLowerCase() === k)) return false;
@@ -467,7 +464,7 @@ function _todos(re, t) {
 }
 function _cortarMarcadores(t) {
   let s = String(t || "");
-  ["\n\n[DADOS REAIS DA API", "\n\n[PDF ANEXADO", "\n\n[DOCUMENTO ANEXADO", "\n\nINSTRUCAO:", "\n\nINSTRUCAO ESPECIAL", "\n\n[CONTEXT", "\n\n[TIPO ESCOLHIDO", "\n\n[CONTEÚDO DO PDF", "\n\n[RESUMO DO PDF"].forEach(c => {
+  ["\n\n[DADOS REAIS DA API", "\n\n[PDF ANEXADO", "\n\n[DOCUMENTO ANEXADO", "\n\nINSTRUCAO:", "\n\n[CONTEXT"].forEach(c => {
     const i = s.indexOf(c); if (i !== -1) s = s.slice(0, i);
   });
   return s.trim();
@@ -948,8 +945,10 @@ function _perfilParaMarkdown(p) {
 }
 
 async function montarExportacaoJSON() {
+  try { await atualizarMemorias(true); } catch (e) {}
   return {
-    tipo: "informacoes-do-usuario", versao: 2, exportadoEm: new Date().toISOString(), perfil: carregarPerfil()
+    tipo: "informacoes-do-usuario", versao: 2, exportadoEm: new Date().toISOString(), perfil: carregarPerfil(),
+    memoriasSalvas: _memorias.map(m => ({ tema: m.tema, descricao: m.descricao }))
   };
 }
 
@@ -957,6 +956,10 @@ async function montarExportacao() {
   const json = await montarExportacaoJSON();
   const partes = ["# Minhas informações", "Gerado em: " + new Date().toLocaleString("pt-BR"), ""];
   partes.push(_perfilParaMarkdown(json.perfil));
+  if (json.memoriasSalvas.length) {
+    partes.push("## Memórias salvas", "");
+    json.memoriasSalvas.forEach(m => partes.push("### " + String(m.tema).replace(/\s+/g, " "), m.descricao, ""));
+  }
   partes.push("## Dados estruturados (JSON)", "", "```json", JSON.stringify(json, null, 2), "```");
   return partes.join("\n");
 }
@@ -1209,12 +1212,12 @@ function renderMsgHistorico(m) {
 
 function _criarCopyBtn(texto) {
   const cb = document.createElement("button");
-  cb.textContent = "📋 Copiar";
+  cb.textContent = "Copiar";
   cb.className = "copy-btn";
   cb.onclick = () => {
     navigator.clipboard.writeText(texto).catch(() => {});
-    cb.textContent = "✅ Copiado!";
-    setTimeout(() => cb.textContent = "📋 Copiar", 1400);
+    cb.textContent = "Copiado!";
+    setTimeout(() => cb.textContent = "Copiar", 1400);
   };
   return cb;
 }
@@ -1286,7 +1289,7 @@ function _criarSpeakBtn(texto) {
   sb.className = "speak-btn";
   sb.title = "Ouvir resposta em voz alta";
   sb.setAttribute("aria-label", "Ouvir resposta em voz alta");
-  sb.innerHTML = "🔊";
+  sb.innerHTML = ICO.speaker;
 
   sb.onclick = async () => {
     if (!("speechSynthesis" in window)) {
@@ -1295,14 +1298,14 @@ function _criarSpeakBtn(texto) {
     }
     const estaFalandoEssaMsg = sb.classList.contains("falando");
     window.speechSynthesis.cancel();
-    document.querySelectorAll(".speak-btn.falando").forEach(b => { b.classList.remove("falando"); b.innerHTML = "🔊"; });
+    document.querySelectorAll(".speak-btn.falando").forEach(b => { b.classList.remove("falando"); b.innerHTML = ICO.speaker; });
     if (estaFalandoEssaMsg) return;
 
     const conteudo = _textoParaFala(texto);
     if (!conteudo) return;
 
     // ⏳ Mostra que está preparando a voz enquanto a lista de vozes carrega
-    sb.innerHTML = "⏳";
+    sb.innerHTML = "…";
     const vozesDisponiveis = await _obterVozesAsync();
 
     const utter = new SpeechSynthesisUtterance(conteudo);
@@ -1311,11 +1314,11 @@ function _criarSpeakBtn(texto) {
     if (voz) { utter.voice = voz; utter.lang = voz.lang; }
     utter.pitch = 1.05;
     utter.rate = 1;
-    utter.onend  = () => { sb.classList.remove("falando"); sb.innerHTML = "🔊"; };
-    utter.onerror = () => { sb.classList.remove("falando"); sb.innerHTML = "🔊"; };
+    utter.onend  = () => { sb.classList.remove("falando"); sb.innerHTML = ICO.speaker; };
+    utter.onerror = () => { sb.classList.remove("falando"); sb.innerHTML = ICO.speaker; };
 
     sb.classList.add("falando");
-    sb.innerHTML = "⏹️";
+    sb.innerHTML = ICO.stop;
     // 🔁 No Chrome, cancel() as vezes deixa a fila num estado instável — um pequeno delay evita fala "muda"
     window.speechSynthesis.cancel();
     setTimeout(() => window.speechSynthesis.speak(utter), 40);
@@ -2190,7 +2193,7 @@ function _renderCodeBlock(conteudo, lang, nome) {
       </div>
       <div class="code-file-actions">
         <button class="code-act-btn code-toggle-btn" type="button">${_ICONE_CHEVRON}<span class="code-toggle-label">Ver código</span></button>
-        <button class="code-act-btn copy-code" type="button">📋 Copiar</button>
+        <button class="code-act-btn copy-code" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg> Copiar</button>
       </div>
     </div>
     <div class="code-block-body"></div>
@@ -2233,8 +2236,8 @@ document.addEventListener("click", e => {
   if (copyBtn) {
     const bloco = copyBtn.closest(".code-block");
     _copiarTexto(bloco ? _codB64Decode(bloco.dataset.code || "") : "");
-    copyBtn.textContent = "✅ Copiado!";
-    setTimeout(() => copyBtn.textContent = "📋 Copiar", 1400);
+    copyBtn.textContent = "Copiado!";
+    setTimeout(() => copyBtn.textContent = "Copiar", 1400);
     return;
   }
 
@@ -2316,7 +2319,7 @@ function renderizarFormulaEscolar(texto) {
   return `<div class="formula-block">
     <div class="formula-block-header">
       <span class="formula-block-label">🧮 Fórmula pronta para copiar</span>
-      <button class="copy-formula" type="button">📋 Copiar</button>
+      <button class="copy-formula" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg> Copiar</button>
     </div>
     <div class="formula-block-body">${corpo}</div>
   </div>`;
@@ -2332,7 +2335,7 @@ document.addEventListener("click", e => {
     .join("\n");
   navigator.clipboard.writeText(texto).catch(() => {});
   const original = e.target.textContent;
-  e.target.textContent = "✅ Copiado!";
+  e.target.textContent = "Copiado!";
   setTimeout(() => e.target.textContent = original, 1400);
 });
 
@@ -4795,4 +4798,235 @@ input.addEventListener("keypress", e => {
   setInterval(() => { if (!document.hidden) atualizarMemorias(); }, 30000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) atualizarMemorias(true); });
   console.log("🤖 S.A.R v2.0 iniciada | 😄 Emoji Mode");
+})();
+
+/* ====================================================
+   S.A.R v2 — ícones SVG, feedback, Akinator com botões,
+   pesquisa na web, configurações extras, PC e offline
+   (sobrescreve funções acima sem alterar o resto)
+   ==================================================== */
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  /* ---- Ícones dos comandos / ---- */
+  const CMD_ICO = { "/tabela":"table","/humman":"chat","/jurado":"scale","/akinator":"gamepad","/plan":"calendar","/prof":"school","/deep":"search","/imagem":"image","/grafico":"chart","/traduzir":"globe","/corrigir":"check" };
+  SLASH_COMMANDS.forEach(c => { c.icone = ICO[CMD_ICO[c.cmd]] || ICO.sparkle; });
+
+  /* ---- Configurações extras ---- */
+  const _gc = getConfig;
+  window.getConfig = getConfig = function () {
+    const c = carregarConfig();
+    return Object.assign(_gc(), { webMode: c.webMode || "auto", aprender: c.aprender !== false, fonte: c.fonte || "m", reduzMov: c.reduzMov === true });
+  };
+  const _ac = aplicarConfig;
+  window.aplicarConfig = aplicarConfig = function () {
+    _ac();
+    const g = getConfig();
+    document.body.dataset.fonte = g.fonte;
+    document.body.classList.toggle("reduce-motion", g.reduzMov);
+    if ($("toggleMov")) $("toggleMov").checked = g.reduzMov;
+    if ($("toggleAprender")) $("toggleAprender").checked = g.aprender;
+    [["segFonte", g.fonte], ["segWeb", g.webMode]].forEach(([id, v]) => {
+      const el = $(id); if (el) el.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+    });
+  };
+  document.querySelectorAll(".seg").forEach(sg => sg.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const c = carregarConfig(); c[sg.dataset.key] = b.dataset.v; salvarConfig(c); aplicarConfig();
+  }));
+  [["toggleMov", "reduzMov"], ["toggleAprender", "aprender"]].forEach(([id, k]) => {
+    const el = $(id); if (el) el.addEventListener("change", () => { const c = carregarConfig(); c[k] = el.checked; salvarConfig(c); aplicarConfig(); });
+  });
+
+  /* ---- Like / Deslike (localStorage) que adapta as respostas ---- */
+  const LS_FB = "sar_feedback_v1";
+  const fbLoad = () => { try { return JSON.parse(localStorage.getItem(LS_FB)) || { itens: [] }; } catch (e) { return { itens: [] }; } };
+  const fbSave = o => { try { localStorage.setItem(LS_FB, JSON.stringify(o)); } catch (e) {} };
+  const fbKey = t => { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return String(h); };
+  const fbGet = t => ((fbLoad().itens.find(x => x.k === fbKey(t))) || {}).v || 0;
+  function fbVoto(texto, pergunta, v) {
+    const o = fbLoad(), k = fbKey(texto);
+    o.itens = o.itens.filter(x => x.k !== k);
+    if (v) o.itens.push({ k, v, q: (pergunta || "").slice(0, 140), len: texto.length, lista: /^\s*([-*•]|\d+\.)\s/m.test(texto), t: Date.now() });
+    o.itens = o.itens.slice(-60); fbSave(o);
+  }
+  function contextoFeedback() {
+    if (!getConfig().aprender) return "";
+    const it = fbLoad().itens; if (it.length < 2) return "";
+    const up = it.filter(x => x.v === 1), dn = it.filter(x => x.v === -1);
+    const avg = a => Math.round(a.reduce((s, x) => s + x.len, 0) / a.length);
+    let s = "\n\nPREFERENCIAS APRENDIDAS COM AS AVALIACOES DO USUARIO (adapte o estilo, sem mencionar isso):";
+    if (up.length) s += "\n- Respostas que ele curtiu tinham cerca de " + avg(up) + " caracteres e " + (up.filter(x => x.lista).length > up.length / 2 ? "usavam listas." : "usavam texto corrido.");
+    if (dn.length) {
+      s += "\n- Respostas que ele nao curtiu tinham cerca de " + avg(dn) + " caracteres; evite repetir esse padrao.";
+      s += "\n- Pedidos com avaliacao negativa (acerte mais nesse tipo): " + dn.slice(-3).map(x => '"' + x.q + '"').join("; ");
+    }
+    return s;
+  }
+  const _bs = _buildSystem;
+  window._buildSystem = _buildSystem = function (a, b, c) { return _bs(a, b, c) + contextoFeedback(); };
+
+  window._criarCopyBtn = _criarCopyBtn = function (texto) {
+    const cb = document.createElement("button");
+    cb.className = "copy-btn"; cb.type = "button"; cb.title = "Copiar"; cb.setAttribute("aria-label", "Copiar resposta");
+    cb.innerHTML = ICO.copy;
+    cb.onclick = () => {
+      _copiarTexto(texto);
+      cb.innerHTML = ICO.check; cb.classList.add("ok");
+      setTimeout(() => { cb.innerHTML = ICO.copy; cb.classList.remove("ok"); }, 1400);
+    };
+    return cb;
+  };
+  window._criarAcoesMsg = _criarAcoesMsg = function (texto) {
+    const wrap = document.createElement("div");
+    wrap.className = "msg-actions";
+    wrap.appendChild(_criarSpeakBtn(texto));
+    wrap.appendChild(_criarCopyBtn(texto));
+    const mk = (cls, ico, label, val) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "fb-btn " + cls; b.title = label; b.setAttribute("aria-label", label); b.innerHTML = ico;
+      b.classList.toggle("on", fbGet(texto) === val);
+      b.onclick = () => {
+        const msg = wrap.closest(".msg"), ant = msg && msg.previousElementSibling;
+        const novo = fbGet(texto) === val ? 0 : val;
+        fbVoto(texto, ant ? ant.textContent : "", novo);
+        wrap.querySelectorAll(".fb-btn").forEach(x => x.classList.remove("on"));
+        if (novo) b.classList.add("on");
+        mostrarToast(novo === 1 ? "Obrigada! Vou lembrar do que você curte" : novo === -1 ? "Anotado! Vou tentar melhorar" : "Avaliação removida");
+      };
+      return b;
+    };
+    wrap.appendChild(mk("fb-up", ICO.up, "Gostei", 1));
+    wrap.appendChild(mk("fb-down", ICO.down, "Não gostei", -1));
+    return wrap;
+  };
+
+  /* ---- Akinator com botões de resposta ---- */
+  const RE_OPC = /\[OPCOES:([^\]]*)\]/i, RE_FIM = /\[FIM\]/gi;
+  const semOpcoes = t => String(t || "").replace(/\[OPCOES:[^\]]*\]/gi, "").replace(RE_FIM, "").replace(/[ \t]+$/gm, "").trim();
+  const _ft = formatarTexto; window.formatarTexto = formatarTexto = t => _ft(semOpcoes(t));
+  const _tw = typeWriter; window.typeWriter = typeWriter = (el, t) => _tw(el, semOpcoes(t));
+
+  function akinatorAtivo() {
+    try {
+      const m = getMensagens();
+      const ult = [...m].reverse().find(x => x.role === "assistant");
+      if (ult && /\[FIM\]/i.test(ult.content || "")) return false;
+      for (let i = m.length - 1, n = 0; i >= 0 && n < 60; i--, n++) {
+        const x = m[i]; if (x.role !== "user") continue;
+        const t = (x.content || "").trim();
+        if (/^\/akinator\b/i.test(t)) return true;
+        if (t.startsWith("/")) return false;
+      }
+    } catch (e) {}
+    return false;
+  }
+  window.instrucaoAkinator = instrucaoAkinator = function () {
+    return `\n\nINSTRUCAO ESPECIAL - JOGO AKINATOR:
+O usuario esta jogando Akinator com voce (ignore a palavra "/akinator", e so um comando). Voce deve adivinhar em quem ou no que ele pensou (pessoa real, personagem, animal, objeto...).
+Faca UMA pergunta por mensagem, curta, respondivel com sim/nao, sem explicar raciocinio e sem emojis. Na primeira mensagem pergunte se e uma pessoa real. Use as respostas anteriores para restringir.
+Quando tiver bastante certeza, pergunte "Voce esta pensando em X?".
+FORMATO OBRIGATORIO: toda mensagem sua termina com UMA linha de botoes:
+- Pergunta normal: [OPCOES: Sim|Não|Não sei|Provavelmente sim|Provavelmente não]
+- Palpite: [OPCOES: Sim, acertou|Não, errou|Não sei]
+- Se acertou ou o usuario desistiu: comemore em uma frase, escreva [FIM] e termine com [OPCOES: Jogar de novo]
+Se errou o palpite, continue com mais perguntas.`;
+  };
+  const _idc = instrucoesDeComando;
+  window.instrucoesDeComando = instrucoesDeComando = function (t) {
+    const r = _idc(t); if (r) return r;
+    return (!String(t).trim().startsWith("/") && akinatorAtivo()) ? instrucaoAkinator() : "";
+  };
+  function cardOpcoes(ops) {
+    const card = document.createElement("div");
+    card.className = "imagem-quiz grafico-quiz ak-quiz";
+    card.innerHTML = '<div class="iq-bloco"><div class="iq-opcoes"></div></div>';
+    const box = card.querySelector(".iq-opcoes");
+    ops.forEach(o => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "iq-opcao"; b.textContent = o;
+      b.onclick = () => {
+        if (card.classList.contains("iq-enviado")) return;
+        b.classList.add("selecionada"); card.classList.add("iq-enviado");
+        input.value = /^jogar de novo$/i.test(o) ? "/akinator vamos jogar de novo" : o;
+        enviar();
+      };
+      box.appendChild(b);
+    });
+    return card;
+  }
+  const _am = addMsg;
+  window.addMsg = addMsg = function (txt, tipo, g) {
+    _am(txt, tipo, g);
+    if (tipo !== "bot") return;
+    const m = RE_OPC.exec(String(txt || "")); if (!m) return;
+    const ops = m[1].split("|").map(s => s.trim()).filter(Boolean).slice(0, 6); if (!ops.length) return;
+    const el = chat.lastElementChild;
+    setTimeout(() => { if (el && el.isConnected) { el.appendChild(cardOpcoes(ops)); chat.scrollTop = chat.scrollHeight; } }, Math.min(2200, 250 + String(txt).length * 6));
+  };
+
+  /* ---- Pesquisa na internet ---- */
+  const _epb = ePesquisa;
+  window.ePesquisa = ePesquisa = function (t) {
+    const modo = getConfig().webMode, s = String(t).trim();
+    if (modo === "off") return false;
+    if (s.startsWith("/")) return _epb(t);
+    if (modo === "always") return s.length > 14 && !akinatorAtivo();
+    return _epb(t) || /\b(20(25|26)|hoje|agora|[uú]ltim[oa]s?|atual(mente)?|recente|esta semana|neste m[eê]s|placar|previs[aã]o do tempo|resultado d[eo])\b/i.test(s);
+  };
+
+  /* ---- Offline: barra + service worker ---- */
+  const bar = document.createElement("div");
+  bar.className = "offline-bar"; bar.setAttribute("role", "status");
+  bar.innerHTML = ICO.wifioff + "<span>Você está offline — dá para ler o histórico, mas enviar mensagens precisa de internet</span>";
+  document.body.appendChild(bar);
+  const pill = document.querySelector(".status-pill span:last-child");
+  function net(first) {
+    const off = !navigator.onLine;
+    document.body.classList.toggle("is-offline", off);
+    if (pill) pill.textContent = off ? "Offline" : "Online";
+    if (!first) mostrarToast(off ? "Sem conexão" : "Conexão restabelecida");
+  }
+  window.addEventListener("online", () => net()); window.addEventListener("offline", () => net());
+  net(true);
+  const bloqueia = e => { if (!navigator.onLine) { e.stopImmediatePropagation(); e.preventDefault(); mostrarToast("Sem internet: reconecte para enviar"); } };
+  if ($("btn")) $("btn").addEventListener("click", bloqueia, true);
+  if (input) input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) bloqueia(e); }, true);
+
+  function offStatus() {
+    const el = $("offStatus"); if (!el) return;
+    el.textContent = !("serviceWorker" in navigator) ? "Não suportado neste navegador"
+      : navigator.serviceWorker.controller ? "Ativo: o app abre mesmo sem internet" : "Será ativado após o primeiro carregamento (precisa de HTTPS)";
+  }
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").then(offStatus).catch(offStatus);
+    navigator.serviceWorker.addEventListener("controllerchange", offStatus);
+  }
+  if ($("btnLimparCache")) $("btnLimparCache").onclick = async () => {
+    try { for (const k of await caches.keys()) await caches.delete(k); mostrarToast("Cache offline limpo"); } catch (e) { mostrarToast("Não foi possível limpar"); }
+  };
+  if ($("btnLimparFb")) $("btnLimparFb").onclick = () => { try { localStorage.removeItem(LS_FB); } catch (e) {} mostrarToast("Avaliações apagadas"); };
+  if ($("configBtn")) $("configBtn").addEventListener("click", offStatus);
+
+  /* ---- PC: histórico fixo na lateral + atalhos ---- */
+  const mq = window.matchMedia("(min-width: 1024px)");
+  const lista = $("historicoLista"), alvo = $("sidebarHist"), origem = lista && lista.parentElement;
+  let tmr;
+  const refresh = () => { clearTimeout(tmr); tmr = setTimeout(() => { try { renderHistorico(); } catch (e) {} }, 400); };
+  function layoutPC() {
+    if (!lista || !alvo) return;
+    if (mq.matches) alvo.appendChild(lista); else if (lista.parentElement !== origem) origem.appendChild(lista);
+    refresh();
+  }
+  mq.addEventListener ? mq.addEventListener("change", layoutPC) : mq.addListener(layoutPC);
+  if (chat) new MutationObserver(() => { if (mq.matches) refresh(); }).observe(chat, { childList: true });
+  layoutPC();
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); input.focus(); }
+    else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); const b = $("clearBtn"); if (b) b.click(); }
+    else if (e.key === "Escape") document.querySelectorAll(".modal-overlay.show").forEach(m => m.classList.remove("show"));
+  });
+
+  aplicarConfig();
 })();
