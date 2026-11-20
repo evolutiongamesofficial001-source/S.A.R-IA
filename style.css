@@ -1776,3 +1776,16 @@ body.glass-mode .toggle-slider { box-shadow: none; }
   .msg.bot:hover .copy-btn, .msg.bot:hover .speak-btn, .msg.bot:hover .fb-btn { opacity: 1; }
   body.is-offline .app { height: calc(100vh - 34px); }
 }
+
+/* ===== FIX: Configurações (cartões não encolhem mais; rolagem no corpo) ===== */
+.modal-body { min-height: 0; -webkit-overflow-scrolling: touch; }
+.modal-body > * { flex-shrink: 0; }
+.cfg-card { flex-shrink: 0; overflow: visible; }
+.cfg-card .config-row { flex-wrap: nowrap; min-height: 56px; }
+.cfg-lead { flex: 1 1 0; }
+.config-info { flex: 1 1 auto; }
+.config-label { overflow-wrap: anywhere; }
+.cfg-card .config-row > .seg, .cfg-card .config-row > .toggle-switch, .cfg-card .config-row > .config-btn { flex: 0 0 auto; }
+.cfg-group-title { margin-top: 14px; }
+.cfg-icon { color: #fff; }
+@media (max-width: 420px) { .seg button { padding: 6px 8px; } .cfg-card .config-row { padding: 10px 12px; } }
